@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  18.03.1997  *
+ *      letztes Update am:  03.11.1997  *
  ****************************************}
 
 {
@@ -54,17 +54,7 @@
 }
 
 
-{$IFDEF DEBUG}
-	{$B+,D+,I-,L+,P-,Q+,R+,S+,T-,V-,X+,Z-}
-{$ELSE}
-	{$B+,D-,I-,L-,P-,Q-,R-,S-,T-,V-,X+,Z-}
-{$ENDIF}
-
-{$IFDEF COPRO}
-	{$G+,N-}
-{$ELSE}
-	{$G-,N-}
-{$ENDIF}
+{$B+,D-,G-,I-,L-,N-,P-,Q-,R-,S-,T-,V-,X+,Z-}
 
 unit OProcs;
 
@@ -207,9 +197,13 @@ type
 var
 
 	kt     : KEYTABPtr;
+	mxver  : word;
+	mxdate,
 	oldct  : longint;
 	krcount: integer;
 	conterm: byte absolute $484;
+	pmagx  : PMAGX_COOKIE;
+
 
 
 procedure Abstract;
@@ -973,32 +967,16 @@ function BootDevice: char;
 
 
 function MagiCVersion: word;
-	var pmagx: PMAGX_COOKIE;
 
 	begin
-		MagiCVersion:=0;
-		if GetCookie('MagX',longint(pmagx)) then
-			if pmagx<>nil then
-				with pmagx^ do
-					if aes_vars<>nil then
-						with aes_vars^ do
-							if magic=-2023406815 then
-								if magic2='MAGX' then MagiCVersion:=version
+		MagiCVersion:=mxver
 	end;
 
 
 function MagiCDate: longint;
-	var pmagx: PMAGX_COOKIE;
 
 	begin
-		MagiCDate:=0;
-		if GetCookie('MagX',longint(pmagx)) then
-			if pmagx<>nil then
-				with pmagx^ do
-					if aes_vars<>nil then
-						with aes_vars^ do
-							if magic=-2023406815 then
-								if magic2='MAGX' then MagiCDate:=(date shl 16) or (date shr 24) or ((date shr 8) and $0000ff00)
+		MagiCDate:=mxdate
 	end;
 
 
@@ -1488,5 +1466,18 @@ procedure KeyRepeatRestore;
 begin
 	kt:=nil;
 	krcount:=0;
-	oldct:=0
+	oldct:=0;
+	mxver:=0;
+	mxdate:=0;
+	if GetCookie('MagX',longint(pmagx)) then
+		if pmagx<>nil then
+			with pmagx^ do
+				if aes_vars<>nil then
+					with aes_vars^ do
+						if magic=-2023406815 then
+							if magic2='MAGX' then
+								begin
+									mxver:=version;
+									mxdate:=(date shl 16) or (date shr 24) or ((date shr 8) and $0000ff00)
+								end;
 end.

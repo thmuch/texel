@@ -54,17 +54,7 @@
 }
 
 
-{$IFDEF DEBUG}
-	{$B+,D+,I-,L+,P-,Q+,R+,S+,T-,V-,X+,Z-}
-{$ELSE}
-	{$B+,D-,I-,L-,P-,Q-,R-,S-,T-,V-,X+,Z-}
-{$ENDIF}
-
-{$IFDEF COPRO}
-	{$G+,N-}
-{$ELSE}
-	{$G-,N-}
-{$ENDIF}
+{$B+,D-,G-,I-,L-,N-,P-,Q-,R-,S-,T-,V-,X+,Z-}
 
 unit Objects;
 

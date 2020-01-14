@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  07.01.1997  *
+ *      letztes Update am:  26.11.1997  *
  ****************************************}
 
 {
@@ -54,17 +54,7 @@
 }
 
 
-{$IFDEF DEBUG}
-	{$B+,D+,I-,L+,P-,Q+,R+,S+,T-,V-,X+,Z-}
-{$ELSE}
-	{$B+,D-,I-,L-,P-,Q-,R-,S-,T-,V-,X+,Z-}
-{$ENDIF}
-
-{$IFDEF COPRO}
-	{$G+,N-}
-{$ELSE}
-	{$G-,N-}
-{$ENDIF}
+{$B+,D-,G-,I-,L-,N-,P-,Q-,R-,S-,T-,V-,X+,Z-}
 
 unit ODialogs;
 
@@ -114,6 +104,7 @@ type
 		destructor Done; virtual;
 		procedure SetText(ATextString: string); virtual;
 		function GetText: string; virtual;
+		procedure Paint; virtual;
 		private
 		Title    : PString;
 		oldflags : word;
@@ -126,12 +117,14 @@ type
 		constructor Init(AParent: PDialog; AnIndx: integer; UserDef: boolean; Hlp: string);
 		function Install: boolean; virtual;
 		procedure Deinstall; virtual;
+		procedure SetShortCut(Key: char); virtual;
 		function Transfer(DataPtr: pointer; TransferFlag: word): word; virtual;
 		procedure SetCheck(CheckFlag: integer); virtual;
 		function GetCheck: integer; virtual;
 		procedure Check; virtual;
 		procedure Uncheck; virtual;
 		procedure Toggle; virtual;
+		function IsChecked: boolean; virtual;
 	end;
 
 	PTriState = ^TTriState;
@@ -154,17 +147,20 @@ type
 		public
 		constructor Init(AParent: PDialog; AnIndx,ATextLen: integer; Hlp: string);
 		destructor Done; virtual;
+		function Transfer(DataPtr: pointer; TransferFlag: word): word; virtual;
 		procedure SetCursor(CPos: integer); virtual;
 		private
 		optext,
 		optmplt,
 		opvalid,
 		txt,
-		tmplt   : pointer;
+		tmplt     : pointer;
+		VirtualLen,
 		otxtlen,
 		otmplen,
-		ojust   : integer;
-		xtedinfo: XTED
+		ojust     : integer;
+		xtedinfo  : XTED;
+		function MagiCScrollEditLength: integer;
 	end;
 
 	PComboBox    = ^TComboBox;
@@ -185,13 +181,17 @@ type
 		procedure SetState(StateFlag: integer); virtual;
 		procedure SetText(ATextString: string); virtual;
 		function GetText: string; virtual;
+		procedure SetTitle(ATextString: string); virtual;
+		function GetTitle: string; virtual;
 		procedure Paint; virtual;
 		procedure Hide(Draw: boolean); virtual;
 		procedure Unhide; virtual;
+		procedure SetShortCut(Key: char); virtual;
 		function GetSelection: integer; virtual;
 		procedure SetSelection(Sel: integer; Wrk: boolean); virtual;
 		procedure ClearSelection(Wrk: boolean); virtual;
 		function CreatePopup: boolean; virtual;
+		procedure OpenPopup; virtual;
 		procedure SetValue(Sel: integer); virtual;
 		function GetEdit: PEdit; virtual;
 		private
@@ -214,15 +214,31 @@ type
 		procedure commoninit(cycleindx,titleindx: integer; cycle,editable: boolean);
 	end;
 
-	PNotepad = ^TNotepad;
-	TNotepad = object(TControl)
+	PCard = ^TCard;
+	TCard = object(TControl)
 		public
-		constructor Init(AParent: PDialog; AnIndx,PadIndx,AGroup: integer; Hlp: string);
-		{ ... }
+		constructor Init(AParent: PDialog; CardIdx,TitleIdx,AGroup,AFlag: integer; Hlp: string);
+		destructor Done; virtual;
+		function TestIndex(AnIndx: integer): boolean; virtual;
+		procedure Paint; virtual;
+		procedure Changed(AnIndx: integer; DblClick: boolean); virtual;
+		procedure HideCard(Draw: boolean); virtual;
+		procedure UnhideCard; virtual;
+		function IsCardHidden: boolean; virtual;
+		procedure SetCheck(CheckFlag: integer); virtual;
+		function GetCheck: integer; virtual;
+		procedure Check; virtual;
+		procedure Uncheck; virtual;
+		procedure Toggle; virtual;
+		function IsChecked: boolean; virtual;
 		private
-		group,
-		pad  : integer;
-		paddr: PObj
+		oldflags,
+		cindx,
+		cflag,
+		group   : integer;
+		caddr   : PObj;
+		cusrblk : USERBLK;
+		procedure ActivateShortcut;
 	end;
 
 	PListBox     = ^TListBox;
@@ -268,9 +284,11 @@ const
 	cbFlags     = cbUnchecked or cbChecked or cbGrayed;
 	cbType      = $4000;
 	cbAll       = not(cbFlags or cbType);
-	UDCOL       = Blue;
-	HOTCOL      = Red;
+	crdFirst    = $1000;
+	crdLast     = $2000;
+	crdFlags    = crdFirst or crdLast;
 	POP_MAXROWS = 19;
+	CARD_OFFS   =  2;
 
 type
 
@@ -285,12 +303,15 @@ function DrawGroupBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word; forward;
 function DrawCheckBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word; forward;
 function DrawRadioButton(dummy1,dummy2: pointer; parm: PARMBLKPtr): word; forward;
 function DrawComboTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word; forward;
+function DrawCardBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word; forward;
+function DrawCardTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word; forward;
 
 var
 
 	d_clip : ARRAY_4;
-	d_str  : string;
-	d_btn  : string[40];
+	extent : ARRAY_8;
+	d_str,
+	d_btn  : string;
 	d_chr  : PChar;
 	d_tx,
 	d_ty,
@@ -594,26 +615,53 @@ function TScrollBar.GetSBoxMin: integer;
 { *** Objekt TGROUPBOX *** }
 
 constructor TGroupBox.Init(AParent: PDialog; AnIndx: integer; ATitle,Hlp: string);
+	var nxo,pixdif: integer;
 
 	begin
 		if not(inherited Init(AParent,AnIndx,Hlp)) then fail;
 		Style:=cs_GroupBox or gbs_Recessed;
-		Title:=NewStr(ATitle);
+		Title:=nil;
 		if (ObjAddr^.ob_type and $ff)=G_BOX then
-			with ObjAddr^ do
-				begin
-					oldflags:=ob_flags;
-					oldobspec:=ob_spec.index;
-					UsrBlk.ub_parm:=longint(Title);
-					UsrBlk.ub_code:=@DrawGroupBox;
-					ob_flags:=ob_flags and not(RBUTTON or EDITABLE or SELECTABLE or DEFAULT or F_EXIT or TOUCHEXIT);
-					ob_type:=G_USERDEF;
-					ob_spec.user_blk:=@UsrBlk;
-					UsrDef:=true
-				end
+			begin
+				if Application^.ExtObjects then
+					begin
+						if length(ATitle)>0 then ATitle:=' '+ATitle+' ';
+						pixdif:=Application^.Attr.charSHeight shr 1;
+						with ObjAddr^ do
+							begin
+								ob_type:=G_BUTTON;
+								ob_flags:=(ob_flags and not(RBUTTON or EDITABLE or SELECTABLE or DEFAULT or F_EXIT or TOUCHEXIT)) or FL3DBAK;
+								ob_state:=(ob_state and $00ff) or WHITEBAK or $fe00;
+								ob_spec.free_string:=ChrNew(ATitle);
+								dec(ob_y,pixdif);
+								inc(ob_height,pixdif);
+								nxo:=ob_head
+							end;
+						if nxo<>-1 then
+							while nxo<>ObjIndx do
+								begin
+									inc(Parent^.DlgTree^[nxo].ob_y,pixdif);
+									nxo:=Parent^.DlgTree^[nxo].ob_next
+								end
+					end
+				else
+					begin
+						Title:=NewStr(ATitle);
+						with ObjAddr^ do
+							begin
+								oldflags:=ob_flags;
+								oldobspec:=ob_spec.index;
+								UsrBlk.ub_parm:=longint(Title);
+								UsrBlk.ub_code:=@DrawGroupBox;
+								ob_flags:=ob_flags and not(RBUTTON or EDITABLE or SELECTABLE or DEFAULT or F_EXIT or TOUCHEXIT);
+								ob_type:=G_USERDEF;
+								ob_spec.user_blk:=@UsrBlk;
+								UsrDef:=true
+							end
+					end
+			end
 		else
 			begin
-				DisposeStr(Title);
 				inherited Done;
 				fail
 			end
@@ -623,13 +671,17 @@ constructor TGroupBox.Init(AParent: PDialog; AnIndx: integer; ATitle,Hlp: string
 destructor TGroupBox.Done;
 
 	begin
-		with ObjAddr^ do
+		if Application^.ExtObjects then ChrDispose(PChar(ObjAddr^.ob_spec.free_string))
+		else
 			begin
-				ob_spec.index:=oldobspec;
-				ob_type:=G_BOX;
-				ob_flags:=oldflags
+				with ObjAddr^ do
+					begin
+						ob_spec.index:=oldobspec;
+						ob_type:=G_BOX;
+						ob_flags:=oldflags
+					end;
+				DisposeStr(Title)
 			end;
-		DisposeStr(Title);
 		inherited Done
 	end;
 
@@ -637,9 +689,18 @@ destructor TGroupBox.Done;
 procedure TGroupBox.SetText(ATextString: string);
 
 	begin
-		DisposeStr(Title);
-		Title:=NewStr(ATextString);
-		UsrBlk.ub_parm:=longint(Title);
+		if Application^.ExtObjects then
+			begin
+				if length(ATextString)>0 then ATextString:=' '+ATextString+' ';
+				ChrDispose(PChar(ObjAddr^.ob_spec.free_string));
+				ObjAddr^.ob_spec.free_string:=ChrNew(ATextString)
+			end
+		else
+			begin
+				DisposeStr(Title);
+				Title:=NewStr(ATextString);
+				UsrBlk.ub_parm:=longint(Title)
+			end;
 		Paint
 	end;
 
@@ -647,7 +708,31 @@ procedure TGroupBox.SetText(ATextString: string);
 function TGroupBox.GetText: string;
 
 	begin
-		if Title<>nil then GetText:=Title^ else GetText:=''
+		if Application^.ExtObjects then GetText:=StrPPas(ObjAddr^.ob_spec.free_string)
+		else
+			if Title<>nil then GetText:=Title^
+			else
+				GetText:=''
+	end;
+
+
+procedure TGroupBox.Paint;
+	var ox,oy: integer;
+	    r    : GRECT;
+
+	begin
+		if Application^.ExtObjects and (ObjIndx>0) then
+			begin
+				if not(IsHidden) then
+					begin
+						objc_offset(Parent^.DlgTree,ObjIndx,r.X,r.Y);
+						r.W:=ObjAddr^.ob_width;
+						r.H:=ObjAddr^.ob_height;
+						Parent^.ObjcPaintRect(ROOT,r,bTst(Flags,wb_Lazy))
+					end
+			end
+		else
+			inherited Paint
 	end;
 
 { *** TGROUPBOX ***}
@@ -677,17 +762,29 @@ function TCheckBox.Install: boolean;
 
 	begin
 		with ObjAddr^ do
-			if (ob_type and $ff)=G_BUTTON then
-				begin
-					UsrBlk.ub_parm:=ob_spec.index;
-					UsrBlk.ub_code:=@DrawCheckBox;
-					ob_flags:=(ob_flags and not(RBUTTON or EDITABLE)) or SELECTABLE;
-					ob_state:=ob_state and not(CHECKED or OUTLINED or SHADOWED);
-					ob_type:=G_USERDEF;
-					ob_spec.user_blk:=@UsrBlk
-				end
-			else
-				UsrDef:=false;
+			begin
+				if Application^.ExtObjects then
+					begin
+						UsrDef:=false;
+					  ob_type:=G_BUTTON;
+					  ob_flags:=(ob_flags and not(RBUTTON)) or FL3DBAK;
+					  ob_state:=ob_state or WHITEBAK or $ff00
+					end
+				else
+					begin
+						if (ob_type and $ff)=G_BUTTON then
+							begin
+								UsrBlk.ub_parm:=ob_spec.index;
+								UsrBlk.ub_code:=@DrawCheckBox;
+								ob_flags:=(ob_flags and not(RBUTTON or EDITABLE)) or SELECTABLE;
+								ob_state:=ob_state and not(CHECKED or OUTLINED or SHADOWED);
+								ob_type:=G_USERDEF;
+								ob_spec.user_blk:=@UsrBlk
+							end
+						else
+							UsrDef:=false
+					end
+			end;
 		Install:=true
 	end;
 
@@ -695,6 +792,26 @@ function TCheckBox.Install: boolean;
 procedure TCheckBox.Deinstall;
 
 	begin
+	end;
+
+
+procedure TCheckBox.SetShortCut(Key: char);
+	var idx: integer;
+
+	begin
+		inherited SetShortCut(Key);
+		if Application^.ExtObjects and not(UsrDef) then
+			with ObjAddr^ do
+				begin
+					if Key=#0 then ob_state:=ob_state or $ff00
+					else
+						begin
+							idx:=pos(upcase(Key),StrPUpper(GetText));
+							if idx=0 then ob_state:=ob_state or $ff00
+							else
+								ob_state:=(ob_state and $00ff) or $8000 or ((idx-1) shl 8)
+						end
+				end
 	end;
 
 
@@ -785,6 +902,13 @@ procedure TCheckBox.Toggle;
 		end
 	end;
 
+
+function TCheckBox.IsChecked: boolean;
+
+	begin
+		IsChecked:=(GetCheck=bf_Checked)
+	end;
+
 { *** TCHECKBOX *** }
 
 
@@ -792,9 +916,13 @@ procedure TCheckBox.Toggle;
 { *** Objekt TTRISTATE *** }
 
 constructor TTriState.Init(AParent: PDialog; AnIndx: integer; Hlp: string);
+	var oldext: boolean;
 
 	begin
+		oldext:=Application^.ExtObjects;
+		Application^.ExtObjects:=false;
 		if not(inherited Init(AParent,AnIndx,true,Hlp)) then fail;
+		Application^.ExtObjects:=oldext;
 		Style:=cs_3State;
 		with ObjAddr^ do ob_type:=ob_type or cbType
 	end;
@@ -835,17 +963,29 @@ function TRadioButton.Install: boolean;
 
 	begin
 		with ObjAddr^ do
-			if (ob_type and $ff)=G_BUTTON then
-				begin
-					UsrBlk.ub_parm:=ob_spec.index;
-					UsrBlk.ub_code:=@DrawRadioButton;
-					ob_flags:=(ob_flags and not(EDITABLE)) or RBUTTON or SELECTABLE;
-					ob_state:=ob_state and not(CROSSED or CHECKED or OUTLINED or SHADOWED);
-					ob_type:=G_USERDEF;
-					ob_spec.user_blk:=@UsrBlk
-				end
-			else
-				UsrDef:=false;
+			begin
+				if Application^.ExtObjects then
+					begin
+						UsrDef:=false;
+					  ob_type:=G_BUTTON;
+					  ob_flags:=ob_flags or RBUTTON or FL3DBAK;
+			  		ob_state:=ob_state or WHITEBAK or $ff00
+					end
+				else
+					begin
+						if (ob_type and $ff)=G_BUTTON then
+							begin
+								UsrBlk.ub_parm:=ob_spec.index;
+								UsrBlk.ub_code:=@DrawRadioButton;
+								ob_flags:=(ob_flags and not(EDITABLE)) or RBUTTON or SELECTABLE;
+								ob_state:=ob_state and not(CROSSED or CHECKED or OUTLINED or SHADOWED);
+								ob_type:=G_USERDEF;
+								ob_spec.user_blk:=@UsrBlk
+							end
+						else
+							UsrDef:=false
+					end
+			end;
 		Install:=true
 	end;
 
@@ -856,45 +996,50 @@ function TRadioButton.Install: boolean;
 { *** Objekt TSCROLLEDIT *** }
 
 constructor TScrollEdit.Init(AParent: PDialog; AnIndx,ATextLen: integer; Hlp: string);
-	var t: TEDINFOPtr;
+	var t : TEDINFOPtr;
+	    el: integer;
 
 	begin
 		if not(inherited Init(AParent,AnIndx,ATextLen,Hlp)) then fail;
-		TextLen:=Min(Max(ATextLen,TextLen),256);
-		if not(Application^.AESCanScrollEdit) then
+		el:=MagiCScrollEditLength;
+		VirtualLen:=ATextLen;
+		if el=0 then
 			begin
 				txt:=nil;
-				tmplt:=nil;
-				exit
-			end;
-		getmem(txt,TextLen);
-		getmem(tmplt,TextLen);
-		if (txt=nil) or (tmplt=nil) then
+				tmplt:=nil
+			end
+		else
 			begin
-				if txt<>nil then freemem(txt,TextLen);
-				if tmplt<>nil then freemem(tmplt,TextLen);
-				fail
-			end;
-		t:=ObjAddr^.ob_spec.ted_info;
-		ojust:=t^.te_just;
-		otxtlen:=t^.te_txtlen;
-		otmplen:=t^.te_tmplen;
-		optmplt:=t^.te_ptmplt;
-		opvalid:=t^.te_pvalid;
-		optext:=t^.te_ptext;
-		t^.te_just:=TE_LEFT;
-		StrCopy(txt,t^.te_ptext);
-		t^.te_ptext:=txt;
-		fillchar(tmplt^,TextLen,#0);
-		fillchar(tmplt^,TextLen-1,'_');
-		xtedinfo.xte_ptmplt:=tmplt;
-		xtedinfo.xte_pvalid:=t^.te_pvalid;
-		xtedinfo.xte_vislen:=t^.te_tmplen-1;
-		xtedinfo.xte_scroll:=0;
-		t^.te_tmplen:=TextLen;
-		t^.te_ptmplt:=nil;
-		t^.te_pvalid:=@xtedinfo;
-		t^.te_txtlen:=t^.te_tmplen
+				TextLen:=Min(Max(ATextLen,TextLen),el);
+				getmem(txt,TextLen);
+				getmem(tmplt,TextLen);
+				if (txt=nil) or (tmplt=nil) then
+					begin
+						if txt<>nil then freemem(txt,TextLen);
+						if tmplt<>nil then freemem(tmplt,TextLen);
+						fail
+					end;
+				t:=ObjAddr^.ob_spec.ted_info;
+				ojust:=t^.te_just;
+				otxtlen:=t^.te_txtlen;
+				otmplen:=t^.te_tmplen;
+				optmplt:=t^.te_ptmplt;
+				opvalid:=t^.te_pvalid;
+				optext:=t^.te_ptext;
+				t^.te_just:=TE_LEFT;
+				StrCopy(txt,t^.te_ptext);
+				t^.te_ptext:=txt;
+				fillchar(tmplt^,TextLen,#0);
+				fillchar(tmplt^,TextLen-1,'_');
+				xtedinfo.xte_ptmplt:=tmplt;
+				xtedinfo.xte_pvalid:=t^.te_pvalid;
+				xtedinfo.xte_vislen:=t^.te_tmplen-1;
+				xtedinfo.xte_scroll:=0;
+				t^.te_tmplen:=TextLen;
+				t^.te_ptmplt:=nil;
+				t^.te_pvalid:=@xtedinfo;
+				t^.te_txtlen:=t^.te_tmplen
+			end
 	end;
 
 
@@ -902,7 +1047,7 @@ destructor TScrollEdit.Done;
 	var t: TEDINFOPtr;
 
 	begin
-		if Application^.AESCanScrollEdit then
+		if MagiCScrollEditLength>0 then
 			begin
 				t:=ObjAddr^.ob_spec.ted_info;
 				t^.te_just:=ojust;
@@ -918,6 +1063,16 @@ destructor TScrollEdit.Done;
 	end;
 
 
+function TScrollEdit.Transfer(DataPtr: pointer; TransferFlag: word): word;
+
+	begin
+		inherited Transfer(DataPtr,TransferFlag);
+		if odd(VirtualLen) then Transfer:=VirtualLen+1
+		else
+			Transfer:=VirtualLen
+	end;
+
+
 procedure TScrollEdit.SetCursor(CPos: integer);
 	var maxidx: integer;
 
@@ -930,6 +1085,20 @@ procedure TScrollEdit.SetCursor(CPos: integer);
 		inherited SetCursor(CPos)
 	end;
 
+
+	{ private }
+
+
+function TScrollEdit.MagiCScrollEditLength: integer;
+
+	begin
+		if MagiCDate>=$19970926 then MagiCScrollEditLength:=256
+		else
+			if MagiCDate>=$19950829 then MagiCScrollEditLength:=126
+			else
+				MagiCScrollEditLength:=0
+	end;
+
 { *** TSCROLLEDIT *** }
 
 
@@ -939,6 +1108,7 @@ procedure TScrollEdit.SetCursor(CPos: integer);
 constructor TComboBox.Init(AParent: PDialog; AnIndx,CycleIndx,TitleIndx,ptIndx,popIndx,StartIndx: integer; Cycle,Editable: boolean; Hlp: string);
 
 	begin
+		taddr:=nil;
 		if not(inherited Init(AParent,AnIndx,Hlp)) then fail;
 		commoninit(CycleIndx,TitleIndx,Cycle,Editable);
 		startidx:=StartIndx;
@@ -952,6 +1122,7 @@ constructor TComboBox.Init(AParent: PDialog; AnIndx,CycleIndx,TitleIndx,ptIndx,p
 constructor TComboBox.InitCollection(AParent: PDialog; AnIndx,CycleIndx,TitleIndx,MinColumns: integer; ACollection: PStringCollection; DisposeColl,Cycle,Editable: boolean; Hlp: string);
 
 	begin
+		taddr:=nil;
 		if not(inherited Init(AParent,AnIndx,Hlp)) then fail;
 		commoninit(CycleIndx,TitleIndx,Cycle,Editable);
 		lstdispose:=DisposeColl;
@@ -970,6 +1141,9 @@ destructor TComboBox.Done;
 		if taddr<>nil then
 			with taddr^ do
 				begin
+					if Application^.ExtObjects then ChrDispose(PChar(ob_spec.free_string))
+					else
+						ChrDispose(PChar(usrtblk.ub_parm));
 					ob_type:=oldttype;
 					ob_spec.index:=oldtobspec
 				end;
@@ -1012,7 +1186,9 @@ function TComboBox.Transfer(DataPtr: pointer; TransferFlag: word): word;
 
 
 procedure TComboBox.Changed(AnIndx: integer; DblClick: boolean);
-	var res,xof,yof,q: integer;
+	var res,xof,
+	    yof,q  : integer;
+	    r      : GRECT;
 
 	begin
 		if AnIndx=cindx then
@@ -1029,12 +1205,15 @@ procedure TComboBox.Changed(AnIndx: integer; DblClick: boolean);
 						if not(bTst(caddr^.ob_state,SELECTED)) then exit
 			end;
 		if not(CreatePopup) then exit;
-		if tindx>0 then
-			with Parent^ do
-				begin
-					DlgTree^[tindx].ob_state:=DlgTree^[tindx].ob_state or SELECTED;
-					ObjcPaint(tindx,false)
-				end;
+		OpenPopup;
+		if taddr<>nil then
+			begin
+				taddr^.ob_state:=taddr^.ob_state or SELECTED;
+				objc_offset(Parent^.DlgTree,tindx,r.X,r.Y);
+				r.W:=taddr^.ob_width;
+				r.H:=taddr^.ob_height;
+				Parent^.ObjcPaintRect(ROOT,r,bTst(Flags,wb_Lazy))
+			end;
 		if not(cycl) then
 			if AnIndx=tindx then
 				if caddr<>nil then
@@ -1071,9 +1250,9 @@ procedure TComboBox.Changed(AnIndx: integer; DblClick: boolean);
 						Parent^.ObjcPaint(cindx,false)
 					end;
 		if res>=0 then SetSelection(res,true);
-		if tindx>0 then
+		if taddr<>nil then
 			begin
-				with Parent^.DlgTree^[tindx] do ob_state:=ob_state and not(SELECTED);
+				taddr^.ob_state:=taddr^.ob_state and not(SELECTED);
 				Paint
 			end
 	end;
@@ -1144,24 +1323,105 @@ function TComboBox.GetText: string;
 	end;
 
 
+procedure TComboBox.SetTitle(ATextString: string);
+	var ot : integer;
+	    drw: boolean;
+	    key: char;
+
+	begin
+		if taddr=nil then exit;
+		if Application^.ExtObjects then
+			begin
+				drw:=(taddr^.ob_spec.index<>0);
+				ChrDispose(PChar(taddr^.ob_spec.free_string))
+			end
+		else
+			begin
+				drw:=(usrtblk.ub_parm<>0);
+				ChrDispose(PChar(usrtblk.ub_parm))
+			end;
+		StrPTrim(ATextString);
+		ot:=pos('&',ATextString);
+		if (ot>0) and (ot<length(ATextString)) then key:=ATextString[ot+1]
+		else
+			key:=#0;
+		if Application^.ExtObjects then
+			begin
+				if (ot>0) and (ot<length(ATextString)) then ATextString:=StrPLeft(ATextString,ot-1)+StrPRight(ATextString,length(ATextString)-ot);
+				taddr^.ob_spec.free_string:=ChrNew(ATextString)
+			end
+		else
+			usrtblk.ub_parm:=longint(ChrNew(ATextString));
+		SetShortCut(key);
+		if drw then Paint
+	end;
+
+
+function TComboBox.GetTitle: string;
+
+	begin
+		if taddr=nil then GetTitle:=''
+		else
+			if Application^.ExtObjects then GetTitle:=StrPPas(taddr^.ob_spec.free_string)
+			else
+				GetTitle:=StrPPas(PChar(usrtblk.ub_parm))
+	end;
+
+
 procedure TComboBox.Paint;
+	var r: GRECT;
 
 	begin
 		if IsHidden then exit;
-		if tindx>0 then Parent^.ObjcPaint(tindx,false);
+		if taddr<>nil then
+			begin
+				objc_offset(Parent^.DlgTree,tindx,r.X,r.Y);
+				r.W:=taddr^.ob_width;
+				r.H:=taddr^.ob_height;
+				Parent^.ObjcPaintRect(ROOT,r,bTst(Flags,wb_Lazy))
+			end;
 		if Edit<>nil then Edit^.Paint
 		else
 			inherited Paint;
-		if cindx>0 then Parent^.ObjcPaint(cindx,false)
+		if cindx>0 then Parent^.ObjcPaint(cindx,bTst(Flags,wb_Lazy))
 	end;
 
 
 procedure TComboBox.Hide(Draw: boolean);
+	var valid: boolean;
+	    ox,oy: integer;
+	    r    : GRECT;
 
 	begin
+		valid:=not(IsHidden) and Draw;
+		with ObjAddr^ do ob_flags:=ob_flags or HIDETREE;
 		if taddr<>nil then taddr^.ob_flags:=taddr^.ob_flags or HIDETREE;
 		if caddr<>nil then caddr^.ob_flags:=caddr^.ob_flags or HIDETREE;
-		inherited Hide(Draw)
+		if valid then
+			begin
+				if taddr<>nil then
+					begin
+						objc_offset(Parent^.DlgTree,tindx,r.X,r.Y);
+						r.W:=taddr^.ob_width;
+						r.H:=taddr^.ob_height;
+						Parent^.ObjcPaintRect(ROOT,r,bTst(Flags,wb_Lazy))
+					end;
+				objc_offset(Parent^.DlgTree,ObjIndx,r.X,r.Y);
+				dec(r.X);
+				dec(r.Y);
+				r.W:=ObjAddr^.ob_width+3;
+				r.H:=ObjAddr^.ob_height+4;
+				Parent^.ObjcPaintRect(ROOT,r,bTst(Flags,wb_Lazy));
+				if caddr<>nil then
+					begin
+						objc_offset(Parent^.DlgTree,cindx,r.X,r.Y);
+						dec(r.X);
+						dec(r.Y);
+						r.W:=caddr^.ob_width+3;
+						r.H:=caddr^.ob_height+4;
+						Parent^.ObjcPaintRect(ROOT,r,bTst(Flags,wb_Lazy))
+					end
+			end
 	end;
 
 
@@ -1171,6 +1431,24 @@ procedure TComboBox.Unhide;
 		if taddr<>nil then taddr^.ob_flags:=taddr^.ob_flags and not(HIDETREE);
 		if caddr<>nil then caddr^.ob_flags:=caddr^.ob_flags and not(HIDETREE);
 		inherited Unhide
+	end;
+
+
+procedure TComboBox.SetShortCut(Key: char);
+	var idx: integer;
+
+	begin
+		inherited SetShortCut(Key);
+		if Application^.ExtObjects and (taddr<>nil) then
+			with taddr^ do
+				begin
+					ob_state:=ob_state and not(WHITEBAK) and $00ff;
+					if Key<>#0 then
+						begin
+							idx:=pos(upcase(Key),StrPUpper(GetTitle));
+							if (idx>0) and (idx<=$10) then ob_state:=ob_state or ((idx-1) shl 8) or WHITEBAK
+						end
+				end
 	end;
 
 
@@ -1260,6 +1538,12 @@ function TComboBox.CreatePopup: boolean;
 	end;
 
 
+procedure TComboBox.OpenPopup;
+
+	begin
+	end;
+
+
 procedure TComboBox.SetValue(Sel: integer);
 
 	begin
@@ -1328,29 +1612,24 @@ procedure TComboBox.commoninit(cycleindx,titleindx: integer; cycle,editable: boo
 							else
 								ob_flags:=ob_flags and not(FL3DBAK);
 							ot:=ob_type and $ff;
-							if (ot=G_BUTTON) or (ot=G_STRING) or (ot=G_TITLE) then
-								begin
-									txt:=StrPas(ob_spec.free_string);
-									usrtblk.ub_parm:=longint(ob_spec.free_string)
-								end
+							if (ot=G_BUTTON) or (ot=G_STRING) or (ot=G_TITLE) then txt:=StrPas(ob_spec.free_string)
 							else
 								if (ot=G_TEXT) or (ot=G_FTEXT) or (ot=G_BOXTEXT) or (ot=G_FBOXTEXT) then
-									begin
-										txt:=StrPas(ob_spec.ted_info^.te_ptext);
-										usrtblk.ub_parm:=longint(ob_spec.ted_info^.te_ptext)
-									end
+									txt:=StrPas(ob_spec.ted_info^.te_ptext)
 								else
-									begin
-										txt:='';
-										usrtblk.ub_parm:=0
-									end;
-							ot:=pos('&',txt);
-							if (ot>0) and (ot<length(txt)) then SetShortCut(txt[ot+1]);
+									txt:='';
 							oldttype:=ob_type;
 							oldtobspec:=ob_spec.index;
-							usrtblk.ub_code:=@DrawComboTitle;
-							ob_spec.user_blk:=@usrtblk;
-							ob_type:=G_USERDEF
+							usrtblk.ub_parm:=0;
+							ob_spec.index:=0;
+							SetTitle(txt);
+							if Application^.ExtObjects then ob_type:=G_STRING
+							else
+								begin
+									usrtblk.ub_code:=@DrawComboTitle;
+									ob_spec.user_blk:=@usrtblk;
+									ob_type:=G_USERDEF
+								end
 						end
 			end
 		else
@@ -1381,27 +1660,230 @@ procedure TComboBox.commoninit(cycleindx,titleindx: integer; cycle,editable: boo
 
 
 
-{ *** Objekt TNOTEPAD *** }
+{ *** Objekt TCARD *** }
 
-constructor TNotepad.Init(AParent: PDialog; AnIndx,PadIndx,AGroup: integer; Hlp: string);
+constructor TCard.Init(AParent: PDialog; CardIdx,TitleIdx,AGroup,AFlag: integer; Hlp: string);
 
 	begin
-		if not(inherited Init(AParent,AnIndx,Hlp)) then fail;
-		pad:=PadIndx;
-		if pad>0 then paddr:=@Parent^.DlgTree^[pad]
+		if not(inherited Init(AParent,TitleIdx,Hlp)) then fail;
+		cindx:=CardIdx;
+		if cindx>0 then caddr:=@Parent^.DlgTree^[cindx]
 		else
-			paddr:=nil;
-		if paddr=nil then
+			caddr:=nil;
+		if caddr=nil then
 			begin
 				inherited Done;
 				fail
 			end;
 		Style:=cs_Notepad;
+		ID:=id_NoExit;
 		group:=AGroup;
-		{ ... }
+		cflag:=AFlag;
+		if ((ObjAddr^.ob_type and $ff)=G_BUTTON) and ((caddr^.ob_type and $ff)=G_BOX) then
+			begin
+				with ObjAddr^ do
+					begin
+						oldflags:=ob_flags;
+						UsrBlk.ub_parm:=ob_spec.index;
+						UsrBlk.ub_code:=@DrawCardTitle;
+						ob_type:=G_USERDEF;
+						ob_spec.user_blk:=@UsrBlk;
+						UsrDef:=true;
+						case cflag of
+						crd_First:
+							ob_type:=(ob_type and not(crdFlags)) or crdFirst;
+						crd_Last:
+							ob_type:=(ob_type and not(crdFlags)) or crdLast;
+						end
+					end;
+				with caddr^ do
+					begin
+						cusrblk.ub_parm:=ob_spec.index;
+						cusrblk.ub_code:=@DrawCardBox;
+						ob_type:=G_USERDEF;
+						ob_spec.user_blk:=@cusrblk
+					end;
+				if IsChecked then
+					begin
+						SetShortCut(#0);
+						UnhideCard
+					end
+				else
+					begin
+						ActivateShortcut;
+						HideCard(false)
+					end
+			end
+		else
+			begin
+				inherited Done;
+				fail
+			end
 	end;
 
-{ *** TNOTEPAD *** }
+
+destructor TCard.Done;
+
+	begin
+		with caddr^ do
+			begin
+				ob_spec.index:=cusrblk.ub_parm;
+				ob_type:=G_BOX
+			end;
+		with ObjAddr^ do
+			begin
+				ob_spec.index:=UsrBlk.ub_parm;
+				ob_flags:=oldflags;
+				ob_type:=G_BUTTON
+			end;
+		inherited Done
+	end;
+
+
+function TCard.TestIndex(AnIndx: integer): boolean;
+
+	begin
+		TestIndex:=((AnIndx=ObjIndx) or (AnIndx=cindx))
+	end;
+
+
+procedure TCard.Paint;
+
+	begin
+		if cindx>0 then Parent^.ObjcPaint(cindx,bTst(Flags,wb_Lazy));
+		inherited Paint
+	end;
+
+
+procedure TCard.Changed(AnIndx: integer; DblClick: boolean);
+	var pc: PControl;
+
+	begin
+		if AnIndx<>ObjIndx then exit;
+		if not(IsChecked) then exit;
+		pc:=Parent^.CtrlList;
+		while pc<>nil do
+			begin
+				if bTst(pc^.Style,cs_Notepad) then
+					if PCard(pc)^.group=group then
+						if pc<>@self then
+							if PCard(pc)^.IsChecked then PCard(pc)^.HideCard(true);
+				pc:=pc^.Next
+			end;
+		Parent^.InitFocus;
+		UnhideCard;
+		Parent^.InitFocus
+	end;
+
+
+procedure TCard.HideCard(Draw: boolean);
+	var valid: boolean;
+	    ox,oy: integer;
+	    r    : GRECT;
+
+	begin
+		valid:=not(IsHidden) and Draw;
+		with caddr^ do ob_flags:=ob_flags or HIDETREE;
+		with ObjAddr^ do ob_flags:=ob_flags or SELECTABLE or TOUCHEXIT;
+		ActivateShortcut;
+		if valid then
+			begin
+				objc_offset(Parent^.DlgTree,cindx,r.X,r.Y);
+				r.W:=caddr^.ob_width;
+				r.H:=caddr^.ob_height;
+				Parent^.ObjcPaintRect(ROOT,r,bTst(Flags,wb_Lazy))
+			end;
+		Uncheck
+	end;
+
+
+procedure TCard.UnhideCard;
+
+	begin
+		with caddr^ do ob_flags:=ob_flags and not(HIDETREE);
+		SetShortCut(#0);
+		Check;
+		with ObjAddr^ do ob_flags:=ob_flags and not(SELECTABLE or TOUCHEXIT);
+		Paint
+	end;
+
+
+function TCard.IsCardHidden: boolean;
+
+	begin
+		IsCardHidden:=Application^.IsTreeHidden(Parent^.DlgTree,cindx)
+	end;
+
+
+procedure TCard.SetCheck(CheckFlag: integer);
+
+	begin
+		if GetCheck<>CheckFlag then
+			begin
+				with ObjAddr^ do
+					begin
+						if CheckFlag=bf_Unchecked then ob_state:=ob_state and not(SELECTED)
+						else
+							ob_state:=ob_state or SELECTED
+					end;
+				Paint
+			end
+	end;
+
+
+function TCard.GetCheck: integer;
+
+	begin
+		if bTst(ObjAddr^.ob_state,SELECTED) then GetCheck:=bf_Checked
+		else
+			GetCheck:=bf_Unchecked
+	end;
+
+
+procedure TCard.Check;
+
+	begin
+		SetCheck(bf_Checked)
+	end;
+
+
+procedure TCard.Uncheck;
+
+	begin
+		SetCheck(bf_Unchecked)
+	end;
+
+
+procedure TCard.Toggle;
+
+	begin
+		if GetCheck=bf_Checked then Uncheck
+		else
+			Check
+	end;
+
+
+function TCard.IsChecked: boolean;
+
+	begin
+		IsChecked:=(GetCheck=bf_Checked)
+	end;
+
+
+	{ private }
+
+
+procedure TCard.ActivateShortcut;
+	var q: integer;
+	    s: string;
+
+	begin
+		s:=StrPPas(PChar(UsrBlk.ub_parm));
+		q:=pos('&',s);
+		if (q>0) and (q<length(s)) then SetShortCut(PChar(UsrBlk.ub_parm+q)^)
+	end;
+
+{ *** TCARD *** }
 
 
 
@@ -1702,6 +2184,60 @@ procedure TLBScrollBar.Work;
 	end;
 
 
+procedure vFillarea(vdiHandle,Count: integer; const pxyarray: array of integer);
+	var i: integer;
+
+	begin
+		if Count<2 then exit;
+		with VDI_pb do
+			begin
+				control^[0]:=9;
+				control^[1]:=Count;
+				control^[3]:=0;
+				control^[6]:=vdiHandle;
+				for i:=0 to (Count shl 1)-1 do ptsin^[i]:=pxyarray[i];
+				vdi(@VDI_pb)
+			end
+	end;
+
+
+procedure vgText(vdiHandle,x,y: integer; const outstring: string);
+	var l,i: integer;
+
+	begin
+		l:=length(outstring);
+		if l<=0 then exit;
+		with VDI_pb do
+			begin
+				control^[0]:=8;
+				control^[1]:=1;
+				control^[3]:=l;
+				control^[6]:=vdiHandle;
+				ptsin^[0]:=x;
+				ptsin^[1]:=y;
+				for i:=1 to l do intin^[i-1]:=ord(outstring[i]);
+				vdi(@VDI_pb)
+			end
+	end;
+
+
+procedure vPline(vdiHandle,Count: integer; const pxyarray: array of integer);
+	var i: integer;
+
+	begin
+		if Count<2 then exit;
+		with VDI_pb do
+			begin
+				control^[0]:=6;
+				control^[1]:=Count;
+				control^[3]:=0;
+				control^[6]:=vdiHandle;
+				for i:=0 to (Count shl 1)-1 do ptsin^[i]:=pxyarray[i];
+				vdi(@VDI_pb)
+			end
+	end;
+
+
 function DrawCycleBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 
 	begin
@@ -1733,7 +2269,7 @@ function DrawCycleBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 				pxya[5]:=d_clip[3]+1;
 				pxya[6]:=pxya[0];
 				pxya[7]:=pxya[5];
-				v_pline(vdiHandle,4,pxya);
+				vPline(vdiHandle,4,pxya);
 				vsf_color(vdiHandle,LBlack);
 				d_br:=d_clip[2]-d_clip[0]-5;
 				pxya[0]:=d_clip[0]+3;
@@ -1744,12 +2280,12 @@ function DrawCycleBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 				pxya[5]:=pxya[1];
 				pxya[6]:=pxya[0];
 				pxya[7]:=pxya[1];
-				v_fillarea(vdiHandle,4,pxya);
+				vFillarea(vdiHandle,4,pxya);
 				inc(pxya[1],3);
 				pxya[3]:=d_clip[3]-2;
 				pxya[5]:=pxya[1];
 				pxya[7]:=pxya[1];
-				v_fillarea(vdiHandle,4,pxya);
+				vFillarea(vdiHandle,4,pxya);
 				vsf_interior(vdiHandle,FIS_HOLLOW);
 				vsf_color(vdiHandle,Black);
 				vs_clip(vdiHandle,CLIP_ON,SysInfo.Desktop.A2)
@@ -1789,7 +2325,7 @@ function DrawGroupBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						pxya[4]:=d_clip[2];
 						pxya[5]:=d_clip[1];
 						vsl_color(vdiHandle,LBlack);
-						v_pline(vdiHandle,3,pxya);
+						vPline(vdiHandle,3,pxya);
 						pxya[0]:=d_clip[0]+1;
 						pxya[1]:=d_clip[3];
 						pxya[2]:=d_clip[2];
@@ -1797,7 +2333,7 @@ function DrawGroupBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						pxya[4]:=d_clip[2];
 						pxya[5]:=d_clip[1]+1;
 						vsl_color(vdiHandle,White);
-						v_pline(vdiHandle,3,pxya);
+						vPline(vdiHandle,3,pxya);
 						vsf_interior(vdiHandle,FIS_HOLLOW);
 						vsf_color(vdiHandle,Black)
 					end
@@ -1822,13 +2358,13 @@ function DrawGroupBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 								end;
 							vst_color(vdiHandle,SysInfo.BGDefCol);
 							vswr_mode(vdiHandle,MD_REPLACE);
-							v_gtext(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
+							vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
 							vswr_mode(vdiHandle,MD_ERASE);
-							v_gtext(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
+							vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
 							vswr_mode(vdiHandle,MD_TRANS);
-							v_gtext(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
+							vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
 							vst_color(vdiHandle,Black);
-							v_gtext(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str)
+							vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str)
 						end;
 				vsl_color(vdiHandle,Black);
 				vswr_mode(vdiHandle,MD_REPLACE);
@@ -1903,7 +2439,7 @@ function DrawCheckBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						pxya[4]:=d_clip[2]-1;
 						pxya[5]:=d_clip[1]-1;
 						vsl_color(vdiHandle,SysInfo.BGDefCol);
-						v_pline(vdiHandle,3,pxya);
+						vPline(vdiHandle,3,pxya);
 						if d_stat=bf_Checked then
 							begin
 								vsl_color(vdiHandle,LBlack);
@@ -1913,12 +2449,12 @@ function DrawCheckBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 										pxya[1]:=d_clip[1]+1;
 										pxya[2]:=d_clip[2]-1;
 										pxya[3]:=d_clip[3]-1;
-										v_pline(vdiHandle,2,pxya);
+										vPline(vdiHandle,2,pxya);
 										pxya[0]:=d_clip[0]+1;
 										pxya[1]:=d_clip[3]-1;
 										pxya[2]:=d_clip[2]-1;
 										pxya[3]:=d_clip[1]+1;
-										v_pline(vdiHandle,2,pxya)
+										vPline(vdiHandle,2,pxya)
 									end
 								else
 									begin
@@ -1928,10 +2464,10 @@ function DrawCheckBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 										pxya[3]:=d_clip[1]+1;
 										pxya[4]:=d_clip[2]-1;
 										pxya[5]:=d_clip[1]+1;
-										v_pline(vdiHandle,3,pxya);
+										vPline(vdiHandle,3,pxya);
 										vsf_interior(vdiHandle,FIS_SOLID);
-										vsf_color(vdiHandle,UDCOL);
-										vsl_color(vdiHandle,UDCOL);
+										vsf_color(vdiHandle,SysInfo.UsrDefCol);
+										vsl_color(vdiHandle,SysInfo.UsrDefCol);
 										if bTst(parm^.pr_currstate,DISABLED) then
 											if Attr.Colors>=LWhite then
 												begin
@@ -1954,7 +2490,7 @@ function DrawCheckBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 										pxya[13]:=d_clip[1]+10;
 										pxya[14]:=d_clip[0]+5;
 										pxya[15]:=d_clip[1]+7;
-										v_fillarea(vdiHandle,8,pxya)
+										vFillarea(vdiHandle,8,pxya)
 									end
 							end
 						else
@@ -1971,7 +2507,7 @@ function DrawCheckBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 									pxya[8]:=d_clip[0];
 									pxya[9]:=d_clip[1];
 									vsl_color(vdiHandle,Black);
-									v_pline(vdiHandle,5,pxya)
+									vPline(vdiHandle,5,pxya)
 								end
 					end
 				else
@@ -1984,7 +2520,7 @@ function DrawCheckBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 							pxya[4]:=d_clip[2]+1;
 							pxya[5]:=d_clip[1]+1;
 							vsl_color(vdiHandle,LBlack);
-							v_pline(vdiHandle,3,pxya)
+							vPline(vdiHandle,3,pxya)
 						end;
 				d_tx:=parm^.pb_x+14+Attr.charSWidth;
 				d_ty:=parm^.pb_y+SysInfo.Font.Height+1;
@@ -2012,22 +2548,37 @@ function DrawCheckBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 					end;
 				vswr_mode(vdiHandle,MD_ERASE);
 				vst_color(vdiHandle,SysInfo.BGDefCol);
-				v_gtext(vdiHandle,d_tx,d_ty,d_btn);
+				vgText(vdiHandle,d_tx,d_ty,d_btn);
 				vswr_mode(vdiHandle,MD_TRANS);
-				v_gtext(vdiHandle,d_tx,d_ty,d_btn);
-				if bTst(parm^.pr_currstate,DISABLED) then vst_effects(vdiHandle,TF_LIGHTENED);
-				vst_color(vdiHandle,Black);
-				v_gtext(vdiHandle,d_tx,d_ty,d_btn);
+				vgText(vdiHandle,d_tx,d_ty,d_btn);
 				if d_scpos>0 then
 					begin
-						if bTst(parm^.pr_currstate,DISABLED) then vst_effects(vdiHandle,TF_UNDERLINED or TF_LIGHTENED)
+						if bTst(parm^.pr_currstate,DISABLED) then
+							begin
+								vst_effects(vdiHandle,TF_UNDERLINED or TF_LIGHTENED);
+								vst_color(vdiHandle,Black)
+							end
 						else
 							begin
 								vst_effects(vdiHandle,TF_UNDERLINED);
-								vst_color(vdiHandle,HOTCOL)
+								vst_color(vdiHandle,SysInfo.HotKeyCol)
 							end;
-						v_gtext(vdiHandle,d_tx+(d_scpos-1)*Attr.charSWidth,d_ty,' ')
+						if d_scpos=1 then extent[2]:=0
+						else
+							begin
+								d_str[0]:=chr(d_scpos-1);
+								for q:=1 to d_scpos-1 do d_str[q]:=d_btn[q];
+								vqt_extent(vdiHandle,d_str,extent)
+							end;
+						d_str[0]:=#1;
+						d_str[1]:=d_btn[d_scpos];
+						vgText(vdiHandle,d_tx+extent[2],d_ty,d_str)
 					end;
+				vst_color(vdiHandle,Black);
+				if bTst(parm^.pr_currstate,DISABLED) then vst_effects(vdiHandle,TF_LIGHTENED)
+				else
+					vst_effects(vdiHandle,TF_NORMAL);
+				vgText(vdiHandle,d_tx,d_ty,d_btn);
 				vsl_type(vdiHandle,LT_SOLID);
 				vsf_interior(vdiHandle,FIS_HOLLOW);
 				vsf_color(vdiHandle,Black);
@@ -2078,7 +2629,7 @@ function DrawRadioButton(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 		if d_stat=bf_Checked then for q:=0 to 4 do inc(pxya[q shl 1]);
 		with Application^ do
 			begin
-				v_fillarea(vdiHandle,5,pxya);
+				vFillarea(vdiHandle,5,pxya);
 				if d_stat=bf_Checked then
 					begin
 						pxya[0]:=parm^.pb_x+8;
@@ -2088,7 +2639,7 @@ function DrawRadioButton(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						pxya[4]:=parm^.pb_x+8;
 						pxya[5]:=parm^.pb_y+15;
 						vsl_color(vdiHandle,SysInfo.BGDefCol);
-						v_pline(vdiHandle,3,pxya);
+						vPline(vdiHandle,3,pxya);
 						pxya[0]:=parm^.pb_x+9;
 						pxya[1]:=parm^.pb_y+2;
 						pxya[2]:=parm^.pb_x+3;
@@ -2096,9 +2647,9 @@ function DrawRadioButton(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						pxya[4]:=parm^.pb_x+9;
 						pxya[5]:=parm^.pb_y+14;
 						vsl_color(vdiHandle,LBlack);
-						v_pline(vdiHandle,3,pxya);
+						vPline(vdiHandle,3,pxya);
 						vsf_interior(vdiHandle,FIS_SOLID);
-						vsf_color(vdiHandle,UDCOL);
+						vsf_color(vdiHandle,SysInfo.UsrDefCol);
 						if bTst(parm^.pr_currstate,DISABLED) then
 							if Attr.Colors>=LWhite then
 								begin
@@ -2115,7 +2666,7 @@ function DrawRadioButton(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						pxya[7]:=parm^.pb_y+6;
 						pxya[8]:=parm^.pb_x+7;
 						pxya[9]:=parm^.pb_y+8;
-						v_fillarea(vdiHandle,5,pxya)
+						vFillarea(vdiHandle,5,pxya)
 					end
 				else
 					begin
@@ -2126,7 +2677,7 @@ function DrawRadioButton(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						pxya[4]:=parm^.pb_x+9;
 						pxya[5]:=parm^.pb_y+15;
 						vsl_color(vdiHandle,LBlack);
-						v_pline(vdiHandle,3,pxya)
+						vPline(vdiHandle,3,pxya)
 					end;
 				d_tx:=parm^.pb_x+14+Attr.charSWidth;
 				d_ty:=parm^.pb_y+SysInfo.Font.Height+1;
@@ -2154,21 +2705,23 @@ function DrawRadioButton(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 					end;
 				vswr_mode(vdiHandle,MD_ERASE);
 				vst_color(vdiHandle,SysInfo.BGDefCol);
-				v_gtext(vdiHandle,d_tx,d_ty,d_btn);
+				vgText(vdiHandle,d_tx,d_ty,d_btn);
 				vswr_mode(vdiHandle,MD_TRANS);
-				v_gtext(vdiHandle,d_tx,d_ty,d_btn);
+				vgText(vdiHandle,d_tx,d_ty,d_btn);
 				if bTst(parm^.pr_currstate,DISABLED) then vst_effects(vdiHandle,TF_LIGHTENED);
 				vst_color(vdiHandle,Black);
-				v_gtext(vdiHandle,d_tx,d_ty,d_btn);
+				vgText(vdiHandle,d_tx,d_ty,d_btn);
 				if d_scpos>0 then
 					begin
 						if bTst(parm^.pr_currstate,DISABLED) then vst_effects(vdiHandle,TF_UNDERLINED or TF_LIGHTENED)
 						else
 							begin
 								vst_effects(vdiHandle,TF_UNDERLINED);
-								vst_color(vdiHandle,HOTCOL)
+								vst_color(vdiHandle,SysInfo.HotKeyCol)
 							end;
-						v_gtext(vdiHandle,d_tx+(d_scpos-1)*Attr.charSWidth,d_ty,' ')
+						d_btn[0]:=#1;
+						d_btn[1]:=#32;
+						vgText(vdiHandle,d_tx+(d_scpos-1)*Attr.charSWidth,d_ty,d_btn)
 					end;
 				vsl_type(vdiHandle,LT_SOLID);
 				vsl_color(vdiHandle,Black);
@@ -2232,16 +2785,18 @@ function DrawComboTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 				vswr_mode(vdiHandle,MD_TRANS);
 				if bTst(parm^.pr_currstate,DISABLED) then vst_effects(vdiHandle,TF_LIGHTENED);
 				vst_color(vdiHandle,Black);
-				v_gtext(vdiHandle,d_tx,d_ty,d_btn);
+				vgText(vdiHandle,d_tx,d_ty,d_btn);
 				if d_scpos>0 then
 					begin
 						if bTst(parm^.pr_currstate,DISABLED) then vst_effects(vdiHandle,TF_UNDERLINED or TF_LIGHTENED)
 						else
 							begin
 								vst_effects(vdiHandle,TF_UNDERLINED);
-								vst_color(vdiHandle,HOTCOL)
+								vst_color(vdiHandle,SysInfo.HotKeyCol)
 							end;
-						v_gtext(vdiHandle,d_tx+(d_scpos-1)*Attr.charSWidth,d_ty,' ')
+						d_btn[0]:=#1;
+						d_btn[1]:=#32;
+						vgText(vdiHandle,d_tx+(d_scpos-1)*Attr.charSWidth,d_ty,d_btn)
 					end;
 				vsf_color(vdiHandle,Black);
 				if bTst(parm^.pr_currstate,SELECTED) then
@@ -2258,6 +2813,310 @@ function DrawComboTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 				vs_clip(vdiHandle,CLIP_ON,SysInfo.Desktop.A2)
 			end;
 		DrawComboTitle:=NORMAL
+	end;
+
+
+function DrawCardBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
+
+	begin
+		with parm^ do
+			begin
+				d_clip[0]:=pb_xc;
+				d_clip[1]:=pb_yc;
+				d_clip[2]:=pb_xc+pb_wc-1;
+				d_clip[3]:=pb_yc+pb_hc-1;
+				vs_clip(Application^.vdiHandle,CLIP_ON,d_clip);
+				d_clip[0]:=pb_x;
+				d_clip[1]:=pb_y+1;
+				d_clip[2]:=pb_x+pb_w-1;
+				d_clip[3]:=pb_y+pb_h-2
+			end;
+		with Application^ do
+			begin
+				vswr_mode(vdiHandle,MD_REPLACE);
+				vsf_interior(vdiHandle,FIS_SOLID);
+				vsf_color(vdiHandle,SysInfo.BGDefCol);
+				v_bar(vdiHandle,d_clip);
+				pxya[0]:=parm^.pb_x;
+				pxya[1]:=parm^.pb_y;
+				pxya[2]:=pxya[0];
+				pxya[3]:=pxya[1]+parm^.pb_h-1;
+				pxya[4]:=pxya[2]+parm^.pb_w-CARD_OFFS-1;
+				if Attr.Colors<16 then dec(pxya[3],CARD_OFFS);
+				pxya[5]:=pxya[3];
+				pxya[6]:=pxya[4];
+				pxya[7]:=pxya[1];
+				vsl_color(vdiHandle,Black);
+				vPline(vdiHandle,4,pxya);
+				if Attr.Colors<16 then
+					begin
+						pxya[0]:=parm^.pb_x+CARD_OFFS;
+						pxya[1]:=parm^.pb_y+parm^.pb_h-2;
+						pxya[2]:=parm^.pb_x+parm^.pb_w-2;
+						pxya[3]:=pxya[1];
+						pxya[4]:=pxya[2];
+						pxya[5]:=parm^.pb_y+CARD_OFFS;
+						vPline(vdiHandle,3,pxya);
+						inc(pxya[1]);
+						inc(pxya[2]);
+						pxya[3]:=pxya[1];
+						pxya[4]:=pxya[2];
+						vPline(vdiHandle,3,pxya)
+					end
+				else
+					begin
+						inc(pxya[0]);
+						pxya[2]:=pxya[0];
+						pxya[3]:=pxya[1]+parm^.pb_h-5;
+						vsl_color(vdiHandle,White);
+						vPline(vdiHandle,2,pxya);
+						pxya[0]:=parm^.pb_x+1;
+						pxya[1]:=parm^.pb_y+parm^.pb_h-2;
+						pxya[2]:=parm^.pb_x+parm^.pb_w-2-2;
+						pxya[3]:=pxya[1];
+						pxya[4]:=pxya[2];
+						pxya[5]:=parm^.pb_y;
+						vsl_color(vdiHandle,LBlack);
+						vPline(vdiHandle,3,pxya)
+					end;
+				vsf_interior(vdiHandle,FIS_HOLLOW);
+				vsf_color(vdiHandle,Black);
+				vsl_color(vdiHandle,Black);
+				vs_clip(vdiHandle,CLIP_ON,SysInfo.Desktop.A2)
+			end;
+		DrawCardBox:=NORMAL
+	end;
+
+
+function DrawCardTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
+	var dummy,
+	    teff,q,l,
+	    hkpos,i,
+	    xpos,ypos: integer;
+
+	begin
+		with parm^ do
+			begin
+				d_clip[0]:=pb_xc;
+				d_clip[1]:=pb_yc;
+				d_clip[2]:=pb_xc+pb_wc-1;
+				d_clip[3]:=pb_yc+pb_hc-1;
+				vs_clip(Application^.vdiHandle,CLIP_ON,d_clip);
+				d_clip[0]:=pb_x;
+				d_clip[1]:=pb_y;
+				d_clip[2]:=pb_x+pb_w-1;
+				d_clip[3]:=pb_y+pb_h-1
+			end;
+		with Application^ do
+			begin
+				vswr_mode(vdiHandle,MD_REPLACE);
+				vsf_interior(vdiHandle,FIS_SOLID);
+				vsf_color(vdiHandle,SysInfo.BGDefCol);
+				v_bar(vdiHandle,d_clip);
+				vst_alignment(vdiHandle,TA_LEFT,TA_TOP,dummy,dummy);
+				vsl_color(vdiHandle,Black);
+				hkpos:=-1;
+				if parm^.pb_parm<>0 then
+					begin
+						d_chr:=PChar(parm^.pb_parm);
+						l:=min(StrLen(d_chr),127);
+						d_str[0]:=chr(l);
+						if l>0 then
+							begin
+								i:=1;
+								for q:=1 to l do
+									begin
+										if d_chr^='&' then
+											if hkpos<0 then
+												if PChar(longint(d_chr)+1)^<>#0 then
+													begin
+														hkpos:=q-1;
+														dec(d_str[0]);
+														inc(longint(d_chr));
+														continue
+													end;
+										d_str[i]:=d_chr^;
+										inc(longint(d_chr));
+										inc(i)
+									end
+							end
+					end
+				else
+					d_str[0]:=#0;
+				vqt_extent(vdiHandle,d_str,extent);
+				xpos:=parm^.pb_x+((parm^.pb_w-extent[4]-extent[6]) shr 1);
+				ypos:=parm^.pb_y+((parm^.pb_h-extent[1]-extent[7]) shr 1);
+				if Attr.Colors<16 then
+					begin
+						pxya[0]:=parm^.pb_x;
+						pxya[1]:=parm^.pb_y+parm^.pb_h-1;
+						pxya[2]:=pxya[0];
+						pxya[3]:=parm^.pb_y;
+						pxya[4]:=parm^.pb_x+parm^.pb_w-CARD_OFFS-2;
+						pxya[5]:=pxya[3];
+						pxya[6]:=pxya[4];
+						pxya[7]:=pxya[1];
+						if bTst(parm^.pr_currstate,SELECTED) then
+							begin
+								pxya[8]:=pxya[0]+parm^.pb_w-1;
+								pxya[9]:=pxya[1];
+								vPline(vdiHandle,5,pxya);
+								vsf_color(vdiHandle,Black);
+								d_clip[0]:=parm^.pb_x+parm^.pb_w-3;
+								d_clip[1]:=parm^.pb_y+2;
+								d_clip[2]:=d_clip[0]+1;
+								d_clip[3]:=parm^.pb_y+parm^.pb_h-1;
+								v_bar(vdiHandle,d_clip)
+							end
+						else
+							begin
+								inc(pxya[0],3);
+								pxya[2]:=pxya[0];
+								inc(pxya[3],3);
+								inc(pxya[4]);
+								pxya[5]:=pxya[3];
+								pxya[6]:=pxya[4];
+								vPline(vdiHandle,4,pxya);
+								pxya[0]:=parm^.pb_x;
+								pxya[1]:=parm^.pb_y+parm^.pb_h-1;
+								pxya[2]:=pxya[0]+parm^.pb_w-1;
+								pxya[3]:=pxya[1];
+								vPline(vdiHandle,2,pxya)
+							end
+					end
+				else
+					begin
+						pxya[0]:=parm^.pb_x;
+						pxya[1]:=parm^.pb_y+parm^.pb_h-2;
+						pxya[3]:=parm^.pb_y+3;
+						pxya[6]:=pxya[0]+parm^.pb_w-1-3;
+						pxya[8]:=pxya[0]+parm^.pb_w-1;
+						if not(bTst(parm^.pr_currstate,SELECTED)) then
+							begin
+								inc(pxya[0],2);
+								dec(pxya[1]);
+								inc(pxya[3],3);
+								dec(pxya[6],2);
+								dec(pxya[8],2)
+							end;
+						pxya[2]:=pxya[0];
+						pxya[4]:=pxya[2]+3;
+						pxya[5]:=pxya[3]-3;
+						pxya[7]:=pxya[5];
+						pxya[9]:=pxya[3];
+						pxya[10]:=pxya[8];
+						pxya[11]:=pxya[1];
+						vsl_color(vdiHandle,Black);
+						vPline(vdiHandle,6,pxya);
+						inc(pxya[0]);
+						inc(pxya[2]);
+						inc(pxya[5]);
+						dec(pxya[6]);
+						inc(pxya[7]);
+						vsl_color(vdiHandle,White);
+						vPline(vdiHandle,4,pxya);
+						pxya[0]:=pxya[6]+1;
+						pxya[1]:=pxya[7];
+						pxya[2]:=pxya[8]-1;
+						pxya[3]:=pxya[9];
+						pxya[4]:=pxya[10]-1;
+						pxya[5]:=pxya[11];
+						vsl_color(vdiHandle,LBlack);
+						vPline(vdiHandle,3,pxya);
+						if not(bTst(parm^.pr_currstate,SELECTED)) then
+							begin
+								pxya[0]:=parm^.pb_x;
+								pxya[1]:=parm^.pb_y+parm^.pb_h-2;
+								pxya[2]:=pxya[0]+parm^.pb_w-1;
+								pxya[3]:=pxya[1];
+								pxya[4]:=pxya[2];
+								pxya[5]:=pxya[3]+1;
+								vsl_color(vdiHandle,Black);
+								vPline(vdiHandle,2,pxya);
+								if (parm^.pb_tree^[parm^.pb_obj].ob_type and crdFlags)=crdFirst then inc(pxya[0]);
+								if (parm^.pb_tree^[parm^.pb_obj].ob_type and crdFlags)=crdLast then dec(pxya[2]);
+								pxya[1]:=parm^.pb_y+parm^.pb_h-1;
+								pxya[3]:=pxya[1];
+								vsl_color(vdiHandle,White);
+								vPline(vdiHandle,2,pxya)
+							end
+						else
+							begin
+								if (parm^.pb_tree^[parm^.pb_obj].ob_type and crdFlags)=crdFirst then
+									begin
+										vsl_color(vdiHandle,White);
+										d_clip[0]:=parm^.pb_x+1;
+										d_clip[1]:=parm^.pb_y+parm^.pb_h-1;
+										d_clip[2]:=d_clip[0];
+										d_clip[3]:=d_clip[1];
+										vPline(vdiHandle,2,d_clip)
+									end;
+								if (parm^.pb_tree^[parm^.pb_obj].ob_type and crdFlags)=crdLast then
+									begin
+										vsl_color(vdiHandle,LBlack);
+										d_clip[0]:=parm^.pb_x+parm^.pb_w-2;
+										d_clip[1]:=parm^.pb_y+parm^.pb_h-1;
+										d_clip[2]:=d_clip[0];
+										d_clip[3]:=d_clip[1];
+										vPline(vdiHandle,2,d_clip)
+									end;
+							end
+					end;
+				vsl_color(vdiHandle,Black);
+				if (parm^.pb_tree^[parm^.pb_obj].ob_type and crdFlags)=crdFirst then
+					begin
+						d_clip[0]:=parm^.pb_x;
+						d_clip[1]:=parm^.pb_y+parm^.pb_h-1;
+						d_clip[2]:=d_clip[0];
+						d_clip[3]:=d_clip[1];
+						vPline(vdiHandle,2,d_clip)
+					end;
+				if (parm^.pb_tree^[parm^.pb_obj].ob_type and crdFlags)=crdLast then
+					begin
+						d_clip[0]:=parm^.pb_x+parm^.pb_w-1;
+						d_clip[1]:=parm^.pb_y+parm^.pb_h-1;
+						d_clip[2]:=d_clip[0];
+						d_clip[3]:=d_clip[1];
+						vPline(vdiHandle,2,d_clip)
+					end;
+				if not(bTst(parm^.pr_currstate,SELECTED)) then
+					begin
+						inc(xpos);
+						inc(ypos,2)
+					end;
+				vswr_mode(vdiHandle,MD_TRANS);
+				vst_color(vdiHandle,Black);
+				if bTst(parm^.pr_currstate,DISABLED) then teff:=TF_LIGHTENED
+				else
+					teff:=TF_NORMAL;
+				if (hkpos>=0) and (parm^.pb_parm<>0) then
+					begin
+						vst_effects(vdiHandle,teff or TF_UNDERLINED);
+						if not(bTst(parm^.pr_currstate,DISABLED)) and (Attr.Colors>=16) then
+							vst_color(vdiHandle,SysInfo.HotKeyCol)
+						else
+							vst_color(vdiHandle,Black);
+						if hkpos=0 then extent[2]:=0
+						else
+							begin
+								d_btn[0]:=chr(hkpos);
+								for q:=1 to hkpos do d_btn[q]:=d_str[q];
+								vqt_extent(vdiHandle,d_btn,extent)
+							end;
+						d_btn[0]:=#1;
+						d_btn[1]:=PChar(parm^.pb_parm+hkpos+1)^;
+						vgText(vdiHandle,xpos+extent[2],ypos,d_btn)
+					end;
+				vst_effects(vdiHandle,teff);
+				vgText(vdiHandle,xpos,ypos,d_str);
+				vsf_interior(vdiHandle,FIS_HOLLOW);
+				vsf_color(vdiHandle,Black);
+				vst_effects(vdiHandle,TF_NORMAL);
+				vst_alignment(vdiHandle,TA_LEFT,TA_BASELINE,dummy,dummy);
+				vswr_mode(vdiHandle,MD_REPLACE);
+				vs_clip(vdiHandle,CLIP_ON,SysInfo.Desktop.A2)
+			end;
+		DrawCardTitle:=NORMAL
 	end;
 
 end.

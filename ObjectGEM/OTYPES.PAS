@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  20.03.1997  *
+ *      letztes Update am:  28.11.1997  *
  ****************************************}
 
 {
@@ -54,17 +54,7 @@
 }
 
 
-{$IFDEF DEBUG}
-	{$B+,D+,I-,L+,P-,Q+,R+,S+,T-,V-,X+,Z-}
-{$ELSE}
-	{$B+,D-,I-,L-,P-,Q-,R-,S-,T-,V-,X+,Z-}
-{$ENDIF}
-
-{$IFDEF COPRO}
-	{$G+,N-}
-{$ELSE}
-	{$G-,N-}
-{$ENDIF}
+{$B+,D-,G-,I-,L-,N-,P-,Q-,R-,S-,T-,V-,X+,Z-}
 
 unit OTypes;
 
@@ -77,7 +67,7 @@ uses
 const
 
 	GOVersion             = $0150;
-	GODate                = $03201997;
+	GODate                = $11281997;
 
 	em_OK                 =     0;
 	em_OutOfMemory        =    -1;
@@ -151,6 +141,10 @@ const
 	tf_GetData            =     0;
 	tf_SetData            =     1;
 	tf_SizeData           =     2;
+
+	crd_Normal            =     0;
+	crd_First             =     1;
+	crd_Last              =     2;
 
 	wb_Transfer           =     1;
 	wb_Lazy               =     2;
@@ -438,6 +432,9 @@ const
 	DD_EXTSIZE            =    32;
 	DD_NAMEMAX            =   128;
 	DD_HDRMAX             =     8+DD_NAMEMAX;
+	G_SHORTCUT            =    38;
+	WHITEBAK              = $0040;
+	DRAW3D                = $0080;
 	FL3DMASK              = $0600;
 	FL3DNONE              = $0000;
 	FL3DIND               = $0200;
@@ -541,6 +538,7 @@ const
 	AV_GETSTATUS          = $4703;
 	AV_STATUS             = $4704;
 	VA_SETSTATUS          = $4705;
+	AV_SENDCLICK          = $4709;
 	AV_SENDKEY            = $4710;
 	VA_START              = $4711;
 	AV_ASKFILEFONT        = $4712;
@@ -612,6 +610,7 @@ const
 	SC_CHANGED            = $0050;
 	PRN_CHANGED           = $0052;
 	FNT_CHANGED           = $0053;
+	COLORS_CHANGED        = $0054;
 	SH_CHANGED            = $5343;
 
 	SCF_INDEF             = $0000;
@@ -690,6 +689,11 @@ const
 	GSM_COMMAND           = $0001;
 	GSM_MACRO             = $0002;
 
+	KEYTAB_ID_IDENTICAL   =     0;
+	KEYTAB_ID_ANSI        =     1;
+	KEYTAB_ID_MAC         =     2;
+	KEYTAB_ID_PC          =     3;
+
 	GO_PRIVATE            = $1235;
 
 	GOP_GETVERSION        =     0;
@@ -698,6 +702,12 @@ const
 	GOP_RELEASEBUTTON     =     3;
 	GOP_VERSION           =  $3ff;
 	GOP_USERDEF           =  $400;
+
+	BUBBLEGEM_SHOW        = integer($babb);
+	BUBBLEGEM_ACK         = integer($babc);
+	BUBBLEGEM_ASKFONT     = integer($babd);
+	BUBBLEGEM_FONT        = integer($babe);
+	BUBBLEGEM_HIDE        = integer($babf);
 
 	CAB_CCHANGED          = integer($cab0);
 	CAB_EXIT              = integer($cab1);
@@ -711,6 +721,9 @@ const
 	CAB_MAIL              = integer($cab9);
 	CAB_MAILSENT          = integer($caba);
 	CAB_SUPPORT           = integer($cabb);
+	
+	DHST_ADD              = integer($dadd);
+	DHST_ACK              = integer($dade);
 
 	KOBOLD_JOB            = $2f10;
 	KOBOLD_JOB_NO_WINDOW  = $2f11;
@@ -788,6 +801,38 @@ type
 	TCookie               = record
 		ID:  TCookieID;
 		Val: longint
+	end;
+	
+	PGSInfo               = ^TGSInfo;
+	TGSInfo               = record
+		Len    : longint;
+		Version,
+		Msgs   : word;
+		Ext    : TCookieID
+	end;
+
+	PDHSTInfo             = ^TDHSTInfo;
+	TDHSTInfo             = record
+		AppName,
+		AppPath,
+		DocName,
+		DocPath: PChar
+	end;
+
+	PKEYT = ^TKEYT;
+	TKEYT = record
+		Magic          : TCookieID;
+		Size           : longint;
+		GetExportCount : function: integer;
+		GetExportName  : function(d1,d2: pointer; d3,d4,d5: longint; enr: integer): PChar;
+		GetExportFilter: function(d1,d2: pointer; d3,d4,d5: longint; eid: integer): integer;
+		ExportChar     : function(d1,d2: pointer; d3,d4,d5: longint; enr: integer; echr: char): char;
+		GetImportCount : function: integer;
+		GetImportName  : function(d1,d2: pointer; d3,d4,d5: longint; inr: integer): PChar;
+		GetImportFilter: function(d1,d2: pointer; d3,d4,d5: longint; iid: integer): integer;
+		ImportChar     : function(d1,d2: pointer; d3,d4,d5: longint; inr: integer; ichr: char): char;
+		ExportString   : procedure(d1,d2: pointer; d3,d4,d5: longint; enr: integer; elen: longint; echrs: PChar);
+		ImportString   : procedure(d1,d2: pointer; d3,d4,d5: longint; inr: integer; ilen: longint; ichrs: PChar);
 	end;
 
 	PMetaInfo             = ^TMetaInfo;

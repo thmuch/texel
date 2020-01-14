@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        03.03.1994  *
- *      letztes Update am:  11.03.1997  *
+ *      letztes Update am:  28.11.1997  *
  ****************************************}
 
 {
@@ -54,17 +54,7 @@
 }
 
 
-{$IFDEF DEBUG}
-	{$B+,D+,I-,L+,P-,Q+,R+,S+,T-,V-,X+,Z-}
-{$ELSE}
-	{$B+,D-,I-,L-,P-,Q-,R-,S-,T-,V-,X+,Z-}
-{$ENDIF}
-
-{$IFDEF COPRO}
-	{$G+,N-}
-{$ELSE}
-	{$G-,N-}
-{$ENDIF}
+{$B+,D-,G-,I-,L-,N-,P-,Q-,R-,S-,T-,V-,X+,Z-}
 
 unit OStdWnds;
 
@@ -149,7 +139,15 @@ type
 		procedure SetupSize; virtual;
 		procedure Paint(var PaintInfo: TPaintStruct); virtual;
 		procedure WMClick(mX,mY,KStat: integer); virtual;
+		procedure WMDblClick(mX,mY,KStat: integer); virtual;
 		function FontChanged(OrgID,AnID,ASize,AColor,BackColor,Effects,ARotation,ASkew,HorAlign,VertAlign,AWidth,TrackKern: integer; Size31: fix31; PairKern,cWnd: boolean): boolean; virtual;
+		private
+		fontID,
+		fontPt,
+		boxwidth,
+		boxheight: integer;
+		procedure CalcWidth(ID,Pt: integer; resize: boolean);
+		procedure GetSize(var width,height: integer);
 	end;
 
 
@@ -421,7 +419,9 @@ procedure TTextWindow.Paste;
 			begin
 				ext:=GetTitle;
 				if length(ext)>0 then ext:='"'+ext+'"|';
-				if (Application^.Attr.Country=FRG) or (Application^.Attr.Country=SWG) then
+				if Application^.Attr.Country=FRA then
+					Application^.Alert(@self,1,NOTE,ext+'Ce texte n''est qu''en lecture uniquement.','  &OK  ')
+				else if (Application^.Attr.Country=FRG) or (Application^.Attr.Country=SWG) then
 					Application^.Alert(@self,1,NOTE,ext+'Dieser Text ist schreibgeschtzt.','  &OK  ')
 				else
 					Application^.Alert(@self,1,NOTE,ext+'This text is read-only.','  &OK  ');
@@ -475,7 +475,11 @@ procedure TTextWindow.Print;
 		if GetNumLines=0 then exit;
 		ext:=GetTitle;
 		if length(ext)>0 then ext:='"'+ext+'"|';
-		if Application^.Attr.Country in [FRG,SWG] then
+		if Application^.Attr.Country=FRA then
+			begin
+				if Application^.Alert(@self,1,WAIT,ext+'Imprimer tout le texte?',' &Oui | &Non ')<>1 then exit
+			end
+		else if Application^.Attr.Country in [FRG,SWG] then
 			begin
 				if Application^.Alert(@self,1,WAIT,ext+'Den ganzen Text ausdrucken?','  &Ja  | &Nein ')<>1 then exit
 			end
@@ -484,7 +488,11 @@ procedure TTextWindow.Print;
 		_nochmal:
 		if Cprnos=0 then
 			begin
-				if Application^.Attr.Country in [FRG,SWG] then
+				if Application^.Attr.Country=FRA then
+					begin
+						if Application^.Alert(@self,1,STOP,'Imprimante indisponible.','&Encore|&Abandon')=1 then goto _nochmal
+					end
+				else if Application^.Attr.Country in [FRG,SWG] then
 					begin
 						if Application^.Alert(@self,1,STOP,'Der Drucker ist nicht bereit.','&Nochmal|&Abbruch')=1 then goto _nochmal
 					end
@@ -577,7 +585,13 @@ procedure TTextWindow.UpdateSubTitle;
 
 	begin
 		n:=GetNumLines;
-		if Application^.Attr.Country in [FRG,SWG] then
+		if Application^.Attr.Country=FRA then
+			begin
+				if n=1 then SetSubTitle(' 1 ligne')
+				else
+					SetSubTitle(' '+ltoa(n)+' lignes')
+			end
+		else if Application^.Attr.Country in [FRG,SWG] then
 			begin
 				if n=1 then SetSubTitle(' 1 Zeile')
 				else
@@ -692,7 +706,10 @@ function TSpecialCharactersWindow.GetClassName: string;
 function TSpecialCharactersWindow.GetIconTitle: string;
 
 	begin
-		if (Application^.Attr.Country=FRG) or (Application^.Attr.Country=SWG) then GetIconTitle:='Sonderzeichen'
+		if Application^.Attr.Country=FRA then
+			GetIconTitle:='CaractŠres sp‚ciaux'
+		else if (Application^.Attr.Country=FRG) or (Application^.Attr.Country=SWG) then
+			GetIconTitle:='Sonderzeichen'
 		else
 			GetIconTitle:='Special Characters'
 	end;
@@ -721,8 +738,8 @@ procedure TSpecialCharactersWindow.SetupSize;
 
 	begin
 		inherited SetupSize;
-		Work.W:=35*Attr.boxWidth;
-		Work.H:=15*Attr.boxHeight;
+		CalcWidth(SysInfo.Font.ID,SysInfo.Font.Point,false);
+		GetSize(Work.W,Work.H);
 		Work.X:=(Full.W-Work.W) shr 1;
 		Work.Y:=(Full.H-Work.H) shr 1;
 		Calc(WC_BORDER,Work,Curr)
@@ -737,24 +754,25 @@ procedure TSpecialCharactersWindow.Paint(var PaintInfo: TPaintStruct);
 	begin
 		inherited Paint(PaintInfo);
 		vst_alignment(vdiHandle,TA_LEFT,TA_TOP,dummy,dummy);
-		cy:=Work.Y+(Attr.boxHeight shr 1);
+		cy:=Work.Y+(boxheight shr 1);
 		c:=32;
 		for y:=0 to 13 do
 			begin
-				cx:=Work.X+(Attr.boxWidth shl 1);
+				cx:=Work.X+(boxwidth shl 1);
 				for x:=0 to 15 do
 					begin
 						v_gtext(vdiHandle,cx,cy,chr(c));
-						inc(cx,Attr.boxWidth shl 1);
+						inc(cx,boxwidth shl 1);
 						inc(c)
 					end;
-				inc(cy,Attr.boxHeight)
+				inc(cy,boxheight)
 			end
 	end;
 
 
 procedure TSpecialCharactersWindow.WMClick(mX,mY,KStat: integer);
 	var o1,g1,
+	    u1,
 	    dummy,
 	    key,
 	    x,y  : integer;
@@ -762,7 +780,10 @@ procedure TSpecialCharactersWindow.WMClick(mX,mY,KStat: integer);
 	    pe   : PEvent;
 
 	begin
-		wind_get(Attr.gemHandle,WF_TOP,o1,dummy,dummy,dummy);
+		wind_update(BEG_UPDATE);
+		u1:=DESK;
+		wind_get(Attr.gemHandle,WF_TOP,o1,dummy,u1,dummy);
+		if o1<0 then o1:=u1;
 		p:=nil;
 		if not(appl_xgetinfo(11,g1,dummy,dummy,dummy)) then g1:=0;
 		repeat
@@ -770,13 +791,14 @@ procedure TSpecialCharactersWindow.WMClick(mX,mY,KStat: integer);
 			if p=nil then
 				if bTst(g1,16) then wind_get(o1,WF_OWNER,dummy,dummy,dummy,o1)
 		until (p<>nil) or (o1=DESK) or not(bTst(g1,16));
+		wind_update(END_UPDATE);
 		if p=nil then Application^.Bing
 		else
 			begin
-				dec(mX,Work.X+(Attr.boxWidth shr 1)+Attr.boxWidth);
-				dec(mY,Work.Y+(Attr.boxHeight shr 1));
-				x:=mX div (Attr.boxWidth shl 1);
-				y:=mY div Attr.boxHeight;
+				dec(mX,Work.X+(boxwidth shr 1)+boxwidth);
+				dec(mY,Work.Y+(boxheight shr 1));
+				x:=mX div (boxwidth shl 1);
+				y:=mY div boxheight;
 				if (x<0) or (y<0) or (x>15) or (y>13) then
 					begin
 						Application^.Bing;
@@ -794,13 +816,57 @@ procedure TSpecialCharactersWindow.WMClick(mX,mY,KStat: integer);
 	end;
 
 
+procedure TSpecialCharactersWindow.WMDblClick(mX,mY,KStat: integer);
+
+	begin
+		WMClick(mX,mY,KStat);
+		WMClosed
+	end;
+
+
 function TSpecialCharactersWindow.FontChanged(OrgID,AnID,ASize,AColor,BackColor,Effects,ARotation,ASkew,HorAlign,VertAlign,AWidth,TrackKern: integer; Size31: fix31; PairKern,cWnd: boolean): boolean;
 
 	begin
 		inherited FontChanged(OrgID,AnID,ASize,AColor,BackColor,Effects,ARotation,ASkew,HorAlign,VertAlign,AWidth,TrackKern,Size31,PairKern,cWnd);
 		FontChanged:=true;
-		vst_font(vdiHandle,anID);
+		CalcWidth(AnID,ASize,true);
 		ForceRedraw
+	end;
+
+
+	{ private }
+
+
+procedure TSpecialCharactersWindow.CalcWidth(ID,Pt: integer; resize: boolean);
+	var cw,dummy,q: integer;
+	    r         : GRECT;
+
+	begin
+		if ID<>0 then fontID:=ID;
+		if Pt>0 then fontPt:=Max(4,Pt);
+		vst_font(vdiHandle,fontID);
+		vst_point(vdiHandle,fontPt,Attr.charWidth,Attr.charHeight,Attr.boxWidth,Attr.boxHeight);
+		boxwidth:=0;
+		for q:=33 to 126 do
+			if vqt_width(vdiHandle,q,cw,dummy,dummy)=q then
+				if cw>boxwidth then boxwidth:=cw;
+		if boxwidth=0 then boxwidth:=Attr.boxWidth;
+		boxheight:=Attr.boxheight;
+		if resize then
+			begin
+				GetWork;
+				r:=Work;
+				GetSize(r.W,r.H);
+				SetWork(r)
+			end
+	end;
+
+
+procedure TSpecialCharactersWindow.GetSize(var width,height: integer);
+
+	begin
+		width:=35*boxwidth;
+		height:=15*boxheight
 	end;
 
 { *** TSPECIALCHARACTERSWINDOW *** }

@@ -1,5 +1,5 @@
 {*************************************
- *     T E X E L  Version 1.60r0     *
+ *     T E X E L  Version 2.00r0     *
  * Copyright Ω1994-97 by Thomas Much *
  *************************************
  *   Thomas Much, Gerwigstraûe 46,   *
@@ -9,30 +9,18 @@
  * http://www.uni-karlsruhe.de/~uk48 *
  *************************************
  *  erstellt am:         05.10.1994  *
- *  letztes Update am:   24.03.1997  *
+ *  letztes Update am:   01.12.1997  *
  *************************************}
 
-{      | normal    | FPU
-	-----|-----------|----------------
-  Beta | BETA      | BETA COPRO
-  ASH  |           | COPRO
-  Demo | BETA DEMO | BETA COPRO DEMO }
+{       | deutsch   | englisch          | franzîsisch
+	------|-----------|-------------------|------------------
+  Beta  | BETA      | BETA ENGLISH      | BETA FRENCH
+  Final |           | ENGLISH           | FRENCH
+  Demo  | BETA DEMO | BETA DEMO ENGLISH | BETA DEMO FRENCH  }
 
-{DEFINE ENGLISH}
+{$B+,D-,G-,I-,L-,N-,P-,Q-,R-,S-,T-,V-,X+,Z-}
 
-{$IFDEF DEBUG}
-	{$B+,D+,I-,L+,P-,Q+,R+,S+,T-,V-,X+,Z-}
-{$ELSE}
-	{$B+,D-,I-,L-,P-,Q-,R-,S-,T-,V-,X+,Z-}
-{$ENDIF}
-
-{$IFDEF COPRO}
-	{$G+,N-}
-{$ELSE}
-	{$G-,N-}
-{$ENDIF}
-
-{$M 131072}
+{$M 182272}
 
 program Texel;
 
@@ -43,48 +31,68 @@ uses
 
 const
 
-	TEXELVER          =   $0160;
-	TEXELDATE         = '24.03.1997';
+	TEXELVER          =   $0200;
+	TEXELDATE         = '01.12.1997';
 	RELEASE           =       0;
-	EXPIRE            = (17 shl 25) + (6 shl 21);
-	EXPIRESTR         = '31.05.97';
+	EXPIRE            = (18 shl 25) + (2 shl 21);
+	EXPIRESTR         = '31.01.98';
 	TEXELWINDCLASS    = 'TexelCalcWindow';
 	BLOCKWINDCLASS    = 'BlockChangeDialog';
 	TEXELEXTENSION    =   'txl';
+	TEXELSCRIPTEXT    =   'tsc';
 	TEXELMAGIC        =  'TEXL';
 	TEXELNAME         = 'Texel';
 	TEXELWINDPREFIX   = TEXELNAME+' - ';
 	TEXELFILE         = 'texel';
 	TEXELAPPNAME      = TEXELFILE+'.app';
 	TEXELINF          = TEXELFILE+'.inf';
-	TEXELVAL          = TEXELFILE+'.val';
 	TEXELUSRVAL       = TEXELFILE+'usr.val';
-	TEXELDAT          = TEXELFILE+'.dat';
-	TEXELFRM          = TEXELFILE+'.frm';
 	TEXELUSRFRM       = TEXELFILE+'usr.frm';
+	TEXELUSRDAT       = TEXELFILE+'usr.dat';
 	TEXELSOUND        = TEXELFILE+'.cla';
 	TEXELHISTORY      = TEXELFILE+'.his';
 	TEXELPATHS        = TEXELFILE+'.pth';
 	TEXELPALETTE      = TEXELFILE+'.pal';
 	TEXELPRNSET       = TEXELFILE+'.prs';
+	TEXELWORK         = TEXELFILE+'.wrk';
 	GUIDES            = '*:\';
 	GEMJING           = 'gemjing.prg';
+	{$IFDEF FRENCH}
+	TEXELFRM          = TEXELFILE+'_f.frm';
+	TEXELDAT          = TEXELFILE+'_f.dat';
+	TEXELVAL          = TEXELFILE+'_f.val';
+	TEXELRSC          = TEXELFILE+'_f.rsc';
+	TEXELRSC2         = TEXELFILE+'2_f.rsc';
+	TEXELHELP         = TEXELFILE+'_f.hyp';
+	TEXELHELPREF      = TEXELFILE+'_f.hyp'; { ... }
+	TEXELDATAPATH     = 'Fichiers\';
+	TEXELSCRIPTPATH   = 'Scripts\';
+	{$ELSE}
 	{$IFDEF ENGLISH}
+	TEXELFRM          = TEXELFILE+'_e.frm';
+	TEXELDAT          = TEXELFILE+'_e.dat';
+	TEXELVAL          = TEXELFILE+'_e.val';
 	TEXELRSC          = TEXELFILE+'_e.rsc';
 	TEXELRSC2         = TEXELFILE+'2_e.rsc';
 	TEXELHELP         = TEXELFILE+'_e.hyp';
 	TEXELHELPREF      = TEXELFILE+'_e.hyp'; { ... }
 	TEXELDATAPATH     = 'Data\';
+	TEXELSCRIPTPATH   = 'Scripts\';
 	{$ELSE}
+	TEXELFRM          = TEXELFILE+'.frm';
+	TEXELDAT          = TEXELFILE+'.dat';
+	TEXELVAL          = TEXELFILE+'.val';
 	TEXELRSC          = TEXELFILE+'.rsc';
 	TEXELRSC2         = TEXELFILE+'2.rsc';
 	TEXELHELP         = TEXELFILE+'.hyp';
 	TEXELHELPREF      = TEXELFILE+'.hyp'; { ... }
 	TEXELDATAPATH     = 'Daten\';
+	TEXELSCRIPTPATH   = 'Skripte\';
+	{$ENDIF}
 	{$ENDIF}
 	TEXELTEMPPATH     = 'Temp\';
 	TEXELTIMER        =    2000;
-	TEXELCOMPAT       =      33;
+	TEXELCOMPAT       =      38;
 	Ctrl_Insert       =   20992;
 	CtrlShift_Insert  =   21008;
 	Ctrl_Return       =    7178;
@@ -102,6 +110,7 @@ const
 	CELL_CALCULATED   =      64;
 	CELL_USED         =     128;
 	CELL_EMPTYMASK    = CELL_PROTECTED; { ... }
+	GOP_ABANDON       = GOP_USERDEF;
 	CTYPE_EMPTY       =       0;
 	CTYPE_TEXT        =       1;
 	CTYPE_FORMULA     =       2;
@@ -110,15 +119,22 @@ const
 	RF_COLABS         =       1;
 	RF_ROWABS         =       2;
 	CRF_UMBRUCH       =       1;
-	TFL_TEXT2LEFT     =       1; { ... }
-	TFL_TEXT2RIGHT    =       2; { ... }
-	TFL_NOCLIP        =     128;
+	TFL_TEXT2LEFT     =       1;
+	TFL_TEXT2RIGHT    =       2;
+	TFL_TEXTFROMLEFT  =       4;
+	TFL_TEXTFROMRIGHT =       8;
+	TFL_CLIP          =     128;
+	TFL_OVERFLOWMASK  = TFL_TEXT2LEFT or TFL_TEXT2RIGHT or TFL_TEXTFROMLEFT or TFL_TEXTFROMRIGHT;
+	TFL_LEFTMASK      = TFL_TEXT2LEFT or TFL_TEXTFROMRIGHT;
+	TFL_RIGHTMASK     = TFL_TEXT2RIGHT or TFL_TEXTFROMLEFT;
+	TFL_GITTERMASK    = TFL_TEXT2RIGHT or TFL_TEXTFROMRIGHT;
+	TFL_LEFTBORDER    = TFL_TEXT2LEFT or TFL_TEXTFROMLEFT;
+	TFL_RIGHTBORDER   = TFL_TEXT2RIGHT or TFL_TEXTFROMRIGHT;
 	TA_HOR_DEFAULT    =     $03; { ... }
 	TA_VER_DEFAULT    =     $30; { ... }
 	TA_UNTEN          =     $00;
 	TA_OBEN           =     $10;
 	TA_MITTE          =     $20;
-	ERRORALIGN        = TA_MITTE or TA_CENTER;
 	INS_FORMULA       =       1;
 	INS_VALUE         =       2;
 	INS_FORMAT        =       4;
@@ -182,6 +198,7 @@ const
 	FE_UNDEFINED      =      -5;
 	FE_ERROR          =      -6;
 	FE_OVERFLOW       =      -7;
+	FE_EXTERN         =      -8;
 	NT_ENDOFDATA      =      -1;
 	NT_LIST_EMPTY     =       0;
 	NT_CONST          =       1; { Operatoren }
@@ -287,6 +304,7 @@ const
 	NT_BUND           =    5010;
 	NT_BODER          =    5011;
 	NT_BEOR           =    5012;
+	NT_SCRIPTNO       =    5020;
 	NT_MITTEL         =    5100;
 	NT_GEOMITTEL      =    5101;
 	NT_HARMITTEL      =    5102;
@@ -303,6 +321,7 @@ const
 	NT_QUARTILSABST   =    5119;
 	NT_SPANNWEITE     =    5120;
 	NT_GLEICHVERT     =    5200;
+	NT_NORMVERT       =    5201;
 	NT_DATUM          =    5210;
 	NT_ZEIT           =    5211;
 	NT_LIA            =    5250;
@@ -314,12 +333,21 @@ const
 	NT_WENN           =    5300;
 	NT_WAHL           =    5301;
 	NT_QUANTIL        =    5302;
+	{ von 9000..9999 (-1000..-1) externe Texel-Funktionen }
+	{ von 10000..32000 (0..22000) benutzerdefinierte Funktionen }
+	NT_EXTMIN         =    9000;
+	NT_EXTMAX         =   32000;
+	{$IFDEF FRENCH}
+	{$I texel_f.i}
+	{$I texel2_f.i}
+	{$ELSE}
 	{$IFDEF ENGLISH}
 	{$I texel_e.i}
 	{$I texel2_e.i}
 	{$ELSE}
 	{$I texel.i}
 	{$I texel2.i}
+	{$ENDIF}
 	{$ENDIF}
 
 	FF_SYSTEM         =    $0001; { Fontselektor-Flags }
@@ -475,6 +503,95 @@ type
 		device      : array [0..127] of char;
 		mac_settings: array [0..119] of byte
 	end;
+	
+	PPDLG_SUB = ^PDLG_SUB;
+	PDLG_SUB  = record
+		next        : PPDLG_SUB;
+		length,
+		format,
+		reserved    : longint;
+		drivers     : pointer;
+		option_flags,
+		sub_id      : integer;
+		dialog      : pointer;
+		tree        : PObj;
+		index_offset,
+		reserved1   : integer;
+		reserved2,
+		reserved3,
+		reserved4   : longint;
+		init_dlg    : function(d1,d2: pointer; d3,d4,d5: longint; settings: PPRN_SETTINGS; sub: PPDLG_SUB): longint;
+		do_dlg      : function(d1,d2: pointer; d3,d4,d5: longint; settings: PPRN_SETTINGS; sub: PPDLG_SUB; exit_obj: integer): longint;
+		reset_dlg   : function(d1,d2: pointer; d3,d4,d5: longint; settings: PPRN_SETTINGS; sub: PPDLG_SUB): longint;
+		reserved5   : longint;
+		sub_icon    : PObj;
+		sub_tree    : PTree;
+		reserved6,
+		reserved7,
+		private1,
+		private2,
+		private3,
+		private4    : longint
+	end;
+
+	ITAB_REF = pointer;
+
+	COLOR_RGB = record
+		reserved,
+		red,
+		green,
+		blue    : word
+	end;
+
+	COLOR_CMYK = record
+		cyan,
+		magenta,
+		yellow,
+		black  : word
+	end;
+
+	COLOR_ENTRY  = record
+		case boolean of
+		false: (rgb : COLOR_RGB);
+		true:  (cmyk: COLOR_CMYK)
+	end;
+
+	CTAB_REF  = ^COLOR_TAB;
+	COLOR_TAB = record
+		magic,
+		length,
+		format,
+		reserved,
+		map_id,
+		color_space,
+		flags,
+		no_colors,
+		reserved1,
+		reserved2,
+		reserved3,
+		reserved4  : longint;
+		colors     : array [0..255] of COLOR_ENTRY
+	end;
+
+	PBITMAPPtr = ^PBITMAP;
+	PBITMAP    = record
+		magic,
+		length,
+		format,
+		reserved : longint;
+		addr     : pointer;
+		width,
+		bits,
+		px_format,
+		xmin,
+		ymin,
+		xmax,
+		ymax     : longint;
+		ctab     : CTAB_REF;
+		itab     : ITAB_REF;
+		reserved0,
+		reserved1: longint
+	end;
 
 	UFSLPtr = ^UFSL;
 	UFSL    = record
@@ -573,11 +690,7 @@ type
 	end;
 
 	PNumber = ^TNumber;
-	{$IFDEF COPRO}
-	TNumber = real{extended...};
-	{$ELSE}
 	TNumber = real;
-	{$ENDIF}
 
 	PCalcWindow = ^TCalcWindow;
 	PNode       = ^TNode;
@@ -611,6 +724,23 @@ type
 		ColStart,
 		RowEnd,
 		ColEnd  : integer
+	end;
+	
+	POldTxtVal = ^TOldTxtVal;
+	TOldTxtVal = record
+		oldfont,
+		oldsize,
+		oldtcolor,
+		oldeffects,
+		oldrotat,
+		oldskew,
+    brd1w,
+    brd2w,
+    brd3w,
+    brd1h,
+    brd2h,
+    brd3h     : integer;
+    gitter    : boolean
 	end;
 
 	PTxtVal = ^TTxtVal;
@@ -829,8 +959,8 @@ type
 		Release  : word
 	end;
 
-	PAscBuf = ^TAscBuf;
-	TAscBuf = record
+	PExportAscBuf = ^TExportAscBuf;
+	TExportAscBuf = record
 		hor,
 		vert   : integer;
 		rctxt  : string[21];
@@ -843,6 +973,21 @@ type
 		numbers,
 		formula,
 		value  : integer
+	end;
+
+	PImportAscBuf = ^TImportAscBuf;
+	TImportAscBuf = record
+		hor,
+		vert   : integer;
+		rctxt  : string[21];
+		rcval  : integer;
+		celltxt: string[21];
+		cellval: integer;
+		texttxt: string[5];
+		textval,
+		quote,
+		numbers,
+		filter : integer
 	end;
 
 	PZielBuf = ^TZielBuf;
@@ -867,11 +1012,12 @@ type
 		difvalue,
 		difstandard,
 		difexcel   : integer;
-		ascii      : TAscBuf;
+		ascii      : TExportAscBuf;
 		difformat,
 		csvformat,
 		asciiformat,
-		htmlembed  : integer
+		htmlembed,
+		filter     : integer
 	end;
 
 	PProgressWindow = ^TProgressWindow;
@@ -927,10 +1073,31 @@ type
 		procedure SaveAs(const fname: string; flag: integer);
 	end;
 
+	PAbandon = ^TAbandon;
+	TAbandon = object(TKeyMenu)
+		procedure Work; virtual;
+	end;
+
 	PASCIIImportDialog = ^TASCIIImportDialog;
 	TASCIIImportDialog = object(THyperDialog)
 		pcb: PComboBox;
 		function OK: boolean; virtual;
+	end;
+
+	PImport = ^ TImport;
+
+	PGDBCDialog = ^TGDBCDialog;
+	TGDBCDialog = object(THyperDialog)
+		st     : PStatic;
+		pb0,
+		pb1,pb2,
+		pb3,pb4: PButton;
+		lb1,lb2: PListBox;
+		import : PImport;
+		function OK: boolean; virtual;
+		function ExitDlg(AnIndx: integer): boolean; virtual;
+		procedure CheckButtons;
+		procedure LoadFields(lb: PListBox);
 	end;
 
 	PImportBox = ^TImportBox;
@@ -945,7 +1112,6 @@ type
 
 	PImportButton = ^TImportButton;
 	TImportButton = object(TRadioButton)
-		txt  : string[19];
 		pircb: PImportRowColBox;
 		procedure Changed(AnIndx: integer; DblClick: boolean); virtual;
 	end;
@@ -960,18 +1126,20 @@ type
 		procedure SetValue(Sel: integer); virtual;
 	end;
 
-	PImport = ^ TImport;
 	TImport = object(TSubMenu)
 		st      : PStatic;
 		ascii   : PASCIIImportDialog;
+		gdbc    : PGDBCDialog;
+		quelle,
 		filename: string;
 		procedure HandleMenu(Indx: integer); virtual;
-		procedure LoadDBF(fname: string);
+		procedure LoadGDBC(fname: string);
+		procedure ImportDBF(fname: string; fields: PStringCollection);
 		procedure Load123(fname: string);
 		procedure LoadXLS(fname: string);
 		procedure LoadLDW(fname: string);
 		procedure LoadASCII(fname: string);
-		procedure ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: char; hor,quote: boolean);
+		procedure ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: char; hor,quote: boolean; flt: integer);
 		procedure LoadCSV(fname: string);
 		procedure LoadDIF(fname: string);
 		procedure ImportFromClipboard;
@@ -986,7 +1154,7 @@ type
 		Files: array [0..9] of PString;
 		constructor Init(AParent: PEventObject; mNum,popTree,popIndex: integer);
 		procedure HandleMenu(Indx: integer); virtual;
-		procedure Add(fname: string);
+		procedure Add(fname: string; dodhst: boolean);
 	end;
 
 	PExportCheckBox = ^TExportCheckBox;
@@ -1022,6 +1190,7 @@ type
 	PExport = ^TExport;
 	TExport = object(TKeyMenu)
 		p       : PCalcWindow;
+		exflt,
 		cmax,
 		rmax,
 		hdl     : integer;
@@ -1031,25 +1200,26 @@ type
 		buf     : PByteArray;
 		filename: string;
 		lend    : string[2];
+		usepkt,
 		werror  : boolean;
+		function Export(const texbuf: TExportBuf; const fname: string): boolean;
 		procedure SetFile(fname: string);
 		procedure Work; virtual;
-		function InitFile(var fname: string): boolean;
-		procedure ExitFile(bits: word; fname: string);
+		function InitFile(var fname: string; const texbuf: TExportBuf): boolean;
+		procedure ExitFile(bits: word; fname: string; const texbuf: TExportBuf);
 		function bwrite(var buffer; count: longint): boolean;
 		function writeline(s: string): boolean;
 		function writes(s: string): boolean;
-		procedure Save123(fname: string);
-		procedure SaveXLS(fname: string);
-		procedure SaveDIF(fname: string);
-		procedure SaveSYLK(fname: string);
-		procedure SaveCSV(fname: string);
-		procedure SaveASCII(fname: string);
-		procedure SaveText(fname: string);
-		procedure SaveLATEX(fname: string);
-		procedure SaveHTML(fname: string);
-		procedure SaveUDO(fname: string);
-		procedure SaveArtWorks(fname: string);
+		procedure Save123(fname: string; const texbuf: TExportBuf);
+		procedure SaveXLS(fname: string; const texbuf: TExportBuf);
+		procedure SaveDIF(fname: string; const texbuf: TExportBuf);
+		procedure SaveSYLK(fname: string; const texbuf: TExportBuf);
+		procedure SaveCSV(fname: string; const texbuf: TExportBuf);
+		procedure SaveASCII(fname: string; const texbuf: TExportBuf);
+		procedure SaveText(fname: string; const texbuf: TExportBuf);
+		procedure SaveLATEX(fname: string; const texbuf: TExportBuf);
+		procedure SaveHTML(fname: string; const texbuf: TExportBuf);
+		procedure SaveUDO(fname: string; const texbuf: TExportBuf);
 	end;
 
 	PDateButton = ^TDateButton;
@@ -1468,7 +1638,8 @@ type
 		st       : PStatic;
 		pb1,
 		pb2,
-		pb3      : PButton;
+		pb3,
+		pb4      : PButton;
 		cb       : PPreviewBox;
 		colfx,
 		pvok,
@@ -1651,6 +1822,7 @@ type
 	PFontSelectBox = ^TFontSelectBox;
 	TFontSelectBox = object(TComboBox)
 		procedure Changed(AnIndx: integer; DblClick: boolean); virtual;
+		procedure OpenPopup; virtual;
 	end;
 
 	PFontSizeBox = ^TFontSizeBox;
@@ -1888,49 +2060,58 @@ type
 	TBlock = object(TKey)
 		procedure Work; virtual;
 	end;
+	
+	PColorToolbar = ^TColorToolbar;
+	TColorToolbar = object(TToolbar)
+		used     : boolean;
+		oldobtype: integer;
+		oldobspec: longint;
+		constructor Init(AParent: PWindow; AnIndx,AColIndx: integer; Switch: boolean; Hlp: string);
+		destructor Done; virtual;
+	end;
 
 	PTFett = ^TTFett;
-	TTFett = object(TToolbar)
+	TTFett = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTKursiv = ^TTKursiv;
-	TTKursiv = object(TToolbar)
+	TTKursiv = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTUnter = ^TTUnter;
-	TTUnter = object(TToolbar)
+	TTUnter = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTAlignLeft = ^TTAlignLeft;
-	TTAlignLeft = object(TToolbar)
+	TTAlignLeft = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTAlignCenter = ^TTAlignCenter;
-	TTAlignCenter = object(TToolbar)
+	TTAlignCenter = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTAlignRight = ^TTAlignRight;
-	TTAlignRight = object(TToolbar)
+	TTAlignRight = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTDezPlus = ^TTDezPlus;
-	TTDezPlus = object(TToolbar)
+	TTDezPlus = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTDezMinus = ^TTDezMinus;
-	TTDezMinus = object(TToolbar)
+	TTDezMinus = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTSumme = ^TTSumme;
-	TTSumme = object(TToolbar)
+	TTSumme = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 	
@@ -1942,6 +2123,12 @@ type
 	PObjSizeDialog = ^TObjSizeDialog;
 	TObjSizeDialog = object(THyperDialog)
 		embedobj: pointer;
+		ed1,
+		ed2,
+		ed3,
+		ed4     : PEdit;
+		cb1,
+		cb2     : PCheckBox;
 		constructor Init(AParent: PWindow; AEmbed: pointer; ATitle,HypHelp,hdTitle: string; Indx: integer);
 		function OK: boolean; virtual;
 		function ExitDlg(AnIndx: integer): boolean; virtual;
@@ -2014,12 +2201,14 @@ type
 		ObjTyp   : integer;
 		oabuf    : TEmbedBuf;
 		diabuf   : PDiagrammBuf;
+		prntflg,
+		lckflg,
 		skal,
 		umbr,
 		prop,
 		embd     : boolean;
 		Next     : PProtoEmbedded;
-		constructor Init(otyp: integer; fname: string; fdat: pointer; fdatlen,x,y,w100,h100: longint; const oab: TEmbedBuf; pdb: PDiagrammBuf; prp,emb,skl,umb: boolean);
+		constructor Init(otyp: integer; fname: string; fdat: pointer; fdatlen,x,y,w100,h100: longint; const oab: TEmbedBuf; pdb: PDiagrammBuf; prp,emb,skl,umb,prnt,lck: boolean);
 		destructor Done; virtual;
 		procedure Realize(p: PCalcWindow);
 	end;
@@ -2040,9 +2229,11 @@ type
 		osbuf     : record
 			x,y,
 			width,
-			height: string[7]
+			height: string[7];
+			prop,
+			sperr : integer
 		end;
-		constructor Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: string; srvid,pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd: boolean; poa: PEmbedBuf);
+		constructor Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: string; srvid,pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,prntflg,lckflg: boolean; poa: PEmbedBuf);
 		destructor Done; virtual;
 		function IsExternal: boolean; virtual;
 		function GetType: integer; virtual;
@@ -2087,6 +2278,15 @@ type
 		procedure SetDirty;
 		procedure ClearDirtyFlag;
 		function IsDirty: boolean;
+		procedure SetPropFlag;
+		procedure ClearPropFlag;
+		function IsProportional: boolean;
+		procedure Lock;
+		procedure Unlock;
+		function IsLocked: boolean;
+		procedure SetPrintFlag;
+		procedure ClearPrintFlag;
+		function CanPrint: boolean;
 		procedure SetFile(s: string);
 		function GetFile: string;
 		function bwrite(hdl: integer; count: longint; var buffer): boolean;
@@ -2096,7 +2296,7 @@ type
 		ScaleIMG,
 		outscr,
 		selected,
-		proportional,
+		printflag,
 		embfiledirty,
 		embedflag   : boolean;
 		FileName    : PString;
@@ -2119,7 +2319,7 @@ type
 	TEmbeddedTAD = object(TEmbedded)
 		dbvalid: boolean;
 		diabuf : TDiagrammBuf;
-		constructor Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: string; srvid,pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd: boolean; poa: PEmbedBuf; pdb: PDiagrammBuf);
+		constructor Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: string; srvid,pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,prntflg,lckflg: boolean; poa: PEmbedBuf; pdb: PDiagrammBuf);
 		function GetType: integer; virtual;
 		function SaveData(hdl: integer; emb: boolean): boolean; virtual;
 		procedure DoMenu(mX,mY: integer); virtual;
@@ -2139,7 +2339,7 @@ type
 		srcMFDB,
 		desMFDB  : MFDB;
 		skalieren: boolean;
-		constructor Init(AParent: PCalcWindow; fName: string; pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,skal: boolean; poa: PEmbedBuf);
+		constructor Init(AParent: PCalcWindow; fName: string; pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,skal,prntflg,lckflg: boolean; poa: PEmbedBuf);
 		destructor Done; virtual;
 		function GetDefaultExt: string; virtual;
 		function GetType: integer; virtual;
@@ -2155,7 +2355,7 @@ type
 	  txOffs,
 	  tyOffs : integer;
 		umbruch: boolean;
-		constructor Init(AParent: PCalcWindow; fName: string; pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,umbr: boolean; poa: PEmbedBuf);
+		constructor Init(AParent: PCalcWindow; fName: string; pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,umbr,prntflg,lckflg: boolean; poa: PEmbedBuf);
 		function GetDefaultExt: string; virtual;
 		function GetType: integer; virtual;
 		function SaveData(hdl: integer; emb: boolean): boolean; virtual;
@@ -2187,7 +2387,7 @@ type
 		procedure EndDlg(Indx: integer; DblClick: boolean); virtual;
 		procedure AddObject(pe: PEmbedded);
 		procedure RemoveObject(pe: PEmbedded);
-		procedure UpdateList;
+		procedure UpdateList(pe: PEmbedded);
 	end;
 
 	PPassWord = ^TPassWord;
@@ -2279,7 +2479,7 @@ type
 		CurrSize: GRECT;
 		Cursor  : TCursor;
 		psbuffer: TPSBuffer;
-		Resvd   : integer
+		Toolbar : integer
 	end;
 	
 	PInputEdit = ^TInputEdit;
@@ -2298,6 +2498,7 @@ type
 		tcnum,
 		wWidth,
 		numWidth,
+		prnRangeFlag,
 		fneOp,
 		actFont,
 		actPoint,
@@ -2315,12 +2516,14 @@ type
 		Dirty,
 		Speedo,
 		currvalid,
+		tbactive,
 		closing,
 		inpstat     : boolean;
 		insrow      : PInsertRows;
 		inscol      : PInsertColumns;
 		save        : PSave;
 		saveas      : PSaveAs;
+		abandon     : PAbandon;
 		export      : PExport;
 		diagramm    : PDiagram;
 		objects     : PObjects;
@@ -2338,6 +2541,7 @@ type
 		grafik      : PGrafik;
 		bblock      : PBlock;
 		prnt        : PPrint;
+		tbonoff,
 		inpok,
 		inpcancel   : PControl;
 		dblock      : PStatic;
@@ -2455,7 +2659,7 @@ type
 		constructor InitFile(const FNam: string; pg: PProgressWindow; const AParm: TTexelParms; const ADBuf: TDialogBuffer; const ASBuf: TSheetBuffer; const FBuf: TFindBuf; const RBuf: TReplaceBuf; const FlBuf: TFillBuffer;
 		                     const zBuf: TZielBuf; const ExBuf: TExportBuf; const SrtBuf: TSortBuf; const InfBuf: TInfoBuf; const DiaBuf: TDiagrammBuf;
 		                     ASheet: PCell; ARow,ACol: PWordArray; CNam: PItemList; Parm: PParameterCollection; UFrm: PFormatCollection; ProtoEmb: PProtoEmbedded;
-		                     apwd: TPassWord; bhist: PStringCollection; CFlags,RFlags: PByteArray; prntset: PPRN_SETTINGS; drt: boolean);
+		                     apwd: TPassWord; bhist: PStringCollection; CFlags,RFlags: PByteArray; prntset: PPRN_SETTINGS; prnrange: integer; drt,checkover: boolean);
 		constructor InitImport(pg: PProgressWindow; rw,cl: integer; const FNam: string; ASheet: PCell; ARow,ACol: PWordArray; CNam: PItemList; breiten: boolean);
 		procedure CommonInit1;
 		procedure CommonInit2(breiten: boolean);
@@ -2477,6 +2681,16 @@ type
 		procedure PaintNames(rect: GRECT);
 		function Val2Txt(fval: TNumber; var vtxt: string; fp: byte; frm: integer; cell: PCell): boolean;
 		function Val2TxtF(fval: TNumber; fp: byte; frm: integer; cell: PCell): string;
+		procedure InitTextValues(handle: integer; var cmpval: TOldTxtVal);
+		procedure RestoreTextValues(handle: integer);
+		procedure RowsClearOverflow(rs,re: integer; var cmin,cmax: integer);
+		procedure RowsCheckOverflow(rs,re: integer; var cmin,cmax: integer);
+		procedure SheetCheckOverflow;
+		function ClearOverflow(cell: PCell; var cmin,cmax: integer): boolean;
+		function CheckOverflow(cell: PCell; var cmin,cmax: integer): boolean;
+		procedure OutputVectorText(handle: integer; cell: PCell; const txt: string; const tval: TTxtVal; var cmpval: TOldTxtVal; csize: ARRAY_4; isnum: boolean);
+		procedure OutputKF(handle,kfx,kfy,alh,alv,pagenum,pages: integer; printtime: longint; s: string);
+		procedure OutputErrorText(handle: integer; cell: PCell; const tval: TTxtVal; var cmpval: TOldTxtVal; csize: ARRAY_4; err: shortint);
 		procedure Paint(var PaintInfo: TPaintStruct); virtual;
 		procedure ForceVRedraw; virtual;
 		procedure Print; virtual;
@@ -2496,6 +2710,7 @@ type
 		function WMKeyDown(Stat,Key: integer): boolean; virtual;
 		function ExitDlg(AnIndx: integer): boolean; virtual;
 		procedure GotoBlock(s: string);
+		procedure ToggleToolbar;
 		function SelectDisabled(AnIndx,KStat,Clicks: integer): boolean; virtual;
 		function GetColWidth(num: integer): integer;
 		procedure SetColWidth(num: integer; width: longint; draw: boolean);
@@ -2521,6 +2736,7 @@ type
 		procedure EnableInpline;
 		procedure SetInpline(cell: PCell);
 		procedure Calculate(clr: boolean);
+		procedure AutoCalculate(clr: boolean);
 		function NewNode(var p: PNode): boolean;
 		procedure DeleteNode(var p: PNode);
 		procedure TranslateCells(rs,cs,re,ce,rdif,cdif: integer; clr: boolean);
@@ -2532,6 +2748,7 @@ type
 		function GetCellValue(cell: PCell; clr: boolean): TNumber;
 		function Error2Txt(err: shortint): string;
 		procedure ChangeCell(cell: PCell; intxt: string; r,c: integer; chgval: boolean);
+		procedure CheckToolbarTextFX(cell: PCell);
 		procedure SetCursorPos(r,c: integer; scrl: boolean);
 		procedure ClearCalcFlags;
 		procedure SetBlock;
@@ -2586,9 +2803,6 @@ type
 		function Weekday(num: TNumber; typ: integer): integer;
 		function Date(Year: longint; Month,Day: integer): TNumber;
 		function Time(Hour,Minute,Second: integer): TNumber;
-		function std1: TNumber;
-		function min1: TNumber;
-		function sek1: TNumber;
 		function DDGetPath: string; virtual;
 		procedure OLGAGetInfo(OrgID,InfoNr: integer);
 		procedure OLGAUpdated(OrgID,SrvID,InfoNr: integer; Link: string); virtual;
@@ -2598,8 +2812,8 @@ type
 		function NewNumFormat(s: string): integer;
 		procedure DeselectAllObjects;
 		function FirstSelectedObject: PEmbedded;
-		procedure Embed(poi: POLGAObjectInfo; srvid: integer; ow,oh,x100,y100,dlen: longint; dat: pointer; poabuf: PEmbedBuf; pdb: PDiagrammbuf; xyvalid,prop,embd,drty,istad: boolean);
-		procedure EmbedNewObject(fname: string; w100,h100,x100,y100,dlen: longint; dat: pointer; poabuf: PEmbedBuf; pdb: PDiagrammBuf; xyvalid,prop,embd,drty,istad: boolean);
+		procedure Embed(poi: POLGAObjectInfo; srvid: integer; ow,oh,x100,y100,dlen: longint; dat: pointer; poabuf: PEmbedBuf; pdb: PDiagrammbuf; xyvalid,prop,embd,drty,istad,prntflg,lckflg: boolean);
+		procedure EmbedNewObject(fname: string; w100,h100,x100,y100,dlen: longint; dat: pointer; poabuf: PEmbedBuf; pdb: PDiagrammBuf; xyvalid,prop,embd,drty,istad,prntflg,lckflg: boolean);
 		function PasteObject: boolean;
 		procedure CallID4Server(fname: string);
 		procedure Unembed(srvID: integer);
@@ -2613,6 +2827,8 @@ type
 		function DoFeed: boolean;
 		function DoSheet: boolean;
 		function ClearDispList: boolean;
+		procedure SetTextColor(ntc: integer);
+		procedure SetCellColor(nc: integer);
 	end;
 
 	PCalcScroller = ^TCalcScroller;
@@ -2687,6 +2903,7 @@ type
 		ExtResource,
 		ScaleIMG,
 		UseExtPrn,
+		UseNewToolbar,
 		CheckHistory,
 		GSActive,
 		ColFX         : boolean;
@@ -2697,6 +2914,7 @@ type
 		CABFlags4,
 		CABFlags5,
 		HelpID,
+		GEMScriptID,
 		SheetCount    : integer;
 		mstimer       : longint;
 		FormStart     : array [0..19] of integer;
@@ -2709,6 +2927,7 @@ type
 		fnt_titel,
 		SumName,
 		DataPath      : string;
+		sccsid        : string[79];
 		setupbuffer   : record
 			stdrows     : string[5];
 			stdcolumns  : string[3];
@@ -2730,6 +2949,10 @@ type
 			recalc,
 			online,
 			bak,
+			toolbar,
+			currency,
+			overflow,
+			bottomline,
 			pixw,
 			pixh        : integer
 		end;
@@ -2737,7 +2960,8 @@ type
 		filebuf,
 		prnt_dialog,
 		fnt_dialog    : pointer;
-		ascbuf        : TAscBuf;
+		GSInfo        : PGSInfo;
+		ascbuf        : TImportAscBuf;
 		stdpsbuffer   : TPSBuffer;
 		websupport,
 		webhelp       : PWeb;
@@ -2783,6 +3007,8 @@ type
 		function EscText2Formula(txt: string): string;
 		function Num2Txt(fval: TNumber; fp: byte; cut0: boolean): string;
 		procedure Unembed(srvID: integer);
+		function ScriptByNumber(nr: longint; datei,zelle,prm: string): boolean;
+		function InterpreteScript(pcmd: PChar; var answ: Pipearray): integer;
 		procedure HandleKeybd(Stat,Key: integer); virtual;
 		procedure HandleMesag(Pipe: Pipearray); virtual;
 		procedure HandleTimer; virtual;
@@ -2815,8 +3041,16 @@ type
 		procedure DeactivateExtResource;
 		function num2str(s: string): string;
 		function XAccText(OrgID: integer; pText: pointer): boolean; virtual;
-		function Message(AParent: PWindow; DefBtn: integer; Sign: longint; txt: string): integer;
 		function HelpAvailable(loadstg: boolean): boolean;
+		procedure ErrorWindowMemory(p: PWindow);
+		procedure InitSheetStructs(var parms: TTexelParms; var shbuf: TSheetBuffer; var dgbuf: TDialogBuffer; var zwbuf: TZielBuf; var dibuf: TDiagrammBuf; var exbuf: TExportBuf;
+		                           var srbuf: TSortBuf; var inbuf: TInfoBuf; var fibuf: TFindBuf; var rebuf: TReplaceBuf; var flbuf: TFillBuffer);
+		procedure FilterString(id: integer; var s: string);
+		function dosmask(s: string): string;
+		function macmask(s: string): string;
+		function IsLongFileName(fname: string): boolean;
+		procedure AbandonFile(p: PCalcWindow);
+		procedure InitCells(cell: PCell; rmax,cmax: integer);
 	end;
 
 	PNew = ^TNew;
@@ -2851,6 +3085,7 @@ type
 		ed1,
 		ed2: PEdit;
 		function OK: boolean; virtual;
+		procedure MinimalHeadFoot;
 		function ExitDlg(AnIndx: integer): boolean; virtual;
 	end;
 
@@ -2863,6 +3098,11 @@ type
 	TSaveOpt = object(TKeyMenu)
 		procedure Work; virtual;
 	end;
+	
+	PSaveWork = ^TSaveWork;
+	TSaveWork = object(TMenu)
+		procedure Work; virtual;
+	end;	
 
 	PHelpItemDialog = ^THelpItemDialog;
 	THelpItemDialog = object(THyperDialog)
@@ -2918,62 +3158,62 @@ type
 	end;
 
 	PTCut = ^TTCut;
-	TTCut = object(TToolbar)
+	TTCut = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTCopy = ^TTCopy;
-	TTCopy = object(TToolbar)
+	TTCopy = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTPaste = ^TTPaste;
-	TTPaste = object(TToolbar)
+	TTPaste = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTFunction = ^TTFunction;
-	TTFunction = object(TToolbar)
+	TTFunction = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTNumber = ^TTNumber;
-	TTNumber = object(TToolbar)
+	TTNumber = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTDate = ^TTDate;
-	TTDate = object(TToolbar)
+	TTDate = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTMoney = ^TTMoney;
-	TTMoney = object(TToolbar)
+	TTMoney = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTPercent = ^TTPercent;
-	TTPercent = object(TToolbar)
+	TTPercent = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTDiagram = ^TTDiagram;
-	TTDiagram = object(TToolbar)
+	TTDiagram = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTHome = ^TTHome;
-	TTHome = object(TToolbar)
+	TTHome = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTSortAuf = ^TTSortAuf;
-	TTSortAuf = object(TToolbar)
+	TTSortAuf = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
 	PTSortAb = ^TTSortAb;
-	TTSortAb = object(TToolbar)
+	TTSortAb = object(TColorToolbar)
 		procedure Work; virtual;
 	end;
 
@@ -3000,7 +3240,9 @@ type
 		prop,
 		embd,
 		dirty  : boolean;
-		diabuf : TDiagrammBuf
+		diabuf : TDiagrammBuf;
+		prntflg,
+		lckflg : boolean
 	end;
 
 
@@ -3013,6 +3255,10 @@ const
 	ev_ln10        : TNumber =  2.30258509299404568425;
 	ev_rad2grad    : TNumber = 57.29577951308232087579;
 	ev_grad2rad    : TNumber =  0.01745329251994329577;
+	std1           : TNumber =  0.041666666666667;
+	min1           : TNumber =  0.000694444444445;
+	sek1           : TNumber =  0.000011574074075;
+	TIMEROUND      : TNumber =  0.000000000001;
 	RSC_LOADED     : pointer = pointer(1);
 	Border1        : real    =  0.3;
 	Border2        : real    =  0.6;
@@ -3026,7 +3272,7 @@ const
                     'Alexander Clauss, Gerd Castan, Jîrg Hahne, Ralf Heckmann, Gerd Hofmann, Andreas Kromke, Thomas KÅnneth, ',
                     'John Mcloud, Philipp Oelwein, Jan Pilgenrîder, Volker Ritzhaupt, Stefan Rogel, Ulrich Roûgoderer, Armin Schreck, ',
                     'Jîrg Schulz, Uwe Seimet, Peter G. Spengler, Alexander Stehling, Wolfgang Walter und Christian Witt',
-                    ' - Homepage: http://www.uni-karlsruhe.de/~Thomas.Much/Texel',
+                    ' - Homepage: http://wwwrzstud.rz.uni-karlsruhe.de/~uk48/Texel',
                     ' - ASH-Mailbox: +49 (0)6221 / 303671',
                     ' - We apologise for the inconvenience.                                               ');
 	VarNameSet     : set of char = ['_','0'..'9','a'..'z','A'..'Z','Ñ','é','î','ô','Å','ö','û'];
@@ -3038,10 +3284,14 @@ const
 	ash_serno      : array [0..10] of char = 'ssssssssss'#0;
 	{$ENDIF}
 
+	{$IFDEF FRENCH}
+	{$I texel_f.inc}
+	{$ELSE}
 	{$IFDEF ENGLISH}
 	{$I texel_e.inc}
 	{$ELSE}
 	{$I texel_g.inc}
+	{$ENDIF}
 	{$ENDIF}
 
 var
@@ -3054,7 +3304,90 @@ var
 	helpbuf : pointer;
 	callufsl: UFSLPtr;
 	callxfsl: xFSLPtr;
+	pkt     : PKEYT;
 
+
+
+function InitKeyTab: boolean;
+
+	begin
+		InitKeyTab:=false;
+		if GetCookie('KEYT',longint(pkt)) then
+			if pkt<>nil then
+				if pkt^.Magic='KEYT' then
+					if pkt^.Size>=40 then InitKeyTab:=true
+	end;
+
+
+function pinit_texel(d1,d2: pointer; d3,d4,d5: longint; settings: PPRN_SETTINGS; sub: PPDLG_SUB): longint;
+	var tree  : PTree;
+	    offset: integer;
+
+	begin
+		tree:=PTree(sub^.tree);
+		offset:=sub^.index_offset;
+		if sub^.private1<>0 then
+			case PCalcWindow(sub^.private1)^.prnRangeFlag of
+			1:
+				tree^[offset+RTPSD2].ob_state:=tree^[offset+RTPSD2].ob_state or SELECTED;
+			2:
+				tree^[offset+RTPSD3].ob_state:=tree^[offset+RTPSD3].ob_state or SELECTED;
+			else
+				tree^[offset+RTPSD1].ob_state:=tree^[offset+RTPSD1].ob_state or SELECTED
+			end
+		else
+			with TexelApp.stdprnbuffer do
+				begin
+					if alles=bf_Checked then tree^[offset+RTPSD2].ob_state:=tree^[offset+RTPSD2].ob_state or SELECTED
+					else
+						if block=bf_Checked then tree^[offset+RTPSD3].ob_state:=tree^[offset+RTPSD3].ob_state or SELECTED
+						else
+							tree^[offset+RTPSD1].ob_state:=tree^[offset+RTPSD1].ob_state or SELECTED
+				end;
+		pinit_texel:=1
+	end;
+
+
+function preset_texel(d1,d2: pointer; d3,d4,d5: longint; settings: PPRN_SETTINGS; sub: PPDLG_SUB): longint;
+	var tree  : PTree;
+	    offset: integer;
+
+	begin
+		tree:=PTree(sub^.tree);
+		offset:=sub^.index_offset;
+		if sub^.private1<>0 then
+			begin
+				if bTst(tree^[offset+RTPSD1].ob_state,SELECTED) then PCalcWindow(sub^.private1)^.prnRangeFlag:=0;
+				if bTst(tree^[offset+RTPSD2].ob_state,SELECTED) then PCalcWindow(sub^.private1)^.prnRangeFlag:=1;
+				if bTst(tree^[offset+RTPSD3].ob_state,SELECTED) then PCalcWindow(sub^.private1)^.prnRangeFlag:=2
+			end
+		else
+			begin
+				with TexelApp.stdprnbuffer do
+					begin
+						pblock:=bf_Unchecked;
+						alles:=bf_Unchecked;
+						block:=bf_Unchecked
+					end;
+				if bTst(tree^[offset+RTPSD1].ob_state,SELECTED) then TexelApp.stdprnbuffer.pblock:=bf_Checked;
+				if bTst(tree^[offset+RTPSD2].ob_state,SELECTED) then TexelApp.stdprnbuffer.alles:=bf_Checked;
+				if bTst(tree^[offset+RTPSD3].ob_state,SELECTED) then TexelApp.stdprnbuffer.block:=bf_Checked
+			end;
+		preset_texel:=1
+	end;
+
+
+procedure free_sub_dialogs(sub_dialogs: PPDLG_SUB);
+	var next: PPDLG_SUB;
+
+	begin
+		while sub_dialogs<>nil do
+			begin
+				next:=sub_dialogs^.next;
+				freemem(sub_dialogs,sizeof(PDLG_SUB));
+				sub_dialogs:=next
+			end
+	end;
 
 
 function arcsin(x: TNumber): TNumber;
@@ -3220,9 +3553,9 @@ procedure DemoAlert(p: PWindow);
 	begin
 		if Application=nil then exit;
 		{$IFDEF DEMO}
-		Application^.Alert(p,1,NOTE,'Dies ist die Demoversion von Texel. Jegliches Speichern ist nicht mîglich.','  &OK  ')
+		Application^.Alert(p,1,NOTE,MESSAGE_DEMO_DEMO,BUTTON_OK)
 		{$ELSE}
-		Application^.Alert(p,1,NOTE,'Diese Texel-Version ist nicht registriert, das Speichern ist daher nicht mîglich.','  &OK  ')
+		Application^.Alert(p,1,NOTE,MESSAGE_DEMO_UNREG,BUTTON_OK)
 		{$ENDIF}
 	end;
 
@@ -3446,6 +3779,64 @@ function vqtXFntInfo(handle,id: integer; pxfnt: PXFNT_INFO): boolean;
 					vdi(@VDI_pb);
 					vqtXFntInfo:=(intout^[0]<>0)
 				end
+	end;
+
+
+procedure vr_transfer_bits(handle: integer; src_bm,dst_bm: PBITMAPPtr; pxyarray: ARRAY_8; mode: integer);
+	var q: integer;
+
+	begin
+		with VDI_pb do
+			begin
+				control^[0]:=170;
+				control^[1]:=4;
+				control^[3]:=4;
+				control^[5]:=0;
+				control^[6]:=handle;
+				control^[7]:=integer(HiWord(src_bm));
+				control^[8]:=integer(LoWord(src_bm));
+				control^[9]:=integer(HiWord(dst_bm));
+				control^[10]:=integer(LoWord(dst_bm));
+				control^[11]:=0;
+				control^[12]:=0;
+				intin^[0]:=mode;
+				intin^[1]:=0;
+				intin^[2]:=0;
+				intin^[3]:=0;
+				for q:=0 to 7 do ptsin^[q]:=pxyarray[q];
+				vdi(@VDI_pb)
+			end
+	end;
+
+
+procedure vqt_real_extent(handle,x,y: integer; const calcString: string; var extent: ARRAY_8);
+	var q,len: integer;
+
+	begin
+		len:=length(calcString);
+		with VDI_pb do
+			begin
+				control^[0]:=240;
+				control^[1]:=1;
+				control^[3]:=len;
+				control^[5]:=4200;
+				control^[6]:=handle;
+				ptsin^[0]:=x;
+				ptsin^[1]:=y;
+				if len>0 then
+					for q:=1 to len do intin^[q-1]:=ord(calcString[q]);
+				vdi(@VDI_pb);
+				for q:=0 to 7 do extent[q]:=ptsout^[q]
+			end
+	end;
+
+
+procedure vqt_my_extent(handle: integer; const calcString: string; var extent: ARRAY_8);
+
+	begin
+		if TexelApp.NVDIVersion>=$0300 then vqt_real_extent(handle,0,0,calcString,extent)
+		else
+			vqt_f_extent(handle,calcString,extent)
 	end;
 
 
@@ -4223,6 +4614,13 @@ procedure TFontSelectBox.Changed(AnIndx: integer; DblClick: boolean);
 	end;
 
 
+procedure TFontSelectBox.OpenPopup;
+
+	begin
+		Popup^.SetOffset(GetSelection)
+	end;
+
+
 procedure TFontBox.SetValue(Sel: integer);
 
 	begin
@@ -4329,6 +4727,7 @@ procedure TFontBox.Work;
 
 procedure TFontSizeBox.Work;
 	var rs,cs,re,ce,
+	    cmin,cmax,
 	    x,y,nsize,
 	    nfont      : integer;
 	    cell       : PCell;
@@ -4359,6 +4758,9 @@ procedure TFontSizeBox.Work;
 					cs:=Col;
 					ce:=Col
 				end;
+		cmin:=cs;
+		cmax:=ce;
+		p^.RowsClearOverflow(rs,re,cmin,cmax);
 		for y:=rs to re do
 			begin
 				cell:=p^.GetCell(y,cs);
@@ -4372,8 +4774,9 @@ procedure TFontSizeBox.Work;
 						inc(longint(cell),CELLSIZE)
 					end
 			end;
+		p^.RowsCheckOverflow(rs,re,cmin,cmax);
 		p^.SetDirty;
-		p^.DrawCells(rs,cs,re,ce)
+		p^.DrawCells(rs,cmin,re,cmax)
 	end;
 
 
@@ -4722,6 +5125,7 @@ procedure TPatternDialog.Color2Name;
 function TTextAttrDialog.ChangeValues: boolean;
 	var rs,cs,re,
 	    ce,x,y,
+	    cmin,cmax,
 	    nalgn,
 	    nalgn2,
 	    dummy,
@@ -4734,6 +5138,9 @@ function TTextAttrDialog.ChangeValues: boolean;
 		ChangeValues:=false;
 		if p^.GetBlock(bedt^.GetText,false,rs,cs,re,ce,dummy,dummy) then
 			begin
+				cmin:=cs;
+				cmax:=ce;
+				p^.RowsClearOverflow(rs,re,cmin,cmax);
 				if p^.txabuffer.right=bf_Checked then nalgn:=TA_RIGHT
 				else
 					if p^.txabuffer.center=bf_Checked then nalgn:=TA_CENTER
@@ -4758,9 +5165,9 @@ function TTextAttrDialog.ChangeValues: boolean;
 										if p^.txabuffer.coloff=bf_Checked then Color:=p^.txabuffer.color;
 										if p^.txabuffer.alignoff=bf_Checked then Align:=(Align and $f0) or nalgn;
 										if p^.txabuffer.alignoff2=bf_Checked then Align:=(Align and $0f) or nalgn2;
-										if p^.txabuffer.clip=bf_Checked then Flags:=Flags and not(TFL_NOCLIP)
+										if p^.txabuffer.clip=bf_Checked then Flags:=Flags or TFL_CLIP
 										else
-											if p^.txabuffer.clip=bf_Unchecked then Flags:=Flags or TFL_NOCLIP;
+											if p^.txabuffer.clip=bf_Unchecked then Flags:=Flags and not(TFL_CLIP);
 										if p^.txabuffer.bold=bf_Checked then Effects:=Effects or TF_THICKENED
 										else
 											if p^.txabuffer.bold=bf_Unchecked then Effects:=Effects and not(TF_THICKENED);
@@ -4778,17 +5185,19 @@ function TTextAttrDialog.ChangeValues: boolean;
 											if p^.txabuffer.outl=bf_Unchecked then Effects:=Effects and not(TF_OUTLINED);
 										if p^.txabuffer.shadow=bf_Checked then Effects:=Effects or TF_SHADOWED
 										else
-											if p^.txabuffer.shadow=bf_Unchecked then Effects:=Effects and not(TF_SHADOWED)
+											if p^.txabuffer.shadow=bf_Unchecked then Effects:=Effects and not(TF_SHADOWED);
 									end;
 								inc(longint(cell),CELLSIZE)
 							end
 					end;
+				p^.RowsCheckOverflow(rs,re,cmin,cmax);
 				p^.SetDirty;
-				p^.DrawCells(rs,cs,re,ce);
+				p^.DrawCells(rs,cmin,re,cmax);
+				p^.CheckToolbarTextFX(p^.GetCell(rs,cs));
 				ChangeValues:=true
 			end
 		else
-			TexelApp.Message(@self,1,NOTE,MESSAGE_GENERAL_RANGE)
+			Application^.Alert(@self,1,NOTE,MESSAGE_GENERAL_RANGE,BUTTON_OK)
 	end;
 
 
@@ -4867,14 +5276,14 @@ function TNumFormatsDialog.ExitDlg(AnIndx: integer): boolean;
 			s:=StrPTrimF(p^.nformbuffer.format);
 			if length(s)=0 then
 				begin
-					TexelApp.Message(@self,1,NOTE,MESSAGE_NUMFORM_EMPTY);
+					Application^.Alert(@self,1,NOTE,MESSAGE_NUMFORM_EMPTY,BUTTON_OK);
 					exit
 				end;
 			anz:=0;
 			for q:=1 to length(s) do if s[q]=';' then inc(anz);
 			if anz>2 then
 				begin
-					TexelApp.Message(@self,1,NOTE,MESSAGE_NUMFORM_PARTS);
+					Application^.Alert(@self,1,NOTE,MESSAGE_NUMFORM_PARTS,BUTTON_OK);
 					exit
 				end;
 			anz:=0;
@@ -4909,7 +5318,7 @@ function TNumFormatsDialog.ExitDlg(AnIndx: integer): boolean;
 								end;
 			if anz<>0 then
 				begin
-					TexelApp.Message(@self,1,NOTE,MESSAGE_NUMFORM_BRACES);
+					Application^.Alert(@self,1,NOTE,MESSAGE_NUMFORM_BRACES,BUTTON_OK);
 					exit
 				end;
 			checkinp:=true
@@ -4938,7 +5347,7 @@ function TNumFormatsDialog.ExitDlg(AnIndx: integer): boolean;
 			begin
 				idx:=PFormat(pfcb^.fbox^.List^.At(p^.nformbuffer.frmindex))^.Index;
 				pfm:=PFormat(p^.UsrFormats^.At(idx-1000));
-				if Application^.Alert(@self,1,WAIT,'Zahlenformat "'+StrPTrimF(pfm^.Name^)+'" lîschen?','  &Ja  | &Nein ')=1 then
+				if Application^.Alert(@self,1,WAIT,MESSAGE_NUMFORM_DEL1+StrPTrimF(pfm^.Name^)+MESSAGE_NUMFORM_DEL2,BUTTON_YESNO)=1 then
 					begin
 						if p^.UsrFormats^.Count>(idx-999) then
 							for y:=idx-999 to p^.UsrFormats^.Count-1 do dec(PFormat(p^.UsrFormats^.At(y))^.Index);
@@ -5050,8 +5459,6 @@ function TInputEdit.GetHelp: string;
 
 constructor TCalcWindow.Init;
 	var dummy: longint;
-	    cell : PCell;
-	    q,w  : integer;
 
 	begin
 		currvalid:=false;
@@ -5068,27 +5475,17 @@ constructor TCalcWindow.Init;
 		if Sheet<>nil then fillchar(Sheet^,dummy,0);
 		if (PRow=nil) or (PCol=nil) or (Sheet=nil) or (PColNames=nil) or (PRowFlags=nil) or (PColFlags=nil) then
 			begin
-				TexelApp.Message(@self,1,STOP,MESSAGE_WINDOW_MEMORY);
+				TexelApp.ErrorWindowMemory(@self);
 				Done;
 				ArrowMouse;
 				fail
 			end;
-		cell:=Sheet;
-		for q:=0 to Parms.Rows do
-			for w:=0 to Parms.Columns do
-				begin
-					with cell^ do
-						begin
-							Color:=Black;
-							Style:=8;
-							TxtVal.Color:=Black
-						end;
-					inc(longint(cell),CELLSIZE)
-				end;
+		TexelApp.InitCells(Sheet,Parms.Rows+1,Parms.Columns+1);
 		Sheet^.Flags:=CELL_SELECTED;
 		ScanConst(Parameter);
 		CommonInit2(true);
-		pdirbox^.SetSelection(CRS_DOWN,true)
+		pdirbox^.SetSelection(CRS_DOWN,true);
+		if abandon<>nil then abandon^.Disable
 	end;
 
 
@@ -5117,7 +5514,7 @@ constructor TCalcWindow.InitImport(pg: PProgressWindow; rw,cl: integer; const FN
 			begin
 				if PRowFlags<>nil then freemem(PRowFlags,Parms.Rows+1);
 				if PColFlags<>nil then freemem(PColFlags,Parms.Columns+1);
-				TexelApp.Message(@self,1,STOP,MESSAGE_WINDOW_MEMORY);
+				TexelApp.ErrorWindowMemory(@self);
 				fail
 			end;
 		Sheet:=ASheet;
@@ -5158,7 +5555,9 @@ constructor TCalcWindow.InitImport(pg: PProgressWindow; rw,cl: integer; const FN
 		if pg<>nil then dispose(pg,Done);
 		CommonInit2(breiten);
 		pdirbox^.SetSelection(CRS_DOWN,true);
+		if abandon<>nil then abandon^.Disable;
 		SetCursorPos(0,0,true);
+		SheetCheckOverflow;
 		Calculate(true)
 	end;
 
@@ -5166,7 +5565,7 @@ constructor TCalcWindow.InitImport(pg: PProgressWindow; rw,cl: integer; const FN
 constructor TCalcWindow.InitFile(const FNam: string; pg: PProgressWindow; const AParm: TTexelParms; const ADBuf: TDialogBuffer; const ASBuf: TSheetBuffer; const FBuf: TFindBuf; const RBuf: TReplaceBuf; const FlBuf: TFillBuffer;
                                  const zBuf: TZielBuf; const ExBuf: TExportBuf; const SrtBuf: TSortBuf; const InfBuf: TInfoBuf; const DiaBuf: TDiagrammBuf;
                                  ASheet: PCell; ARow,ACol: PWordArray; CNam: PItemList; Parm: PParameterCollection; UFrm: PFormatCollection; ProtoEmb: PProtoEmbedded;
-                                 apwd: TPassWord; bhist: PStringCollection; CFlags,RFlags: PByteArray; prntset: PPRN_SETTINGS; drt: boolean);
+                                 apwd: TPassWord; bhist: PStringCollection; CFlags,RFlags: PByteArray; prntset: PPRN_SETTINGS; prnrange: integer; drt,checkover: boolean);
 	var cell: PCell;
 	    q,w : longint;
 	    vars: string;
@@ -5204,7 +5603,9 @@ constructor TCalcWindow.InitFile(const FNam: string; pg: PProgressWindow; const 
 		PRowFlags:=RFlags;
 		Parameter:=Parm;
 		UsrFormats:=UFrm;
+		tbactive:=(Parms.Toolbar=bf_Checked);
 		if prntset<>nil then TexelApp.ExtPrnSel(wnd_prnt_set,prntset);
+		if prnrange>=0 then prnRangeFlag:=prnrange;
 		cell:=Sheet;
 		for w:=0 to Parms.Rows do
 			begin
@@ -5269,9 +5670,11 @@ constructor TCalcWindow.InitFile(const FNam: string; pg: PProgressWindow; const 
 		CommonInit2(true);
 		with dtbuffer do
 			if (direction>=0) and (direction<=3) then pdirbox^.SetSelection(direction,true);
+		if checkover then SheetCheckOverflow;
 		if TexelApp.setupbuffer.recalc=bf_Checked then Calculate(true);
 		if ProtoEmb<>nil then ProtoEmb^.Realize(@self);
-		if drt then SetDirty
+		if drt then SetDirty;
+		if abandon<>nil then abandon^.Disable
 	end;
 
 
@@ -5295,6 +5698,11 @@ procedure TCalcWindow.CommonInit1;
 		numformats:=nil;
 		konstanten:=nil;
 		pagepreview:=nil;
+		if TexelApp.stdprnbuffer.alles=bf_Checked then prnRangeFlag:=1
+		else
+			if TexelApp.stdprnbuffer.block=bf_Checked then prnRangeFlag:=2
+			else
+				prnRangeFlag:=0;
 		fnecell:=nil;
 		fneOp:=0;
 		Dirty:=false;
@@ -5303,7 +5711,8 @@ procedure TCalcWindow.CommonInit1;
 		PassWord.Code:=0;
 		PassWord.Mask:=0;
 		numWidth:=0;
-		longfile:=''
+		longfile:='';
+		tbactive:=(TexelApp.setupbuffer.toolbar=bf_Checked)
 	end;
 
 
@@ -5319,6 +5728,8 @@ procedure TCalcWindow.CommonInit2(breiten: boolean);
 	    pfm   : PFormat;
 
 	begin
+		new(tbonoff,Init(@self,RTWDTBSWITCH,BUBBLE_FNBAR_TBONOFF));
+		if tbactive then ToggleToolbar;
 		sheetbuffer.rows:=ltoa(Parms.Rows+1);
 		sheetbuffer.columns:=ltoa(Parms.Columns+1);
 		PercentSize:=Parms.Percent/100;
@@ -5422,7 +5833,7 @@ procedure TCalcWindow.CommonInit2(breiten: boolean);
 				MakeWindow;
 				if Application^.ChkError=em_InvalidWindow then
 					begin
-						TexelApp.Message(@self,1,NOTE,MESSAGE_WINDOW_WINDOWS);
+						Application^.Alert(@self,1,NOTE,MESSAGE_WINDOW_WINDOWS,BUTTON_OK);
 						Free
 					end
 			end
@@ -5434,233 +5845,13 @@ procedure TCalcWindow.CommonParmInit(setsize: boolean);
 	begin
 		new(UsrFormats,Init(50,25));
 		if UsrFormats<>nil then UsrFormats^.Sort:=false;
-		with Parms do
-			begin
-				if setsize then
-					begin
-						Rows:=atol(TexelApp.setupbuffer.stdrows)-1;
-						Columns:=atol(TexelApp.setupbuffer.stdcolumns)-1
-					end;
-				Percent:=100;
-				psbuffer:=TexelApp.stdpsbuffer;
-				Resvd:=0;
-				with Cursor do
-					begin
-						Block:=false;
-						OldRow:=0;
-						OldCol:=0;
-						Row:=0;
-						Col:=0
-					end
-			end;
-		with sheetbuffer do
-			begin
-				size:=TexelApp.setupbuffer.stdfsize;
-				font:=TexelApp.setupbuffer.stdfont;
-				gitter:=bf_Checked;
-				autocalc:=TexelApp.setupbuffer.autocalc;
-				vorlage:=bf_Unchecked;
-				lhor:=bf_Unchecked;
-				lvert:=bf_Unchecked;
-				lmouse:=bf_Checked;
-				llayout:=bf_Checked;
-				images:=bf_Checked;
-				protect:=bf_Checked;
-				umbruch:=bf_Checked
-			end;
-		with dtbuffer do
-			begin
-				font:=TexelApp.setupbuffer.stdfont;
-				size:=TexelApp.setupbuffer.stdfsize;
-				percent:=3;
-				color:=Black;
-				pattern:=7;
-				direction:=CRS_DOWN;
-				input:='';
-				txtcolor:=Black;
-				border:=0;
-				resvd1:=0;
-				resvd2:=0;
-				resvd3:=0;
-				resvd4:=0
-			end;
-		with zwbuf do
-			begin
-				zzelle:='';
-				vzelle:='';
-				wert:='0';
-				iterationen:='100'
-			end;
-		with diagrammbuf do
-			begin
-				rb1:=bf_Checked;
-				rb2:=bf_Unchecked;
-				rb3:=bf_Unchecked;
-				rb4:=bf_Unchecked;
-				rb5:=bf_Unchecked;
-				typLinie:=bf_Checked;
-				typBalken:=bf_Unchecked;
-				typKreis:=bf_Unchecked;
-				Farbe:=bf_Checked;
-				Absolut:=bf_Checked;
-				xyLinear:=bf_Checked;
-				xyFirst:=bf_Unchecked;
-				xyAlternate:=bf_Unchecked;
-				xyLine:=bf_Unchecked;
-				xyPt:=bf_Unchecked;
-				xyLinept:=bf_Checked;
-				Stapeln:=bf_Unchecked;
-				DreiD:=bf_Unchecked;
-				Neben:=bf_Checked;
-				stilLinie:=0;
-				stilPunkt:=5;
-				Titel:='';
-				Legende:=bf_Checked;
-				Border:=bf_Checked;
-				nRow:=bf_Unchecked;
-				nColumn:=bf_Unchecked;
-				Size:=TexelApp.setupbuffer.stdfsize;
-				Font:=TexelApp.setupbuffer.stdfont;
-				dRows:=bf_Checked;
-				dColumns:=bf_Unchecked;
-				Ticks:=bf_Checked;
-				numTicks:='4';
-				alName:='Y';
-				alTicks:=bf_Checked;
-				alNum:='3';
-				alMin:='';
-				alMax:='';
-				auName:='X';
-				auTicks:=bf_Checked;
-				auNum:='3';
-				auMin:='';
-				auMax:='';
-				szWidth:='50.0';
-				szHeight:='50.0';
-				objFilename:=''
-			end;
-		with exportbuf do
-			begin
-				exporttype:=0;
-				clipboard:=bf_Unchecked;
-				bereich:=bf_Unchecked;
-				htmldoctype:=0;
-				htmlsavedt:=bf_Checked;
-				htmlcolor:=bf_Checked;
-				csvformula:=bf_Unchecked;
-				csvvalue:=bf_Checked;
-				difformula:=bf_Unchecked;
-				difvalue:=bf_Checked;
-				difstandard:=bf_Checked;
-				difexcel:=bf_Unchecked;
-				with ascii do
-					begin
-						hor:=bf_Checked;
-						vert:=bf_Unchecked;
-						rctxt:='13,10';
-						rcval:=0;
-						celltxt:='9';
-						cellval:=0;
-						texttxt:='34';
-						textval:=0;
-						quote:=bf_Checked;
-						numbers:=0;
-						formula:=bf_Unchecked;
-						value:=bf_Checked
-					end;
-				difformat:=bf_Checked;
-				csvformat:=bf_Checked;
-				asciiformat:=bf_Checked;
-				htmlembed:=bf_Unchecked
-			end;
-		with sortbuf do
-			begin
-				Pop1:=0;
-				Up1:=bf_Checked;
-				Down1:=bf_Unchecked;
-				Pop2:=0;
-				Up2:=bf_Checked;
-				Down2:=bf_Unchecked;
-				Pop3:=0;
-				Up3:=bf_Checked;
-				Down3:=bf_Unchecked;
-				Columns:=bf_Checked;
-				Rows:=bf_Unchecked;
-				Ins:=bf_Checked;
-				Pre:=bf_Unchecked;
-				Post:=bf_Unchecked;
-				Chars:=bf_Unchecked;
-				EmptyPre:=bf_Unchecked;
-				EmptyPost:=bf_Checked;
-				Lexikal:=bf_Checked;
-				Absolut:=bf_Unchecked;
-				Attribute:=bf_Unchecked
-			end;
-		with infobuf do
-			begin
-				Autor:='';
-				Stichwort:='';
-				Rem1:='';
-				Rem2:='';
-				Rem3:='';
-				Rem4:='';
-				Encrypt:=bf_Checked;
-				Resvd:=0;
-				Created:=gettime;
-				Last:=gettime;
-				Resvd0:=0;
-				Used:=1;
-				Printed:=0;
-				Version:=0;
-				Release:=0
-			end;
-		with findbuf do
-			begin
-				search:='';
-				rows:=bf_Checked;
-				columns:=bf_Unchecked;
-				cse:=bf_Unchecked;
-				complete:=bf_Unchecked;
-				formula:=bf_Checked;
-				value:=bf_Checked;
-				txt:=bf_Checked;
-				iform:=bf_Unchecked;
-				ival:=bf_Checked;
-				vor:=bf_Checked;
-				zurueck:=bf_Unchecked;
-				resvd:=0
-			end;
-		with replacebuf do
-			begin
-				search:='';
-				replace:='';
-				rows:=bf_Checked;
-				columns:=bf_Unchecked;
-				cse:=bf_Unchecked;
-				complete:=bf_Unchecked;
-				formula:=bf_Checked;
-				value:=bf_Checked;
-				txt:=bf_Checked;
-				vor:=bf_Checked;
-				zurueck:=bf_Unchecked;
-				resvd:=0
-			end;
-		with fillbuf do
-			begin
-				rows:=bf_Checked;
-				columns:=bf_Unchecked;
-				arithm:=bf_Checked;
-				geom:=bf_Unchecked;
-				date:=bf_Unchecked;
-				cpy:=bf_Unchecked;
-				trend:=bf_Unchecked;
-				day:=bf_Checked;
-				wday:=bf_Unchecked;
-				month:=bf_Unchecked;
-				year:=bf_Unchecked;
-				stepval:='1';
-				endval:=''
-			end;
+		if setsize then
+			with Parms do
+				begin
+					Rows:=atol(TexelApp.setupbuffer.stdrows)-1;
+					Columns:=atol(TexelApp.setupbuffer.stdcolumns)-1
+				end;
+		TexelApp.InitSheetStructs(Parms,sheetbuffer,dtbuffer,zwbuf,diagrammbuf,exportbuf,sortbuf,infobuf,findbuf,replacebuf,fillbuf);
 		getmem(PRowFlags,Parms.Rows+1);
 		getmem(PColFlags,Parms.Columns+1);
 		if PRowFlags<>nil then fillchar(PRowFlags^,Parms.Rows+1,0);
@@ -5676,7 +5867,7 @@ function TCalcWindow.CanClose: boolean;
 		valid:=inherited CanClose;
 		if valid and Dirty then
 			begin
-				ret:=Application^.Alert(@self,1,WAIT,'Blatt "'+GetRawIconTitle+'" wurde verÑndert. Wollen Sie die énderungen speichern?','  &Ja  | &Nein |&Abbruch');
+				ret:=Application^.Alert(@self,1,WAIT,MESSAGE_WINDOW_CLOSE1+GetRawIconTitle+MESSAGE_WINDOW_CLOSE2,BUTTON_YESNOCANCEL);
 				if ret=1 then
 					begin
 						closing:=true;
@@ -5771,6 +5962,18 @@ procedure TCalcWindow.GetWorkMax(var maxX,maxY: integer);
 procedure TCalcWindow.SetupSize;
 	var oldcurr: GRECT;
 
+	procedure CheckBottomLine;
+	
+		begin
+			if TexelApp.setupbuffer.bottomline=bf_Checked then
+				begin
+					dec(Full.H,TexelApp.Attr.boxSHeight);
+					GRtoA2(Full);
+					Curr:=Full;
+					Calc(WC_WORK,Curr,Work)
+				end
+		end;
+
 	begin
 		with DlgTree^[ROOT] do
 			begin
@@ -5780,19 +5983,25 @@ procedure TCalcWindow.SetupSize;
 		oldcurr:=Curr;
 		TWindow.SetupSize;
 		if currvalid then
-			if TexelApp.setupbuffer.fullsize=bf_Unchecked then
-				begin
-					GRtoA2(oldcurr);
-					if oldcurr.X2>Sysinfo.Desktop.X2 then dec(oldcurr.X,oldcurr.X2-Sysinfo.Desktop.X2);
-					if oldcurr.X<Sysinfo.Desktop.X then oldcurr.X:=SysInfo.Desktop.X;
-					if oldcurr.X+oldcurr.W>=Sysinfo.Desktop.X2 then oldcurr.W:=Sysinfo.Desktop.X2+1-oldcurr.X;
-					if oldcurr.Y2>Sysinfo.Desktop.Y2 then dec(oldcurr.Y,oldcurr.Y2-Sysinfo.Desktop.Y2);
-					if oldcurr.Y<Sysinfo.Desktop.Y then oldcurr.Y:=SysInfo.Desktop.Y;
-					if oldcurr.Y+oldcurr.H>=Sysinfo.Desktop.Y2 then oldcurr.H:=Sysinfo.Desktop.Y2+1-oldcurr.Y;
-					GRtoA2(oldcurr);
-					Curr:=oldcurr;
-					Calc(WC_WORK,Curr,Work)
-				end
+			begin
+				if TexelApp.setupbuffer.fullsize=bf_Unchecked then
+					begin
+						GRtoA2(oldcurr);
+						if oldcurr.X2>Sysinfo.Desktop.X2 then dec(oldcurr.X,oldcurr.X2-Sysinfo.Desktop.X2);
+						if oldcurr.X<Sysinfo.Desktop.X then oldcurr.X:=SysInfo.Desktop.X;
+						if oldcurr.X+oldcurr.W>=Sysinfo.Desktop.X2 then oldcurr.W:=Sysinfo.Desktop.X2+1-oldcurr.X;
+						if oldcurr.Y2>Sysinfo.Desktop.Y2 then dec(oldcurr.Y,oldcurr.Y2-Sysinfo.Desktop.Y2);
+						if oldcurr.Y<Sysinfo.Desktop.Y then oldcurr.Y:=SysInfo.Desktop.Y;
+						if oldcurr.Y+oldcurr.H>=Sysinfo.Desktop.Y2 then oldcurr.H:=Sysinfo.Desktop.Y2+1-oldcurr.Y;
+						GRtoA2(oldcurr);
+						Curr:=oldcurr;
+						Calc(WC_WORK,Curr,Work)
+					end
+				else
+					CheckBottomLine
+			end
+		else
+			CheckBottomLine
 	end;
 
 
@@ -5808,24 +6017,18 @@ procedure TCalcWindow.SetupVDI;
 
 
 procedure TCalcWindow.SetupWindow;
-	var pt: PToolbar;
+	var pt: PColorToolbar;
 
 	begin
 		inherited SetupWindow;
 		Attr.ExStyle:=(Attr.ExStyle and not(ws_ex_TryModeless)) or ws_ex_Modeless;
-		if currvalid then Attr.ExStyle:=Attr.ExStyle and not(ws_ex_CenterOnce);
+		if currvalid or (TexelApp.setupbuffer.bottomline=bf_Checked) then Attr.ExStyle:=Attr.ExStyle and not(ws_ex_CenterOnce);
 		LoadMenu(RTWMENU,false);
-		LoadToolbar(RTWTOOLBAR);
-		if Class.ToolbarTree<>nil then
-			with Class.ToolbarTree^[0] do
-				begin
-					ob_height:=Class.ToolbarTree^[ob_head].ob_spec.icon_blk^.ib_hicon+(Class.ToolbarTree^[ob_head].ob_y shl 1);
-					if MagiCVersion>=$0300 then ob_spec.index:=(ob_spec.index and $ff00ffff) or $00020000
-				end;
 		LoadIcon(new(PIcon,Init(@self,RTICONS,RTICALC,0,0,false,false,'','')));
 		new(bblock,Init(@self,K_CTRL,Ctrl_B,nil,false));
 		new(save,Init(@self,K_CTRL,Ctrl_S,RTWMSAVE,RTWM2));
 		new(saveas,Init(@self,K_CTRL,Ctrl_M,RTWMSAVEAS,RTWM2));
+		new(abandon,Init(@self,K_CTRL,Ctrl_H,RTWMABANDON,RTWM2));
 		new(export,Init(@self,K_CTRL,Ctrl_E,RTWMEXPORT,RTWM2));
 		new(prnt,Init(@self,K_CTRL,Ctrl_P,RTWMPRINT,RTWM2));
 		new(pagesetup,Init(@self,K_CTRL+K_SHIFT,Ctrl_P,RTWMPAGESETUP,RTWM2));
@@ -5866,6 +6069,7 @@ procedure TCalcWindow.SetupWindow;
 			if TexelApp.OLETypes<>nil then oleobject^.Enable;
 		new(fill,Init(@self,RTWMFILL,RTPOPUPS,RTPFILL));
 		if fill<>nil then fill^.reihe:=nil;
+		if fill<>nil then fill^.Disable; { !!! }
 		new(formcell,Init(@self,RTWMFORMCELL,RTPOPUPS,RTPFORMCELL));
 		new(formrow,Init(@self,RTWMFORMROW,RTPOPUPS,RTPFORMROW));
 		new(formcol,Init(@self,RTWMFORMCOL,RTPOPUPS,RTPFORMCOL));
@@ -5875,9 +6079,9 @@ procedure TCalcWindow.SetupWindow;
 		new(PKonst,Init(@self,K_CTRL,Ctrl_K,RTWMCONST,RTWM6));
 		new(PCalculate,Init(@self,K_CTRL,Ctrl_Return,RTWMUPDATE,RTWM6));
 		new(PGoto,Init(@self,RTWMGOTO,nil,false));
-		new(pt,Init(@self,RTWTOOLBAR,RTWTSAVE,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_SAVE));
+		new(pt,Init(@self,RTWTSAVE,RTWTCSAVE,false,BUBBLE_TOOLBAR_SAVE));
 		if pt<>nil then pt^.SetMenuIndex(RTWMSAVE);
-		new(pt,Init(@self,RTWTOOLBAR,RTWTPRINT,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_PRINT));
+		new(pt,Init(@self,RTWTPRINT,RTWTCPRINT,false,BUBBLE_TOOLBAR_PRINT));
 		if pt<>nil then pt^.SetMenuIndex(RTWMPRINT);
 		if not(Application^.GDOSActive) then
 			begin
@@ -5886,27 +6090,27 @@ procedure TCalcWindow.SetupWindow;
 				if paper<>nil then paper^.Disable;
 				if pt<>nil then pt^.Disable
 			end;
-		new(PTCut,Init(@self,RTWTOOLBAR,RTWTCUT,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_CUT));
-		new(PTCopy,Init(@self,RTWTOOLBAR,RTWTCOPY,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_COPY));
-		new(PTPaste,Init(@self,RTWTOOLBAR,RTWTPASTE,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_PASTE));
-		new(tsumme,Init(@self,RTWTOOLBAR,RTWTSUM,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_SUM));
-		new(PTFunction,Init(@self,RTWTOOLBAR,RTWTFN,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_FN));
-		new(pfett,Init(@self,RTWTOOLBAR,RTWTFETT,id_No,id_No,nil,false,true,BUBBLE_TOOLBAR_BOLD));
-		new(pkursiv,Init(@self,RTWTOOLBAR,RTWTKURSIV,id_No,id_No,nil,false,true,BUBBLE_TOOLBAR_ITALIC));
-		new(punter,Init(@self,RTWTOOLBAR,RTWTUNTERSTR,id_No,id_No,nil,false,true,BUBBLE_TOOLBAR_UNDERL));
-		new(palignleft,Init(@self,RTWTOOLBAR,RTWTLINKS,id_No,id_No,nil,false,true,BUBBLE_TOOLBAR_LEFT));
-		new(paligncenter,Init(@self,RTWTOOLBAR,RTWTMITTE,id_No,id_No,nil,false,true,BUBBLE_TOOLBAR_CENTER));
-		new(palignright,Init(@self,RTWTOOLBAR,RTWTRECHTS,id_No,id_No,nil,false,true,BUBBLE_TOOLBAR_RIGHT));
-		new(PTNumber,Init(@self,RTWTOOLBAR,RTWTNUMBER,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_NUMBER));
-		new(PTDate,Init(@self,RTWTOOLBAR,RTWTDATE,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_DATE));
-		new(PTMoney,Init(@self,RTWTOOLBAR,RTWTMONEY,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_MONEY));
-		new(PTPercent,Init(@self,RTWTOOLBAR,RTWTPERCENT,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_PERCENT));
-		new(PTSortAuf,Init(@self,RTWTOOLBAR,RTWTSORTAUF,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_SORTUP));
-		new(PTSortAb,Init(@self,RTWTOOLBAR,RTWTSORTAB,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_SORTDOWN));
-		new(dezplus,Init(@self,RTWTOOLBAR,RTWTDEZPLUS,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_FPLUS));
-		new(dezminus,Init(@self,RTWTOOLBAR,RTWTDEZMINUS,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_FMINUS));
-		new(PTDiagram,Init(@self,RTWTOOLBAR,RTWTDIAGRAM,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_DIAGRAM));
-		new(PTHome,Init(@self,RTWTOOLBAR,RTWTHOME,id_No,id_No,nil,false,false,BUBBLE_TOOLBAR_HOME));
+		new(PTCut,Init(@self,RTWTCUT,RTWTCCUT,false,BUBBLE_TOOLBAR_CUT));
+		new(PTCopy,Init(@self,RTWTCOPY,RTWTCCOPY,false,BUBBLE_TOOLBAR_COPY));
+		new(PTPaste,Init(@self,RTWTPASTE,RTWTCPASTE,false,BUBBLE_TOOLBAR_PASTE));
+		new(tsumme,Init(@self,RTWTSUM,RTWTCSUM,false,BUBBLE_TOOLBAR_SUM));
+		new(PTFunction,Init(@self,RTWTFN,RTWTCFN,false,BUBBLE_TOOLBAR_FN));
+		new(pfett,Init(@self,RTWTFETT,RTWTCFETT,true,BUBBLE_TOOLBAR_BOLD));
+		new(pkursiv,Init(@self,RTWTKURSIV,RTWTCKURSIV,true,BUBBLE_TOOLBAR_ITALIC));
+		new(punter,Init(@self,RTWTUNTERSTR,RTWTCUNTERSTR,true,BUBBLE_TOOLBAR_UNDERL));
+		new(palignleft,Init(@self,RTWTLINKS,RTWTCLINKS,true,BUBBLE_TOOLBAR_LEFT));
+		new(paligncenter,Init(@self,RTWTMITTE,RTWTCMITTE,true,BUBBLE_TOOLBAR_CENTER));
+		new(palignright,Init(@self,RTWTRECHTS,RTWTCRECHTS,true,BUBBLE_TOOLBAR_RIGHT));
+		new(PTNumber,Init(@self,RTWTNUMBER,RTWTCNUMBER,false,BUBBLE_TOOLBAR_NUMBER));
+		new(PTDate,Init(@self,RTWTDATE,RTWTCDATE,false,BUBBLE_TOOLBAR_DATE));
+		new(PTMoney,Init(@self,RTWTMONEY,RTWTCMONEY,false,BUBBLE_TOOLBAR_MONEY));
+		new(PTPercent,Init(@self,RTWTPERCENT,RTWTCPERCENT,false,BUBBLE_TOOLBAR_PERCENT));
+		new(PTSortAuf,Init(@self,RTWTSORTAUF,RTWTCSORTAUF,false,BUBBLE_TOOLBAR_SORTUP));
+		new(PTSortAb,Init(@self,RTWTSORTAB,RTWTCSORTAB,false,BUBBLE_TOOLBAR_SORTDOWN));
+		new(dezplus,Init(@self,RTWTDEZPLUS,RTWTCDEZPLUS,false,BUBBLE_TOOLBAR_FPLUS));
+		new(dezminus,Init(@self,RTWTDEZMINUS,RTWTCDEZMINUS,false,BUBBLE_TOOLBAR_FMINUS));
+		new(PTDiagram,Init(@self,RTWTDIAGRAM,RTWTCDIAGRAM,false,BUBBLE_TOOLBAR_DIAGRAM));
+		new(PTHome,Init(@self,RTWTHOME,RTWTCHOME,false,BUBBLE_TOOLBAR_HOME));
 		Fonts:=nil;
 		PColNames:=nil;
 		PRowFlags:=nil;
@@ -6745,6 +6949,479 @@ function TCalcWindow.Val2Txt(fval: TNumber; var vtxt: string; fp: byte; frm: int
 	end;
 
 
+procedure TCalcWindow.InitTextValues(handle: integer; var cmpval: TOldTxtVal);
+	var dummy: integer;
+
+	begin
+		with cmpval do
+			begin
+				oldtcolor:=Black;
+				oldeffects:=TF_NORMAL;
+				oldskew:=0;
+				oldrotat:=0
+			end;
+		vst_color(handle,cmpval.oldtcolor);
+		vst_effects(handle,cmpval.oldeffects);
+		vst_rotation(handle,cmpval.oldrotat);
+		if Speedo then vst_skew(handle,cmpval.oldskew);
+		vst_alignment(handle,TA_LEFT,TA_TOP,dummy,dummy)
+	end;
+
+
+procedure TCalcWindow.RestoreTextValues(handle: integer);
+	var dummy: integer;
+
+	begin
+		vst_color(handle,Black);
+		vst_effects(handle,TF_NORMAL);
+		vst_rotation(handle,0);
+		if Speedo then vst_skew(handle,0);
+		vst_alignment(handle,TA_LEFT,TA_BASELINE,dummy,dummy)
+	end;
+
+
+procedure TCalcWindow.RowsClearOverflow(rs,re: integer; var cmin,cmax: integer);
+	var x,y,
+	    cmi,cmx: integer;
+	    cell   : PCell;
+
+	begin
+		for y:=rs to re do
+			begin
+				cell:=GetCell(y,0);
+				for x:=0 to Parms.Columns do
+					begin
+						if ClearOverflow(cell,cmi,cmx) then
+							begin
+								if cmi<cmin then cmin:=cmi;
+								if cmx>cmax then cmax:=cmx
+							end;
+						inc(longint(cell),CELLSIZE)
+					end
+			end
+	end;
+
+
+procedure TCalcWindow.RowsCheckOverflow(rs,re: integer; var cmin,cmax: integer);
+	var cell: PCell;
+	    x,y,
+	    cmi,
+	    cmx : integer;
+
+	begin
+		cell:=GetCell(rs,0);
+		for y:=rs to re do
+			for x:=0 to Parms.Columns do
+				begin
+					if CheckOverflow(cell,cmi,cmx) then
+						begin
+							if cmi<cmin then cmin:=cmi;
+							if cmx>cmax then cmax:=cmx
+						end;
+					inc(longint(cell),CELLSIZE)
+				end
+	end;
+
+
+procedure TCalcWindow.SheetCheckOverflow;
+	var r,c,
+	    dummy: integer;
+	    cell : PCell;
+
+	begin
+		BusyMouse;
+		cell:=Sheet;
+		for r:=0 to Parms.Rows do
+			for c:=0 to Parms.Columns do
+				begin
+					CheckOverflow(cell,dummy,dummy);
+					inc(longint(cell),CELLSIZE)
+				end;
+		ArrowMouse
+	end;
+
+
+function TCalcWindow.ClearOverflow(cell: PCell; var cmin,cmax: integer): boolean;
+	var r,c,c2: integer;
+	    cell2 : PCell;
+
+	begin
+		ClearOverflow:=false;
+		if cell^.Typ<>CTYPE_TEXT then exit;
+		Cell2RC(cell,r,c);
+		ClearOverflow:=((cell^.TxtVal.Flags and (TFL_LEFTMASK or TFL_RIGHTMASK))>0);
+		cmin:=c;
+		cmax:=c;
+		cell2:=cell;
+		c2:=c;
+		while ((cell2^.TxtVal.Flags and TFL_LEFTMASK)>0) and (c2>=0) do
+			begin
+				cmin:=c2;
+				cell2^.TxtVal.Flags:=cell2^.TxtVal.Flags and not(TFL_LEFTMASK);
+				dec(longint(cell2),CELLSIZE);
+				dec(c2)
+			end;
+		cell2:=cell;
+		c2:=c;
+		while ((cell2^.TxtVal.Flags and TFL_RIGHTMASK)>0) and (c2<=Parms.Columns) do
+			begin
+				cmax:=c2;
+				cell2^.TxtVal.Flags:=cell2^.TxtVal.Flags and not(TFL_RIGHTMASK);
+				inc(longint(cell2),CELLSIZE);
+				inc(c2)
+			end
+	end;
+
+
+function TCalcWindow.CheckOverflow(cell: PCell; var cmin,cmax: integer): boolean;
+	var r,c,c2,
+	    dummy,
+	    xmin,xmax,
+	    txtwidth,
+	    colwidth : integer;
+	    extent   : ARRAY_8;
+	    cell2    : PCell;
+
+	begin
+		CheckOverflow:=false;
+		if cell^.Typ<>CTYPE_TEXT then exit;
+		if cell^.Data.Value=0 then exit;
+		if bTst(cell^.TxtVal.Flags,TFL_CLIP) then exit;
+		if (cell^.TxtVal.Rotat<>0) and (cell^.TxtVal.Rotat<>1800) then exit;
+		Cell2RC(cell,r,c);
+		colwidth:=GetColWidth(c);
+		SetFont(cell^.TxtVal.Font,cell^.TxtVal.Size);
+		vst_effects(vdiHandle,cell^.TxtVal.Effects);
+		vst_rotation(vdiHandle,cell^.TxtVal.Rotat);
+		if Speedo then vst_skew(vdiHandle,cell^.TxtVal.Skew);
+		vst_alignment(vdiHandle,TA_LEFT,TA_TOP,dummy,dummy);
+		if Speedo then vqt_my_extent(vdiHandle,cell^.Data.Txt^,extent)
+		else
+			vqt_extent(vdiHandle,cell^.Data.Txt^,extent);
+		xmin:=Min(Min(extent[0],extent[2]),Min(extent[4],extent[6]));
+		xmax:=Max(Max(extent[0],extent[2]),Max(extent[4],extent[6]));
+		txtwidth:=xmax-xmin;
+		if txtwidth>colwidth then
+			begin
+				case (cell^.TxtVal.Align and $0f) of
+				TA_RIGHT:
+					begin
+						cell^.TxtVal.Flags:=cell^.TxtVal.Flags or TFL_TEXT2LEFT;
+						c2:=c-1;
+						cell2:=PCell(longint(cell)-CELLSIZE);
+						dec(txtwidth,colwidth);
+						while (txtwidth>0) and (c2>=0) do
+							begin
+								if bTst(PColFlags^[c2],CRF_UMBRUCH) then break;
+								if cell2^.Typ<>CTYPE_EMPTY then break;
+								if (cell2^.TxtVal.Flags and TFL_OVERFLOWMASK)<>0 then break;
+								cell2^.TxtVal.Flags:=cell2^.TxtVal.Flags or TFL_LEFTMASK;
+								dec(txtwidth,GetColWidth(c2));
+								dec(longint(cell2),CELLSIZE);
+								dec(c2)
+							end;
+						inc(longint(cell2),CELLSIZE);
+						cell2^.TxtVal.Flags:=cell2^.TxtVal.Flags and not(TFL_TEXT2LEFT);
+						cmin:=c2+1;
+						cmax:=c
+					end;
+				TA_CENTER:
+					begin
+						dec(txtwidth,colwidth);
+						dummy:=txtwidth shr 1;
+						txtwidth:=dummy;
+						cell^.TxtVal.Flags:=cell^.TxtVal.Flags or TFL_TEXT2LEFT;
+						c2:=c-1;
+						cell2:=PCell(longint(cell)-CELLSIZE);
+						while (txtwidth>0) and (c2>=0) do
+							begin
+								if bTst(PColFlags^[c2],CRF_UMBRUCH) then break;
+								if cell2^.Typ<>CTYPE_EMPTY then break;
+								if (cell2^.TxtVal.Flags and TFL_OVERFLOWMASK)<>0 then break;
+								cell2^.TxtVal.Flags:=cell2^.TxtVal.Flags or TFL_LEFTMASK;
+								dec(txtwidth,GetColWidth(c2));
+								dec(longint(cell2),CELLSIZE);
+								dec(c2)
+							end;
+						inc(longint(cell2),CELLSIZE);
+						cell2^.TxtVal.Flags:=cell2^.TxtVal.Flags and not(TFL_TEXT2LEFT);
+						cmin:=c2+1;
+						txtwidth:=dummy;
+						cell^.TxtVal.Flags:=cell^.TxtVal.Flags or TFL_TEXT2RIGHT;
+						c2:=c+1;
+						cell2:=PCell(longint(cell)+CELLSIZE);
+						while (txtwidth>0) and (c2<=Parms.Columns) do
+							begin
+								if bTst(PColFlags^[c2-1],CRF_UMBRUCH) then break;
+								if cell2^.Typ<>CTYPE_EMPTY then break;
+								if (cell2^.TxtVal.Flags and TFL_OVERFLOWMASK)<>0 then break;
+								cell2^.TxtVal.Flags:=cell2^.TxtVal.Flags or TFL_RIGHTMASK;
+								dec(txtwidth,GetColWidth(c2));
+								inc(longint(cell2),CELLSIZE);
+								inc(c2)
+							end;
+						dec(longint(cell2),CELLSIZE);
+						cell2^.TxtVal.Flags:=cell2^.TxtVal.Flags and not(TFL_TEXT2RIGHT);
+						cmax:=c2-1
+					end
+				else
+					begin
+						cell^.TxtVal.Flags:=cell^.TxtVal.Flags or TFL_TEXT2RIGHT;
+						c2:=c+1;
+						cell2:=PCell(longint(cell)+CELLSIZE);
+						dec(txtwidth,colwidth);
+						while (txtwidth>0) and (c2<=Parms.Columns) do
+							begin
+								if bTst(PColFlags^[c2-1],CRF_UMBRUCH) then break;
+								if cell2^.Typ<>CTYPE_EMPTY then break;
+								if (cell2^.TxtVal.Flags and TFL_OVERFLOWMASK)<>0 then break;
+								cell2^.TxtVal.Flags:=cell2^.TxtVal.Flags or TFL_RIGHTMASK;
+								dec(txtwidth,GetColWidth(c2));
+								inc(longint(cell2),CELLSIZE);
+								inc(c2)
+							end;
+						dec(longint(cell2),CELLSIZE);
+						cell2^.TxtVal.Flags:=cell2^.TxtVal.Flags and not(TFL_TEXT2RIGHT);
+						cmax:=c2-1;
+						cmin:=c
+					end
+				end;
+				CheckOverflow:=true
+			end;
+		SetFont(GetStdFontIndex,GetStdFontSize);
+		RestoreTextValues(vdiHandle)
+	end;
+
+
+procedure TCalcWindow.OutputVectorText(handle: integer; cell: PCell; const txt: string; const tval: TTxtVal; var cmpval: TOldTxtVal; csize: ARRAY_4; isnum: boolean);
+	var extent   : ARRAY_8;
+	    dummy,
+	    xmin,ymin,
+	    xmax,ymax,
+	    tx,ty    : integer;
+
+	procedure doalign;
+	
+		begin
+			xmin:=Min(Min(extent[0],extent[2]),Min(extent[4],extent[6]));
+			ymin:=Min(Min(extent[1],extent[3]),Min(extent[5],extent[7]));
+			xmax:=Max(Max(extent[0],extent[2]),Max(extent[4],extent[6]));
+			ymax:=Max(Max(extent[1],extent[3]),Max(extent[5],extent[7]));
+			case (cell^.TxtVal.Align and $f0) of
+			TA_OBEN:
+				begin
+					ty:=csize[1]+cmpval.brd1h-ymin;
+					if cell^.Border.Top>16 then
+						case (cell^.Border.Top shr 4) of
+						2:
+							inc(ty,cmpval.brd1h);
+						3:
+							inc(ty,cmpval.brd2h);
+						4,5:
+							inc(ty,cmpval.brd3h)
+						end
+				end;
+			TA_MITTE:
+				ty:=((csize[1]+csize[3]) shr 1)-((ymin+ymax) shr 1);
+			else
+				begin
+					ty:=csize[3]-cmpval.brd1h-ymax;
+					if cmpval.gitter then inc(ty);
+					if cell^.Border.Bottom>16 then
+						case (cell^.Border.Bottom shr 4) of
+						2:
+							dec(ty,cmpval.brd1h);
+						3:
+							dec(ty,cmpval.brd2h);
+						4,5:
+							dec(ty,cmpval.brd3h)
+						end
+				end
+			end;
+			case (cell^.TxtVal.Align and $0f) of
+			TA_RIGHT:
+				begin
+					tx:=csize[2]-cmpval.brd1w-xmax;
+					if not(cmpval.gitter) then dec(tx);
+					if cell^.Border.Right>16 then
+						case (cell^.Border.Right shr 4) of
+						2:
+							dec(tx,cmpval.brd1w);
+						3:
+							dec(tx,cmpval.brd2w);
+						4,5:
+							dec(tx,cmpval.brd3w)
+						end
+				end;
+			TA_CENTER:
+				tx:=((csize[0]+csize[2]) shr 1)-((xmin+xmax) shr 1);
+			else
+				begin
+					tx:=csize[0]+Max(cmpval.brd1w,1)-xmin;
+					if cell^.Border.Left>16 then
+						case (cell^.Border.Left shr 4) of
+						2:
+							inc(tx,cmpval.brd1w);
+						3:
+							inc(tx,cmpval.brd2w);
+						4,5:
+							inc(tx,cmpval.brd3w)
+						end
+				end
+			end
+		end;
+
+	procedure checkrotat;
+	
+		begin
+			case cmpval.oldrotat of
+			900:
+				begin
+					extent[1]:=-extent[1];
+					extent[3]:=-extent[3];
+					extent[5]:=-extent[5];
+					extent[7]:=-extent[7]
+				end;
+			1800:
+				begin
+					extent[0]:=-extent[0];
+					extent[1]:=-extent[1];
+					extent[2]:=-extent[2];
+					extent[3]:=-extent[3];
+					extent[4]:=-extent[4];
+					extent[5]:=-extent[5];
+					extent[6]:=-extent[6];
+					extent[7]:=-extent[7]
+				end;
+			2700:
+				begin
+					extent[0]:=-extent[0];
+					extent[2]:=-extent[2];
+					extent[4]:=-extent[4];
+					extent[6]:=-extent[6]
+				end
+			end
+		end;
+
+	function overflow: boolean;
+
+		begin
+			inc(xmin,tx);
+			inc(xmax,tx);
+			inc(ymin,ty);
+			inc(ymax,ty);
+			overflow:=((xmin<csize[0]-cmpval.brd1w-1) or (ymin<csize[1]-cmpval.brd1h-1) or (xmax>csize[2]+cmpval.brd1w+1) or (ymax>csize[3]+cmpval.brd1h+1))
+		end;
+
+	begin
+		{ Textattribute setzen}
+		if tval.Color<>cmpval.oldtcolor then
+			begin
+				vst_color(handle,tval.Color);
+				cmpval.oldtcolor:=tval.Color
+			end;
+		if tval.Effects<>cmpval.oldeffects then
+			begin
+				vst_effects(handle,tval.Effects);
+				cmpval.oldeffects:=tval.Effects
+			end;
+		if tval.Rotat<>cmpval.oldrotat then
+			begin
+				vst_rotation(handle,tval.Rotat);
+				cmpval.oldrotat:=tval.Rotat
+			end;
+		if tval.Skew<>cmpval.oldskew then
+			begin
+				if Speedo then vst_skew(handle,tval.Skew);
+				cmpval.oldskew:=tval.Skew
+			end;
+		{ Text ausgeben }
+		if TexelApp.NVDIVersion>=$0300 then
+			begin
+				vqt_real_extent(handle,0,0,txt,extent);
+				doalign;
+				if isnum then
+					if TexelApp.setupbuffer.overflow=bf_Checked then
+						if overflow then
+							begin
+								v_ftext(handle,tx,ty,StrPFill(length(txt),'#'));
+								exit
+						  end;
+				v_ftext(handle,tx,ty,txt)
+			end
+		else
+			begin
+				if Speedo then vqt_f_extent(handle,txt,extent)
+				else
+					vqt_extent(handle,txt,extent);
+				checkrotat;
+				doalign;
+				if isnum then
+					if TexelApp.setupbuffer.overflow=bf_Checked then
+						if overflow then
+							begin
+								if Speedo then v_ftext(handle,tx,ty,StrPFill(length(txt),'#'))
+								else
+									v_gtext(handle,tx,ty,StrPFill(length(txt),'#'));
+								exit
+							end;
+				if Speedo then v_ftext(handle,tx,ty,txt)
+				else
+					v_gtext(handle,tx,ty,txt)
+			end
+	end;
+
+
+procedure TCalcWindow.OutputKF(handle,kfx,kfy,alh,alv,pagenum,pages: integer; printtime: longint; s: string);
+	var k,dummy: integer;
+	    wert,s2: string;
+
+	begin
+		if length(s)=0 then exit;
+		k:=pos('#',s);
+		s2:='';
+		while k>0 do
+			begin
+				wert:='';
+				case upcase(s[k+1]) of
+				'#':
+					wert:='#';
+				'D':
+					wert:=StrPLeft(TexelApp.Time2Str(printtime),8);
+				'T','Z':
+					wert:=StrPRight(TexelApp.Time2Str(printtime),5);
+				'F':
+					begin
+						wert:=GetWindowFilename;
+						if length(wert)=0 then wert:=GetRawIconTitle
+					end;
+				'P','S':
+					wert:=ltoa(pagenum+1);
+				'G':
+					wert:=ltoa(pages);
+				'A':
+					wert:=infobuf.Autor;
+				end;
+				s2:=s2+StrPLeft(s,k-1)+wert;
+				s:=StrPRight(s,length(s)-k-1);
+				k:=pos('#',s)
+			end;
+		vst_alignment(handle,alh,alv,dummy,dummy);
+		if Speedo then v_ftext(handle,kfx,kfy,s2+s)
+		else
+			v_gtext(handle,kfx,kfy,s2+s)
+	end;
+
+
+procedure TCalcWindow.OutputErrorText(handle: integer; cell: PCell; const tval: TTxtVal; var cmpval: TOldTxtVal; csize: ARRAY_4; err: shortint);
+	var s: string;
+
+	begin
+		s:=Error2Txt(err);
+		OutputVectorText(handle,cell,s,tval,cmpval,csize,false)
+	end;
+
+
 procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 	label _nextgit,_endgit;
 
@@ -6754,36 +7431,21 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 	    gclp,
 	    clp3,bclp : GRECT;
 	    xy,xy2,xy3,
-	    brd,
+	    brd,tover,
 	    notexy,
 	    protxy    : ARRAY_4;
-	    brd1w,
-	    brd2w,
-	    brd3w,
-	    brd1h,
-	    brd2h,
-	    brd3h,
 	    q,w,yofs,
 	    dummy,b,
-	    tx,ty,
+	    tx,ty,c2,
 	    protsize,
 	    oldlcolor,
 	    oldcolor,
 	    oldstyle,
-	    oldalign,
-	    oldskew,
-	    oldrotat,
-	    oldeffects,
-	    oldtcolor,
-	    oldfont,
-	    oldsize,
 	    oldinter  : integer;
 	    pttrn     : word;
-	    midalign,
 	    umbruch,
 	    umorgit,
-	    greyed,
-	    gitter    : boolean;
+	    greyed    : boolean;
 	    sval      : string;
 	    colarray  : ARRAY_2;
 	    ext       : ARRAY_8;
@@ -6792,169 +7454,17 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 	    dstmfdb   : MFDB;
 	    pgrey     : PWord;
 	    grey50    : pointer;
+	    cmpval    : TOldTxtVal;
+	    cell2     : PCell;
 
-	procedure settxtvalues(const tval: TTxtVal);
-
+	procedure setfontattr(const tval: TTxtVal);
+	
 		begin
-			with tval do
+			if (tval.Font<>cmpval.oldfont) or (tval.Size<>cmpval.oldsize) then
 				begin
-					if (Font<>oldfont) or (Size<>oldsize) then
-						begin
-							SetFont(Font,Size);
-							oldsize:=Size;
-							oldfont:=Font
-						end;
-					if Color<>oldtcolor then
-						begin
-							vst_color(vdiHandle,Color);
-							oldtcolor:=Color
-						end;
-					if Effects<>oldeffects then
-						begin
-							vst_effects(vdiHandle,Effects);
-							oldeffects:=Effects
-						end;
-					if Rotat<>oldrotat then
-						begin
-							vst_rotation(vdiHandle,Rotat);
-							oldrotat:=Rotat
-						end;
-					if Align<>oldalign then
-						begin
-							case (Align and $f0) of
-							TA_OBEN:
-								vst_alignment(vdiHandle,Align and $0f,TA_TOP,dummy,dummy);
-							TA_MITTE:
-								vst_alignment(vdiHandle,Align and $0f,TA_TOP,dummy,dummy)
-							else
-								vst_alignment(vdiHandle,Align and $0f,TA_BOTTOM,dummy,dummy)
-							end;
-							oldalign:=Align
-						end;
-					if Skew<>oldskew then
-						begin
-							if Speedo then vst_skew(vdiHandle,Skew);
-							oldskew:=Skew
-						end;
-					case (Align and $0f) of
-					TA_CENTER:
-						tx:=(xy3[0]+xy3[2]) shr 1;
-					TA_RIGHT:
-						begin
-							tx:=xy3[2];
-							if not(gitter) then dec(tx);
-							if PCell(cnum)^.Border.Right>16 then
-								case (PCell(cnum)^.Border.Right shr 4) of
-								2:
-									dec(tx,brd1w);
-								3:
-									dec(tx,brd2w);
-								4,5:
-									dec(tx,brd3w)
-								end
-						end
-					else
-						begin
-							tx:=xy3[0]+1;
-							if PCell(cnum)^.Border.Left>16 then
-								case (PCell(cnum)^.Border.Left shr 4) of
-								2:
-									inc(tx,brd1w);
-								3:
-									inc(tx,brd2w);
-								4,5:
-									inc(tx,brd3w)
-								end
-						end
-					end;
-					case (Align and $f0) of
-					TA_OBEN:
-						begin
-							ty:=xy3[1];
-							midalign:=false;
-							if PCell(cnum)^.Border.Top>16 then
-								case (PCell(cnum)^.Border.Top shr 4) of
-								2:
-									inc(ty,brd1w);
-								3:
-									inc(ty,brd2w);
-								4,5:
-									inc(ty,brd3w)
-								end
-						end;
-					TA_MITTE:
-						begin
-							ty:=(xy3[1]+xy3[3]) shr 1;
-							midalign:=true
-						end
-					else
-						begin
-							ty:=xy3[3];
-							if gitter then inc(ty);
-							midalign:=false;
-							if PCell(cnum)^.Border.Bottom>16 then
-								case (PCell(cnum)^.Border.Bottom shr 4) of
-								2:
-									dec(ty,brd1w);
-								3:
-									dec(ty,brd2w);
-								4,5:
-									dec(ty,brd3w)
-								end
-						end
-					end
-				end
-		end;
-
-	procedure outputtext;
-
-		begin
-			if Speedo then
-				begin
-					vqt_f_extent(vdiHandle,sval,ext);
-					if abs(ext[2]-ext[0])>(xy3[2]-xy3[0]) then sval:=StrPFill(length(sval),'#');
-					if midalign then v_ftext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-					else
-						v_ftext(vdiHandle,tx,ty,sval)
-				end
-			else
-				begin
-					vqt_extent(vdiHandle,sval,ext);
-					if abs(ext[2]-ext[0])>(xy3[2]-xy3[0]) then sval:=StrPFill(length(sval),'#');
-					if midalign then v_gtext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-					else
-						v_gtext(vdiHandle,tx,ty,sval)
-				end
-		end;
-
-	procedure outputerror(tval: TTxtVal; err: shortint);
-
-		begin
-			tval.Align:=ERRORALIGN;
-			tval.Effects:=TF_NORMAL;
-			tval.Rotat:=0;
-			tval.Skew:=0;
-			settxtvalues(tval);
-			sval:=Error2Txt(err);
-			if Speedo then
-				begin
-					if midalign then
-						begin
-							vqt_f_extent(vdiHandle,sval,ext);
-							v_ftext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-						end
-					else
-						v_ftext(vdiHandle,tx,ty,sval)
-				end
-			else
-				begin
-					if midalign then
-						begin
-							vqt_extent(vdiHandle,sval,ext);
-							v_gtext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-						end
-					else
-						v_gtext(vdiHandle,tx,ty,sval)
+					SetFont(tval.Font,tval.Size);
+					cmpval.oldsize:=tval.Size;
+					cmpval.oldfont:=tval.Font
 				end
 		end;
 
@@ -7073,33 +7583,31 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 		if sheetbuffer.protect=bf_Unchecked then protsize:=-1
 		else
 			protsize:=round(2*percentsize);
-		brd1w:=Max(round(percentsize*Border1*1000.0/longint(Application^.Attr.PixW))-1,0);
-		brd2w:=Max(round(percentsize*Border2*1000.0/longint(Application^.Attr.PixW))-1,0);
-		brd3w:=Max(round(percentsize*Border3*1000.0/longint(Application^.Attr.PixW))-1,0);
-		brd1h:=Max(round(percentsize*Border1*1000.0/longint(Application^.Attr.PixH))-1,0);
-		brd2h:=Max(round(percentsize*Border2*1000.0/longint(Application^.Attr.PixH))-1,0);
-		brd3h:=Max(round(percentsize*Border3*1000.0/longint(Application^.Attr.PixH))-1,0);
+		with cmpval do
+			begin
+				oldfont:=GetFontIndex;
+				oldsize:=GetFontSize;
+				brd1w:=Max(round(percentsize*Border1*1000.0/longint(Application^.Attr.PixW))-1,0);
+				brd2w:=Max(round(percentsize*Border2*1000.0/longint(Application^.Attr.PixW))-1,0);
+				brd3w:=Max(round(percentsize*Border3*1000.0/longint(Application^.Attr.PixW))-1,0);
+				brd1h:=Max(round(percentsize*Border1*1000.0/longint(Application^.Attr.PixH))-1,0);
+				brd2h:=Max(round(percentsize*Border2*1000.0/longint(Application^.Attr.PixH))-1,0);
+				brd3h:=Max(round(percentsize*Border3*1000.0/longint(Application^.Attr.PixH))-1,0);
+				gitter:=(sheetbuffer.gitter=bf_Checked)
+			end;
 		oldcolor:=White;
-		oldtcolor:=Black;
 		oldlcolor:=Black;
 		oldstyle:=0;
 		oldinter:=FIS_HOLLOW;
-		oldalign:=TA_LEFT;
-		oldskew:=0;
-		oldrotat:=0;
-		oldeffects:=TF_NORMAL;
-		gitter:=(sheetbuffer.gitter=bf_Checked);
 		umbruch:=(sheetbuffer.umbruch=bf_Checked);
-		umorgit:=gitter or umbruch;
-		oldfont:=GetFontIndex;
-		oldsize:=GetFontSize;
-		SetFont(oldfont,oldsize);
+		umorgit:=cmpval.gitter or umbruch;
 		vsf_color(vdiHandle,oldcolor);
 		vsf_style(vdiHandle,oldstyle);
 		vsf_interior(vdiHandle,oldinter);
 		vsf_interior(Application^.vdiHandle,FIS_SOLID);
-		vst_alignment(vdiHandle,TA_LEFT,TA_BOTTOM,dummy,dummy);
 		vsl_color(vdiHandle,oldlcolor);
+		SetFont(cmpval.oldfont,cmpval.oldsize);
+		InitTextValues(vdiHandle,cmpval);
 		repeat
 			inc(w);
 			{ Spalten durchlaufen }
@@ -7110,7 +7618,7 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 			clp3.W:=GetColWidth(q)-lpoffs-1;
 			clp3.H:=clp.H;
 			xy3[0]:=clp.X2+1-lpoffs;
-			if gitter then dec(xy3[3]);
+			if cmpval.gitter then dec(xy3[3]);
 			protxy[1]:=xy3[1];
 			protxy[3]:=protxy[1]+protsize;
 			notexy[1]:=protxy[3]+1;
@@ -7123,63 +7631,92 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 						vs_clip(Application^.vdiHandle,CLIP_ON,clp2.A2);
 						vs_clip(vdiHandle,CLIP_ON,clp2.A2);
 						xy3[2]:=clp3.X2;
-						if gitter then dec(xy3[2]);
+						if cmpval.gitter then
+							if (PCell(cnum)^.TxtVal.Flags and TFL_GITTERMASK)=0 then dec(xy3[2]);
 						{ Zellinhalt }
 						drawbackground;
 						with PCell(cnum)^ do
 							begin
-								if Data.Value<>0 then
-									if not(bTst(TxtVal.Flags,TFL_NOCLIP)) then
+								vswr_mode(vdiHandle,MD_TRANS);
+								case Typ of
+								CTYPE_TEXT:
+									if Data.Value<>0 then
 										begin
-											vswr_mode(vdiHandle,MD_TRANS);
-											case Typ of
-											CTYPE_TEXT:
-												begin
-													settxtvalues(TxtVal);
-													if Speedo then
-														begin
-															if midalign then
-																begin
-																	vqt_f_extent(vdiHandle,Data.Txt^,ext);
-																	v_ftext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),Data.Txt^)
-																end
-															else
-																v_ftext(vdiHandle,tx,ty,Data.Txt^)
-														end
-													else
-														begin
-															if midalign then
-																begin
-																	vqt_extent(vdiHandle,Data.Txt^,ext);
-																	v_gtext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),Data.Txt^)
-																end
-															else
-																v_gtext(vdiHandle,tx,ty,Data.Txt^)
-														end
-												end;
-											CTYPE_CONST:
-												with Data.Konst^ do
-													begin
-														if Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
-														settxtvalues(TxtVal);
-														outputtext
-													end;
-											CTYPE_FORMULA:
-												with Data.Formula^ do
-													if Error=FE_OK then
-														begin
-															if Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
-															settxtvalues(TxtVal);
-															outputtext
-														end
-													else
-														outputerror(TxtVal,Error)
-											end;
-											vswr_mode(vdiHandle,MD_REPLACE)
+											setfontattr(TxtVal);
+											OutputVectorText(vdiHandle,PCell(cnum),Data.Txt^,TxtVal,cmpval,xy3,false)
 										end;
-								if gitter then
+								CTYPE_CONST:
+									with Data.Konst^ do
+										begin
+											if Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
+											setfontattr(TxtVal);
+											OutputVectorText(vdiHandle,PCell(cnum),sval,TxtVal,cmpval,xy3,true)
+										end;
+								CTYPE_FORMULA:
+									with Data.Formula^ do
+										if Error=FE_OK then
+											begin
+												if Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
+												setfontattr(TxtVal);
+												OutputVectorText(vdiHandle,PCell(cnum),sval,TxtVal,cmpval,xy3,true)
+											end
+										else
+											begin
+												setfontattr(TxtVal);
+												OutputErrorText(vdiHandle,PCell(cnum),TxtVal,cmpval,xy3,Error)
+											end;
+								CTYPE_EMPTY:
 									begin
-										inc(xy3[2]);
+										if bTst(TxtVal.Flags,TFL_TEXTFROMLEFT) then
+											begin
+												tover:=xy3;
+												c2:=q;
+												cell2:=PCell(cnum);
+												repeat
+													dec(longint(cell2),CELLSIZE);
+													dec(c2);
+													if c2<0 then break
+													else
+														begin
+															tover[2]:=tover[0]-1;
+															dec(tover[0],GetColWidth(c2))
+														end;
+												until (cell2^.TxtVal.Flags and TFL_RIGHTMASK)=TFL_TEXT2RIGHT;
+												if c2>=0 then
+													begin
+														setfontattr(cell2^.TxtVal);
+														OutputVectorText(vdiHandle,cell2,cell2^.Data.Txt^,cell2^.TxtVal,cmpval,tover,false)
+													end
+											end
+										else
+											if bTst(TxtVal.Flags,TFL_TEXTFROMRIGHT) then
+												begin
+													tover:=xy3;
+													c2:=q;
+													cell2:=PCell(cnum);
+													repeat
+														inc(longint(cell2),CELLSIZE);
+														inc(c2);
+														if c2>Parms.Columns then break
+														else
+															begin
+																tover[0]:=tover[2]+1;
+																inc(tover[2],GetColWidth(c2));
+																if cmpval.gitter then dec(tover[2])
+															end;
+													until (cell2^.TxtVal.Flags and TFL_LEFTMASK)=TFL_TEXT2LEFT;
+													if c2<=Parms.Columns then
+														begin
+															setfontattr(cell2^.TxtVal);
+															OutputVectorText(vdiHandle,cell2,cell2^.Data.Txt^,cell2^.TxtVal,cmpval,tover,false)
+														end
+												end
+									end
+								end;
+								vswr_mode(vdiHandle,MD_REPLACE);
+								if cmpval.gitter then
+									begin
+										if (PCell(cnum)^.TxtVal.Flags and TFL_GITTERMASK)=0 then inc(xy3[2]);
 										inc(xy3[3])
 									end;
 								with Border do
@@ -7193,151 +7730,153 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 												begin
 													vs_clip(vdiHandle,CLIP_ON,bclp.A2);
 													if Left>=16 then
-														begin
-															if (Left and $f)<>oldlcolor then
-																begin
-																	oldlcolor:=Left and $f;
-																	vsl_color(vdiHandle,oldlcolor)
-																end;
-															case (Left shr 4) of
-															1:
-																begin
-																	brd[0]:=xy3[0];
-																	brd[1]:=xy3[1];
-																	brd[2]:=brd[0];
-																	brd[3]:=xy3[3];
-																	v_pline(vdiHandle,2,brd)
-																end;
-															2:
-																begin
-																	brd[0]:=xy3[0];
-																	brd[1]:=xy3[1];
-																	brd[3]:=xy3[3];
-																	for b:=0 to brd1w do
-																		begin
-																			brd[2]:=brd[0];
-																			v_pline(vdiHandle,2,brd);
-																			inc(brd[0])
-																		end
-																end;
-															3:
-																begin
-																	brd[0]:=xy3[0];
-																	brd[1]:=xy3[1];
-																	brd[3]:=xy3[3];
-																	for b:=0 to brd2w do
-																		begin
-																			brd[2]:=brd[0];
-																			v_pline(vdiHandle,2,brd);
-																			inc(brd[0])
-																		end
-																end;
-															4:
-																begin
-																	brd[0]:=xy3[0];
-																	brd[1]:=xy3[1];
-																	brd[3]:=xy3[3];
-																	for b:=0 to brd3w do
-																		begin
-																			brd[2]:=brd[0];
-																			v_pline(vdiHandle,2,brd);
-																			inc(brd[0])
-																		end
-																end;
-															5:
-																begin
-																	brd[0]:=xy3[0];
-																	brd[1]:=xy3[1];
-																	brd[3]:=xy3[3];
-																	for b:=0 to brd1w do
-																		begin
-																			brd[2]:=brd[0];
-																			v_pline(vdiHandle,2,brd);
-																			inc(brd[0])
-																		end;
-																	brd[0]:=xy3[0]+brd3w;
-																	for b:=0 to brd1w do
-																		begin
-																			brd[2]:=brd[0];
-																			v_pline(vdiHandle,2,brd);
-																			dec(brd[0])
-																		end
+														if (TxtVal.Flags and TFL_LEFTBORDER)=0 then
+															begin
+																if (Left and $f)<>oldlcolor then
+																	begin
+																		oldlcolor:=Left and $f;
+																		vsl_color(vdiHandle,oldlcolor)
+																	end;
+																case (Left shr 4) of
+																1:
+																	begin
+																		brd[0]:=xy3[0];
+																		brd[1]:=xy3[1];
+																		brd[2]:=brd[0];
+																		brd[3]:=xy3[3];
+																		v_pline(vdiHandle,2,brd)
+																	end;
+																2:
+																	begin
+																		brd[0]:=xy3[0];
+																		brd[1]:=xy3[1];
+																		brd[3]:=xy3[3];
+																		for b:=0 to cmpval.brd1w do
+																			begin
+																				brd[2]:=brd[0];
+																				v_pline(vdiHandle,2,brd);
+																				inc(brd[0])
+																			end
+																	end;
+																3:
+																	begin
+																		brd[0]:=xy3[0];
+																		brd[1]:=xy3[1];
+																		brd[3]:=xy3[3];
+																		for b:=0 to cmpval.brd2w do
+																			begin
+																				brd[2]:=brd[0];
+																				v_pline(vdiHandle,2,brd);
+																				inc(brd[0])
+																			end
+																	end;
+																4:
+																	begin
+																		brd[0]:=xy3[0];
+																		brd[1]:=xy3[1];
+																		brd[3]:=xy3[3];
+																		for b:=0 to cmpval.brd3w do
+																			begin
+																				brd[2]:=brd[0];
+																				v_pline(vdiHandle,2,brd);
+																				inc(brd[0])
+																			end
+																	end;
+																5:
+																	begin
+																		brd[0]:=xy3[0];
+																		brd[1]:=xy3[1];
+																		brd[3]:=xy3[3];
+																		for b:=0 to cmpval.brd1w do
+																			begin
+																				brd[2]:=brd[0];
+																				v_pline(vdiHandle,2,brd);
+																				inc(brd[0])
+																			end;
+																		brd[0]:=xy3[0]+cmpval.brd3w;
+																		for b:=0 to cmpval.brd1w do
+																			begin
+																				brd[2]:=brd[0];
+																				v_pline(vdiHandle,2,brd);
+																				dec(brd[0])
+																			end
+																	end
 																end
-															end
-														end;
+															end;
 													if Right>=16 then
-														begin
-															if (Right and $f)<>oldlcolor then
-																begin
-																	oldlcolor:=Right and $f;
-																	vsl_color(vdiHandle,oldlcolor)
-																end;
-															case (Right shr 4) of
-															1:
-																begin
-																	brd[0]:=xy3[2];
-																	brd[1]:=xy3[1];
-																	brd[2]:=brd[0];
-																	brd[3]:=xy3[3];
-																	v_pline(vdiHandle,2,brd)
-																end;
-															2:
-																begin
-																	brd[0]:=xy3[2];
-																	brd[1]:=xy3[1];
-																	brd[3]:=xy3[3];
-																	for b:=0 to brd1w do
-																		begin
-																			brd[2]:=brd[0];
-																			v_pline(vdiHandle,2,brd);
-																			dec(brd[0])
-																		end
-																end;
-															3:
-																begin
-																	brd[0]:=xy3[2];
-																	brd[1]:=xy3[1];
-																	brd[3]:=xy3[3];
-																	for b:=0 to brd2w do
-																		begin
-																			brd[2]:=brd[0];
-																			v_pline(vdiHandle,2,brd);
-																			dec(brd[0])
-																		end
-																end;
-															4:
-																begin
-																	brd[0]:=xy3[2];
-																	brd[1]:=xy3[1];
-																	brd[3]:=xy3[3];
-																	for b:=0 to brd3w do
-																		begin
-																			brd[2]:=brd[0];
-																			v_pline(vdiHandle,2,brd);
-																			dec(brd[0])
-																		end
-																end;
-															5:
-																begin
-																	brd[0]:=xy3[2];
-																	brd[1]:=xy3[1];
-																	brd[3]:=xy3[3];
-																	for b:=0 to brd1w do
-																		begin
-																			brd[2]:=brd[0];
-																			v_pline(vdiHandle,2,brd);
-																			dec(brd[0])
-																		end;
-																	brd[0]:=xy3[2]-brd3w;
-																	for b:=0 to brd1w do
-																		begin
-																			brd[2]:=brd[0];
-																			v_pline(vdiHandle,2,brd);
-																			inc(brd[0])
-																		end
+														if (TxtVal.Flags and TFL_RIGHTBORDER)=0 then
+															begin
+																if (Right and $f)<>oldlcolor then
+																	begin
+																		oldlcolor:=Right and $f;
+																		vsl_color(vdiHandle,oldlcolor)
+																	end;
+																case (Right shr 4) of
+																1:
+																	begin
+																		brd[0]:=xy3[2];
+																		brd[1]:=xy3[1];
+																		brd[2]:=brd[0];
+																		brd[3]:=xy3[3];
+																		v_pline(vdiHandle,2,brd)
+																	end;
+																2:
+																	begin
+																		brd[0]:=xy3[2];
+																		brd[1]:=xy3[1];
+																		brd[3]:=xy3[3];
+																		for b:=0 to cmpval.brd1w do
+																			begin
+																				brd[2]:=brd[0];
+																				v_pline(vdiHandle,2,brd);
+																				dec(brd[0])
+																			end
+																	end;
+																3:
+																	begin
+																		brd[0]:=xy3[2];
+																		brd[1]:=xy3[1];
+																		brd[3]:=xy3[3];
+																		for b:=0 to cmpval.brd2w do
+																			begin
+																				brd[2]:=brd[0];
+																				v_pline(vdiHandle,2,brd);
+																				dec(brd[0])
+																			end
+																	end;
+																4:
+																	begin
+																		brd[0]:=xy3[2];
+																		brd[1]:=xy3[1];
+																		brd[3]:=xy3[3];
+																		for b:=0 to cmpval.brd3w do
+																			begin
+																				brd[2]:=brd[0];
+																				v_pline(vdiHandle,2,brd);
+																				dec(brd[0])
+																			end
+																	end;
+																5:
+																	begin
+																		brd[0]:=xy3[2];
+																		brd[1]:=xy3[1];
+																		brd[3]:=xy3[3];
+																		for b:=0 to cmpval.brd1w do
+																			begin
+																				brd[2]:=brd[0];
+																				v_pline(vdiHandle,2,brd);
+																				dec(brd[0])
+																			end;
+																		brd[0]:=xy3[2]-cmpval.brd3w;
+																		for b:=0 to cmpval.brd1w do
+																			begin
+																				brd[2]:=brd[0];
+																				v_pline(vdiHandle,2,brd);
+																				inc(brd[0])
+																			end
+																	end
 																end
-															end
-														end;
+															end;
 													if Top>=16 then
 														begin
 															if (Top and $f)<>oldlcolor then
@@ -7359,7 +7898,7 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																	brd[1]:=xy3[1];
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd1h do
+																	for b:=0 to cmpval.brd1h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7371,7 +7910,7 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																	brd[1]:=xy3[1];
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd2h do
+																	for b:=0 to cmpval.brd2h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7383,7 +7922,7 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																	brd[1]:=xy3[1];
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd3h do
+																	for b:=0 to cmpval.brd3h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7395,14 +7934,14 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																	brd[1]:=xy3[1];
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd1h do
+																	for b:=0 to cmpval.brd1h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
 																			inc(brd[1])
 																		end;
-																	brd[1]:=xy3[1]+brd3h;
-																	for b:=0 to brd1h do
+																	brd[1]:=xy3[1]+cmpval.brd3h;
+																	for b:=0 to cmpval.brd1h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7432,7 +7971,7 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																	brd[1]:=xy3[3];
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd1h do
+																	for b:=0 to cmpval.brd1h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7444,7 +7983,7 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																	brd[1]:=xy3[3];
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd2h do
+																	for b:=0 to cmpval.brd2h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7456,7 +7995,7 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																	brd[1]:=xy3[3];
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd3h do
+																	for b:=0 to cmpval.brd3h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7468,14 +8007,14 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																	brd[1]:=xy3[3];
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd1h do
+																	for b:=0 to cmpval.brd1h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
 																			dec(brd[1])
 																		end;
-																	brd[1]:=xy3[3]-brd3h;
-																	for b:=0 to brd1h do
+																	brd[1]:=xy3[3]-cmpval.brd3h;
+																	for b:=0 to cmpval.brd1h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7502,10 +8041,10 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																end;
 															2:
 																begin
-																	brd[1]:=(xy3[1]+xy3[3]-brd1h) shr 1;
+																	brd[1]:=(xy3[1]+xy3[3]-cmpval.brd1h) shr 1;
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd1h do
+																	for b:=0 to cmpval.brd1h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7514,10 +8053,10 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																end;
 															3:
 																begin
-																	brd[1]:=(xy3[1]+xy3[3]-brd2h) shr 1;
+																	brd[1]:=(xy3[1]+xy3[3]-cmpval.brd2h) shr 1;
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd2h do
+																	for b:=0 to cmpval.brd2h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7526,10 +8065,10 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																end;
 															4:
 																begin
-																	brd[1]:=(xy3[1]+xy3[3]-brd3h) shr 1;
+																	brd[1]:=(xy3[1]+xy3[3]-cmpval.brd3h) shr 1;
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd3h do
+																	for b:=0 to cmpval.brd3h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7538,17 +8077,17 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																end;
 															5:
 																begin
-																	brd[1]:=(xy3[1]+xy3[3]-brd3h) shr 1;
+																	brd[1]:=(xy3[1]+xy3[3]-cmpval.brd3h) shr 1;
 																	brd[0]:=xy3[0];
 																	brd[2]:=xy3[2];
-																	for b:=0 to brd1h do
+																	for b:=0 to cmpval.brd1h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
 																			inc(brd[1])
 																		end;
-																	brd[1]:=(xy3[1]+xy3[3]+brd3h) shr 1;
-																	for b:=0 to brd1h do
+																	brd[1]:=(xy3[1]+xy3[3]+cmpval.brd3h) shr 1;
+																	for b:=0 to cmpval.brd1h do
 																		begin
 																			brd[3]:=brd[1];
 																			v_pline(vdiHandle,2,brd);
@@ -7575,10 +8114,10 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																end;
 															2:
 																begin
-																	brd[0]:=(xy3[0]+xy3[2]-brd1w) shr 1;
+																	brd[0]:=(xy3[0]+xy3[2]-cmpval.brd1w) shr 1;
 																	brd[1]:=xy3[1];
 																	brd[3]:=xy3[3];
-																	for b:=0 to brd1w do
+																	for b:=0 to cmpval.brd1w do
 																		begin
 																			brd[2]:=brd[0];
 																			v_pline(vdiHandle,2,brd);
@@ -7587,10 +8126,10 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																end;
 															3:
 																begin
-																	brd[0]:=(xy3[0]+xy3[2]-brd2w) shr 1;
+																	brd[0]:=(xy3[0]+xy3[2]-cmpval.brd2w) shr 1;
 																	brd[1]:=xy3[1];
 																	brd[3]:=xy3[3];
-																	for b:=0 to brd2w do
+																	for b:=0 to cmpval.brd2w do
 																		begin
 																			brd[2]:=brd[0];
 																			v_pline(vdiHandle,2,brd);
@@ -7599,10 +8138,10 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																end;
 															4:
 																begin
-																	brd[0]:=(xy3[0]+xy3[2]-brd3w) shr 1;
+																	brd[0]:=(xy3[0]+xy3[2]-cmpval.brd3w) shr 1;
 																	brd[1]:=xy3[1];
 																	brd[3]:=xy3[3];
-																	for b:=0 to brd3w do
+																	for b:=0 to cmpval.brd3w do
 																		begin
 																			brd[2]:=brd[0];
 																			v_pline(vdiHandle,2,brd);
@@ -7611,17 +8150,17 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 																end;
 															5:
 																begin
-																	brd[0]:=(xy3[0]+xy3[2]-brd3w) shr 1;
+																	brd[0]:=(xy3[0]+xy3[2]-cmpval.brd3w) shr 1;
 																	brd[1]:=xy3[1];
 																	brd[3]:=xy3[3];
-																	for b:=0 to brd1w do
+																	for b:=0 to cmpval.brd1w do
 																		begin
 																			brd[2]:=brd[0];
 																			v_pline(vdiHandle,2,brd);
 																			inc(brd[0])
 																		end;
-																	brd[0]:=(xy3[0]+xy3[2]+brd3w) shr 1;
-																	for b:=0 to brd1w do
+																	brd[0]:=(xy3[0]+xy3[2]+cmpval.brd3w) shr 1;
+																	for b:=0 to cmpval.brd1w do
 																		begin
 																			brd[2]:=brd[0];
 																			v_pline(vdiHandle,2,brd);
@@ -7633,39 +8172,40 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 													vs_clip(vdiHandle,CLIP_ON,clp2.A2)
 												end
 										end;
-								if gitter then dec(xy3[3])
+								if cmpval.gitter then dec(xy3[3])
 							end;
 						if umorgit then
 							begin
-								if not(gitter) then dec(xy3[3]);
+								if not(cmpval.gitter) then dec(xy3[3]);
 								{ Begrenzungslinien }
 								if TexelApp.ColFX then vsl_color(Application^.vdiHandle,LWhite)
 								else
 									vsl_type(Application^.vdiHandle,LT_USERDEF);
 								if PCell(cnum)^.Border.Right<16 then
-									begin
-										if q<Parms.Columns then
-											if PCell(cnum+CELLSIZE)^.Border.Left>=16 then goto _nextgit;
-										xy2[0]:=xy3[2];
-										xy2[1]:=xy3[1];
-										xy2[2]:=xy2[0];
-										xy2[3]:=xy3[3]+1;
-										if bTst(PColFlags^[q],CRF_UMBRUCH) and umbruch then
-											begin
-												vsl_type(Application^.vdiHandle,LT_DASHDOTDOT);
-												vsl_color(Application^.vdiHandle,LRed);
-												v_pline(Application^.vdiHandle,2,xy2);
-												if TexelApp.ColFX then
-													begin
-														vsl_color(Application^.vdiHandle,LWhite);
-														vsl_type(Application^.vdiHandle,LT_SOLID)
-													end
-												else
-													vsl_type(Application^.vdiHandle,LT_USERDEF)
-											end
-										else
-											if gitter then v_pline(Application^.vdiHandle,2,xy2)
-									end;
+									if (PCell(cnum)^.TxtVal.Flags and TFL_GITTERMASK)=0 then
+										begin
+											if q<Parms.Columns then
+												if PCell(cnum+CELLSIZE)^.Border.Left>=16 then goto _nextgit;
+											xy2[0]:=xy3[2];
+											xy2[1]:=xy3[1];
+											xy2[2]:=xy2[0];
+											xy2[3]:=xy3[3]+1;
+											if bTst(PColFlags^[q],CRF_UMBRUCH) and umbruch then
+												begin
+													vsl_type(Application^.vdiHandle,LT_DASHDOTDOT);
+													vsl_color(Application^.vdiHandle,LRed);
+													v_pline(Application^.vdiHandle,2,xy2);
+													if TexelApp.ColFX then
+														begin
+															vsl_color(Application^.vdiHandle,LWhite);
+															vsl_type(Application^.vdiHandle,LT_SOLID)
+														end
+													else
+														vsl_type(Application^.vdiHandle,LT_USERDEF)
+												end
+											else
+												if cmpval.gitter then v_pline(Application^.vdiHandle,2,xy2)
+										end;
 								_nextgit:
 								if PCell(cnum)^.Border.Bottom<16 then
 									begin
@@ -7682,7 +8222,7 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 												v_pline(Application^.vdiHandle,2,xy2)
 											end
 										else
-											if gitter then v_pline(Application^.vdiHandle,2,xy2)
+											if cmpval.gitter then v_pline(Application^.vdiHandle,2,xy2)
 									end;
 								_endgit:
 								vsl_type(Application^.vdiHandle,LT_SOLID);
@@ -7715,7 +8255,7 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 								vr_recfl(Application^.vdiHandle,xy3);
 								vswr_mode(Application^.vdiHandle,MD_REPLACE)
 							end;
-						if not(gitter) then inc(xy3[3])
+						if not(cmpval.gitter) then inc(xy3[3])
 					end;
 				inc(q);
 				if q>Parms.Columns then break;
@@ -7816,11 +8356,7 @@ procedure TCalcWindow.Paint(var PaintInfo: TPaintStruct);
 		vsl_color(vdiHandle,Black);
 		vs_clip(vdiHandle,CLIP_ON,SysInfo.Desktop.A2);
 		SetFont(GetStdFontIndex,GetStdFontSize);
-		vst_color(vdiHandle,Black);
-		vst_effects(vdiHandle,TF_NORMAL);
-		vst_rotation(vdiHandle,0);
-		if Speedo then vst_skew(vdiHandle,0);
-		vst_alignment(vdiHandle,TA_LEFT,TA_BASELINE,dummy,dummy);
+		RestoreTextValues(vdiHandle);
 		vsf_interior(Application^.vdiHandle,FIS_HOLLOW);
 		vs_clip(Application^.vdiHandle,CLIP_ON,SysInfo.Desktop.A2)
 	end;
@@ -7830,7 +8366,6 @@ procedure TCalcWindow.ForceVRedraw;
 	var pipe: Pipearray;
 
 	begin
-		wind_update(BEG_UPDATE);
 		pipe[0]:=WM_REDRAW;
 		pipe[1]:=Application^.apID;
 		pipe[2]:=0;
@@ -7839,8 +8374,7 @@ procedure TCalcWindow.ForceVRedraw;
 		pipe[5]:=Work.Y+PaintOffs;
 		pipe[6]:=Work.W;
 		pipe[7]:=Work.H-PaintOffs;
-		appl_write(pipe[1],16,@pipe);
-		wind_update(END_UPDATE)
+		appl_write(pipe[1],16,@pipe)
 	end;
 
 
@@ -7852,8 +8386,9 @@ function TCalcWindow.GetColWidth_mm100(num: integer): word;
 
 
 procedure TCalcWindow.SetColWidth_mm100(num: integer; width: longint; draw: boolean);
-	var r   : LGRECT;
-	    pipe: Pipearray;
+	var cmin,
+	    cmax: integer;
+	    sr  : GRECT;
 
 	begin
 		if width>65535 then width:=65535
@@ -7863,17 +8398,12 @@ procedure TCalcWindow.SetColWidth_mm100(num: integer; width: longint; draw: bool
 		if draw then
 			begin
 				SetScrollerRange;
-				Cell2Rect(0,num,r);
+				cmin:=num;
+				cmax:=num;
+				RowsClearOverflow(0,Parms.Rows,cmin,cmax);
+				RowsCheckOverflow(0,Parms.Rows,cmin,cmax);
 				wind_update(BEG_UPDATE);
-				pipe[0]:=WM_REDRAW;
-				pipe[1]:=Application^.apID;
-				pipe[2]:=0;
-				pipe[3]:=Attr.gemHandle;
-				pipe[4]:=integer(r.X);
-				pipe[5]:=Work.Y+PaintOffs;
-				pipe[6]:=Work.W;
-				pipe[7]:=Work.H;
-				appl_write(pipe[1],16,@pipe);
+				if GetVisibleBlockRect(0,cmin,Parms.Rows,Parms.Columns,sr) then WMRedraw(sr.X-1,Work.Y+PaintOffs,Work.X+Work.W,Work.H);
 				wind_update(END_UPDATE);
 				SetDirty
 			end
@@ -7900,17 +8430,15 @@ procedure TCalcWindow.SetRowHeight_mm100(num: integer; height: longint; draw: bo
 			begin
 				SetScrollerRange;
 				Cell2Rect(num,0,r);
-				wind_update(BEG_UPDATE);
 				pipe[0]:=WM_REDRAW;
 				pipe[1]:=Application^.apID;
 				pipe[2]:=0;
 				pipe[3]:=Attr.gemHandle;
 				pipe[4]:=Work.X;
-				pipe[5]:=integer(r.Y);
+				pipe[5]:=Max(integer(r.Y),Work.Y+PaintOffs);
 				pipe[6]:=Work.W;
 				pipe[7]:=Work.H;
 				appl_write(pipe[1],16,@pipe);
-				wind_update(END_UPDATE);
 				SetDirty
 			end
 	end;
@@ -8117,6 +8645,8 @@ procedure TCalcWindow.WMRButton(mX,mY,KStat,Clicks: integer);
 	var p     : PPopup;
 	    num   : longint;
 	    indx,w,
+	    cmin,
+	    cmax,
 	    r,c   : integer;
 	    cell  : PCell;
 	    pe    : PEmbedded;
@@ -8140,7 +8670,7 @@ procedure TCalcWindow.WMRButton(mX,mY,KStat,Clicks: integer);
 		num:=FindObject(mX,mY,false);
 		if num=OBJ_TOGGLEALL then
 			begin
-				Application^.BubbleHelp(mX,mY,500,BUBBLE_SHEET_TOGGLE);
+				Application^.BubbleHelp(mX,mY,BUBBLE_SHEET_TOGGLE);
 				exit
 			end;
 		if inpstat then
@@ -8258,8 +8788,12 @@ procedure TCalcWindow.WMRButton(mX,mY,KStat,Clicks: integer);
 							AttrDialogs(4,indx,nil);
 						11:
 							begin
+								cmin:=Parms.Cursor.ColStart;
+								cmax:=cmin;
+								RowsClearOverflow(0,Parms.Rows,cmin,cmax);
 								PColFlags^[Parms.Cursor.ColStart]:=PColFlags^[Parms.Cursor.ColStart] xor CRF_UMBRUCH;
-								DrawCells(0,Parms.Cursor.ColStart,Parms.Rows,Parms.Cursor.ColStart);
+								RowsCheckOverflow(0,Parms.Rows,cmin,cmax);
+								DrawCells(0,cmin,Parms.Rows,cmax);
 								SetDirty
 							end;
 						13:
@@ -8295,7 +8829,7 @@ procedure TCalcWindow.WMRButton(mX,mY,KStat,Clicks: integer);
 					begin
 						checkp2;
 						if TexelApp.NoFontSel then p^.Disable(5);
-{						if not(Parms.Cursor.Block) then ... } p^.Disable(11);
+{						if not(Parms.Cursor.Block) then !!! } p^.Disable(11);
 {						if not(Parms.Cursor.Block) then ... } p^.Disable(13);
 						case Application^.Popup(p,mX,mY,POP_CENTER) of
 						0:
@@ -8333,7 +8867,36 @@ procedure TCalcWindow.AttrDialogs(num,indx: integer; cell: PCell);
 	    pb   : PButton;
 	    st   : PStatic;
 	    pfcb : PFormCategoryBox;
+	    x,y,
 	    dummy: integer;
+	    offs,
+	    q    : longint;
+	    c1,c2: PCell;
+	    lfb,
+	    rtb,
+	    topb,
+	    botb : byte;
+	    lfeq,
+	    rteq,
+	    topeq,
+	    boteq: boolean;
+
+	function bequal(b1,b2: byte): boolean;
+	
+		begin
+			bequal:=(((b1 and $0f)=(b2 and $0f)) or ((b1 shr 4)=0) or ((b2 shr 4)=0))
+		end;
+	
+	function bcolor(b1,b2,b3,b4: byte): byte;
+	
+		begin
+			if (b1 shr 4)>0 then bcolor:=(b1 and $0f)
+			else if (b2 shr 4)>0 then bcolor:=(b2 and $0f)
+			else if (b3 shr 4)>0 then bcolor:=(b3 and $0f)
+			else if (b4 shr 4)>0 then bcolor:=(b4 and $0f)
+			else
+				bcolor:=White
+		end;
 
 	begin
 		case num of
@@ -8360,8 +8923,7 @@ procedure TCalcWindow.AttrDialogs(num,indx: integer; cell: PCell);
 								new(pe,Init(textattr,RTTASKEW,6,BUBBLE_TEXTATTR_SKEW));
 								if not(Speedo) then
 									if pe<>nil then pe^.Disable;
-								new(pc,Init(textattr,RTTACLIP,BUBBLE_TEXTATTR_CLIP));
-								if pc<>nil then pc^.Disable; { ... }
+								new(PTriState,Init(textattr,RTTACLIP,BUBBLE_TEXTATTR_CLIP));
 								new(PRadioButton,Init(textattr,RTTALEFT,true,BUBBLE_TEXTATTR_LEFT));
 								new(PRadioButton,Init(textattr,RTTACENTER,true,BUBBLE_TEXTATTR_CENTER));
 								new(PRadioButton,Init(textattr,RTTARIGHT,true,BUBBLE_TEXTATTR_RIGHT));
@@ -8428,9 +8990,9 @@ procedure TCalcWindow.AttrDialogs(num,indx: integer; cell: PCell);
 								else
 									txabuffer.unten:=bf_Checked
 								end;
-								if bTst(Flags,TFL_NOCLIP) then txabuffer.clip:=bf_Unchecked
+								if bTst(Flags,TFL_CLIP) then txabuffer.clip:=bf_Checked
 								else
-									txabuffer.clip:=bf_Checked;
+									txabuffer.clip:=bf_Unchecked;
 								if bTst(Effects,TF_THICKENED) then txabuffer.bold:=bf_Checked
 								else
 									txabuffer.bold:=bf_Unchecked;
@@ -8493,6 +9055,29 @@ procedure TCalcWindow.AttrDialogs(num,indx: integer; cell: PCell);
 				if numformats<>nil then
 					begin
 						numformats^.bedt^.SetText(StrPTrimF(dblock^.GetText));
+						nformbuffer.category:=0;
+						nformbuffer.frmindex:=0;
+						if cell^.Format>=1000 then nformbuffer.category:=1
+						else
+							if cell^.Format<>0 then
+								if TexelApp.Formats^.Count>0 then
+									for q:=0 to TexelApp.Formats^.Count-1 do
+										if PFormat(TexelApp.Formats^.At(q))^.Index=cell^.Format then
+											begin
+												nformbuffer.category:=PFormat(TexelApp.Formats^.At(q))^.Group;
+												break
+											end;
+						numformats^.pfcb^.SetSelection(nformbuffer.category);
+						numformats^.pfcb^.Work;
+						if numformats^.pfcb^.fbox^.List^.Count>0 then
+							for q:=0 to numformats^.pfcb^.fbox^.List^.Count-1 do
+								if PFormat(numformats^.pfcb^.fbox^.List^.At(q))^.Index=cell^.Format then
+									begin
+										nformbuffer.frmindex:=q;
+										break
+									end;
+						numformats^.pfcb^.ScrollBar^.SetPosition(nformbuffer.category);
+						numformats^.pfcb^.fbox^.ScrollBar^.SetPosition(nformbuffer.frmindex);
 						numformats^.MakeWindow;
 						numformats^.pfcb^.fbox^.Work
 					end
@@ -8663,19 +9248,80 @@ procedure TCalcWindow.AttrDialogs(num,indx: integer; cell: PCell);
 				if rahmen<>nil then
 					begin
 						rahmen^.bedt^.SetText(StrPTrimF(dblock^.GetText));
-						with cell^.Border do
+						with rabuf do
 							begin
-								rabuf.lline:=(Left shr 4)+1;
-								rabuf.color:=Left and $0f;
-								rabuf.rline:=(Right shr 4)+1;
-								rabuf.oline:=(Top shr 4)+1;
-								rabuf.uline:=(Bottom shr 4)+1;
-								rabuf.hline:=(Hor shr 4)+1;
-								rabuf.hcolor:=Hor and $0f;
-								rabuf.vline:=(Vert shr 4)+1;
-								rabuf.vcolor:=Vert and $0f;
-								rabuf.gline:=0
+								lline:=0;
+								rline:=0;
+								oline:=0;
+								uline:=0;
+								hline:=0;
+								vline:=0;
+								gline:=0;
+								color:=Black;
+								hcolor:=Black;
+								vcolor:=Black;
+								gcolor:=Black
 							end;
+						if Parms.Cursor.Block then
+							begin
+								lfeq:=true;
+								rteq:=true;
+								topeq:=true;
+								boteq:=true;
+								c1:=GetCell(Parms.Cursor.RowStart,Parms.Cursor.ColStart);
+								c2:=GetCell(Parms.Cursor.RowEnd,Parms.Cursor.ColStart);
+								topb:=c1^.Border.Top;
+								botb:=c2^.Border.Bottom;
+								for x:=Parms.Cursor.ColStart to Parms.Cursor.ColEnd do
+									begin
+										if c1^.Border.Top<>topb then topeq:=false;
+										if c2^.Border.Bottom<>botb then boteq:=false;
+										inc(longint(c1),CELLSIZE);
+										inc(longint(c2),CELLSIZE)
+									end;
+								c1:=GetCell(Parms.Cursor.RowStart,Parms.Cursor.ColStart);
+								c2:=GetCell(Parms.Cursor.RowStart,Parms.Cursor.ColEnd);
+								lfb:=c1^.Border.Left;
+								rtb:=c2^.Border.Right;
+								offs:=CELLSIZE*longint(Parms.Columns+1);
+								for y:=Parms.Cursor.RowStart to Parms.Cursor.RowEnd do
+									begin
+										if c1^.Border.Left<>lfb then lfeq:=false;
+										if c2^.Border.Right<>rtb then rteq:=false;
+										inc(longint(c1),offs);
+										inc(longint(c2),offs)
+									end;
+								if lfeq and rteq and topeq and boteq and (lfb=rtb) and (lfb=topb) and (lfb=botb) and (rtb=topb) and (rtb=botb) and (topb=botb) then
+									begin
+										rabuf.gcolor:=lfb and $0f;
+										rabuf.gline:=(lfb shr 4)+1
+									end
+								else
+									if bequal(lfb,rtb) and bequal(lfb,topb) and bequal(lfb,botb) and bequal(rtb,topb) and bequal(rtb,botb) and bequal(topb,botb) then
+										begin
+											rabuf.color:=bcolor(lfb,rtb,topb,botb);
+											if lfeq and (Parms.Cursor.ColStart=Parms.Cursor.ColEnd) then rabuf.lline:=(lfb shr 4)+1;
+											if rteq and (Parms.Cursor.ColStart=Parms.Cursor.ColEnd) then rabuf.rline:=(rtb shr 4)+1;
+											if topeq and (Parms.Cursor.RowStart=Parms.Cursor.RowEnd) then rabuf.oline:=(topb shr 4)+1;
+											if boteq and (Parms.Cursor.RowStart=Parms.Cursor.RowEnd) then rabuf.uline:=(botb shr 4)+1
+										end
+							end
+						else
+							with cell^.Border do
+								begin
+									rabuf.hline:=(Hor shr 4)+1;
+									rabuf.hcolor:=Hor and $0f;
+									rabuf.vline:=(Vert shr 4)+1;
+									rabuf.vcolor:=Vert and $0f;
+									if bequal(Left,Right) and bequal(Left,Top) and bequal(Left,Bottom) and bequal(Right,Top) and bequal(Right,Bottom) and bequal(Top,Bottom) then
+										begin
+											rabuf.color:=bcolor(Left,Right,Top,Bottom);
+											rabuf.lline:=(Left shr 4)+1;
+											rabuf.rline:=(Right shr 4)+1;
+											rabuf.oline:=(Top shr 4)+1;
+											rabuf.uline:=(Bottom shr 4)+1
+										end
+								end;
 						rahmen^.MakeWindow
 					end
 			end
@@ -8891,6 +9537,15 @@ function TCalcWindow.WMKeyDown(Stat,Key: integer): boolean;
 					if dezminus<>nil then dezminus^.Work;
 				F10:
 					if tsumme<>nil then tsumme^.Work;
+				18688:
+					crsoffs(0,anzv(-1)-Parms.Cursor.Row,bf_Unchecked);
+				20736:
+					crsoffs(0,anzv(1)-Parms.Cursor.Row,bf_Unchecked);
+				20224:
+					begin
+						SetCursorPos(Parms.Rows,Parms.Columns,false);
+						Scroller^.ScrollTo(Scroller^.XRange,Scroller^.YRange)
+					end;
 				Home:
 					begin
 						SetCursorPos(0,0,false);
@@ -8928,7 +9583,7 @@ function TCalcWindow.WMKeyDown(Stat,Key: integer): boolean;
 					if clrinh<>nil then clrinh^.HandleMenu(1);
 				Alt_V:
 					if Embedded<>nil then
-						if objects<>nil then objects^.HandleMenu(3);
+						if objects<>nil then objects^.HandleMenu(9);
 				Alt_H:
 					formrow^.HandleMenu(0);
 				Alt_B:
@@ -8943,7 +9598,7 @@ function TCalcWindow.WMKeyDown(Stat,Key: integer): boolean;
 				if bTst(Stat,K_CTRL) then
 					case (MapKey(Key) and $00ff) of
 					65:
-{						if fill<>nil then fill^.HandleMenu(5) ... };
+{						if fill<>nil then fill^.HandleMenu(5) !!! };
 					77:
 						AttrDialogs(5,0,GetCell(Parms.Cursor.Row,Parms.Cursor.Col));
 					84:
@@ -9076,9 +9731,37 @@ function TCalcWindow.ExitDlg(AnIndx: integer): boolean;
 				SetInpline(GetCell(Parms.Cursor.Row,Parms.Cursor.Col));
 				inpstat:=false;
 				with Parms.Cursor do DrawCells(Row,Col,Row,Col)
-			end
+			end;
+		RTWDTBSWITCH:
+			ToggleToolbar;
 		end;
 		ExitDlg:=false
+	end;
+
+
+procedure TCalcWindow.ToggleToolbar;
+	var pt: PTree;
+
+	begin
+		pt:=Application^.GetAddr(RTICONS);
+		if Class.ToolbarTree<>nil then
+			begin
+				if (tbonoff<>nil) and (pt<>nil) then
+					tbonoff^.ObjAddr^.ob_spec.bit_blk^.bi_pdata:=pt^[RTITBON].ob_spec.bit_blk^.bi_pdata;
+				FreeToolbar(RTWTOOLBAR);
+			end
+		else
+			begin
+				if (tbonoff<>nil) and (pt<>nil) then
+					tbonoff^.ObjAddr^.ob_spec.bit_blk^.bi_pdata:=pt^[RTITBOFF].ob_spec.bit_blk^.bi_pdata;
+				LoadToolbar(RTWTOOLBAR);
+				if Class.ToolbarTree<>nil then
+					with Class.ToolbarTree^[0] do
+						begin
+							ob_height:=Class.ToolbarTree^[ob_head].ob_spec.icon_blk^.ib_hicon+(Class.ToolbarTree^[ob_head].ob_y shl 1);
+							if MagiCVersion>=$0300 then ob_spec.index:=(ob_spec.index and $ff00ffff) or $00020000
+						end
+			end
 	end;
 
 
@@ -9674,7 +10357,9 @@ procedure TCalcWindow.WMClick(mX,mY,KStat: integer);
 
 
 procedure TCalcWindow.InternalDragDrop(mX,mY: integer);
-	var rci,sr: GRECT;
+	var rci,sr,
+	    thisr   : GRECT;
+	    forcexit: boolean;
 	    x,y,
 	    x2,y2,
 	    ro,co,
@@ -9682,10 +10367,16 @@ procedure TCalcWindow.InternalDragDrop(mX,mY: integer);
 	    bs,r,c,
 	    rs,cs,
 	    re,ce,
+	    xs,ys,
+	    xe,ye,
 	    wnd,
-	    dummy : integer;
-	    pw    : PWindow;
-	    pcw   : PCalcWindow;
+	    dummy   : integer;
+	    oldx,
+	    oldy,
+	    xsc,
+	    ysc     : longint;
+	    pw      : PWindow;
+	    pcw     : PCalcWindow;
 
 	procedure InvertDragDropCell;
 		var rect,rc: GRECT;
@@ -9726,6 +10417,7 @@ procedure TCalcWindow.InternalDragDrop(mX,mY: integer);
 	begin
 		wind_update(BEG_UPDATE);
 		wind_update(BEG_MCTRL);
+		GetSheetRect(thisr);
 		with Parms.Cursor do
 			if Block then
 				begin
@@ -9794,6 +10486,37 @@ procedure TCalcWindow.InternalDragDrop(mX,mY: integer);
 						pcw:=nil;
 						wnd:=0
 					end;
+			forcexit:=false;
+			if (pcw=nil) or (pcw=@self) then
+				if IsTop then
+					begin
+						Mouse2Cell(thisr.X1,thisr.Y1,ys,xs);
+						Mouse2Cell(thisr.X2,thisr.Y2,ye,xe);
+						if x<thisr.X1 then xsc:=-GetColWidth(xs)
+						else
+							if x>thisr.X2 then xsc:=GetColWidth(xe)
+							else
+								xsc:=0;
+						if y<thisr.Y1 then ysc:=-GetRowHeight(ys)
+						else
+							if y>thisr.Y2 then ysc:=GetRowHeight(ye)
+							else
+								ysc:=0;
+						if (xsc<>0) or (ysc<>0) then
+							begin
+								vswr_mode(Application^.vdiHandle,MD_REPLACE);
+								vsl_type(Application^.vdiHandle,LT_SOLID);
+								vsf_interior(Application^.vdiHandle,FIS_HOLLOW);
+								oldy:=Scroller^.YPos;
+								oldx:=Scroller^.XPos;
+								Scroller^.ScrollBy(xsc,ysc);
+								evnt_timer(10,0);
+								vswr_mode(Application^.vdiHandle,MD_XOR);
+								vsl_type(Application^.vdiHandle,LT_USERDEF);
+								vsf_interior(Application^.vdiHandle,FIS_PATTERN);
+								forcexit:=((Scroller^.YPos<>oldy) or (Scroller^.XPos<>oldx))
+							end
+					end;
 			pxya[0]:=rci.X1+x-mX;
 			pxya[1]:=rci.Y1+y-mY;
 			pxya[2]:=rci.X2+x-mX;
@@ -9808,7 +10531,7 @@ procedure TCalcWindow.InternalDragDrop(mX,mY: integer);
 			ShowMouse;
 			repeat
 				graf_mkstate(x2,y2,bs,dummy)
-			until (x<>x2) or (y<>y2) or (bs<>1);
+			until (x<>x2) or (y<>y2) or (bs<>1) or forcexit;
 			HideMouse;
 			v_pline(Application^.vdiHandle,5,pxya)
 		until bs<>1;
@@ -9834,15 +10557,18 @@ procedure TCalcWindow.CopyFromInternalDragDrop(from: PCalcWindow; rs,cs,re,ce,r,
 	    yinc,xsc,
 	    xstart,
 	    xend,xinc,
-	    rrel,crel : integer;
+	    cmin,cmax,
+	    cminf,cmaxf,
+	    rmin,rmax,
+	    rrel,crel  : integer;
 	    q,w,
-	    cellinc   : longint;
-	    cell,fcell: PCell;
+	    cellinc    : longint;
+	    cell,fcell : PCell;
 	    lossy,
-	    vorh,mvrnd: boolean;
-	    oldsel    : byte;
-	    ptxt,vars : string;
-	    pp        : PParameter;
+	    vorh,mvrnd : boolean;
+	    oldsel     : byte;
+	    ptxt,vars  : string;
+	    pp         : PParameter;
 
 	begin
 		BusyMouse;
@@ -9866,11 +10592,11 @@ procedure TCalcWindow.CopyFromInternalDragDrop(from: PCalcWindow; rs,cs,re,ce,r,
 			begin
 				if mve then
 					begin
-						if TexelApp.Message(@self,1,WAIT,MESSAGE_WINDOW_DDMOVE)<>1 then goto _raus
+						if Application^.Alert(@self,1,WAIT,MESSAGE_WINDOW_DDMOVE,BUTTON_GOCANCEL)<>1 then goto _raus
 					end
 				else
 					begin
-						if TexelApp.Message(@self,1,WAIT,MESSAGE_WINDOW_DDCOPY)<>1 then goto _raus
+						if Application^.Alert(@self,1,WAIT,MESSAGE_WINDOW_DDCOPY,BUTTON_GOCANCEL)<>1 then goto _raus
 					end
 			end;
 		if IsBlockUsed(r,c,rbis,cbis,1) then goto _raus;
@@ -9905,7 +10631,12 @@ procedure TCalcWindow.CopyFromInternalDragDrop(from: PCalcWindow; rs,cs,re,ce,r,
 						xend:=ce+1;
 						xinc:=1;
 						cellinc:=CELLSIZE
-					end
+					end;
+				cmin:=Min(cs,c);
+				cmax:=Max(ce,cbis);
+				rmin:=Min(rs,r);
+				rmax:=Max(re,rbis);
+				RowsClearOverflow(rmin,rmax,cmin,cmax)
 			end
 		else
 			begin
@@ -9916,7 +10647,16 @@ procedure TCalcWindow.CopyFromInternalDragDrop(from: PCalcWindow; rs,cs,re,ce,r,
 				xsc:=c;
 				xend:=ce+1;
 				xinc:=1;
-				cellinc:=CELLSIZE
+				cellinc:=CELLSIZE;
+				cmin:=c;
+				cmax:=cbis;
+				RowsClearOverflow(r,rbis,cmin,cmax);
+				if mve then
+					begin
+						cminf:=cs;
+						cmaxf:=ce;
+						from^.RowsClearOverflow(rs,re,cminf,cmaxf)
+					end
 			end;
 		repeat
 			fcell:=from^.GetCell(y,xstart);
@@ -9927,6 +10667,7 @@ procedure TCalcWindow.CopyFromInternalDragDrop(from: PCalcWindow; rs,cs,re,ce,r,
 				FreeCell(cell,false);
 				cell^:=fcell^;
 				cell^.Flags:=(cell^.Flags and CELL_EMPTYMASK) or oldsel;
+				cell^.TxtVal.Flags:=cell^.TxtVal.Flags and not(TFL_OVERFLOWMASK);
 				cell^.Data.Value:=0;
 				case cell^.Typ of
 				CTYPE_TEXT:
@@ -10052,14 +10793,26 @@ procedure TCalcWindow.CopyFromInternalDragDrop(from: PCalcWindow; rs,cs,re,ce,r,
 						end;
 					if konstanten<>nil then konstanten^.UpdateList(true)
 				end;
-		SetDirty;
-		DrawCells(r,c,rbis,cbis);
-		Calculate(true);
-		if mvrnd then
+		if from=@self then
 			begin
-				from^.SetDirty;
-				from^.DrawCells(rs,cs,re,ce);
-				if from<>@self then from^.Calculate(true)
+				RowsCheckOverflow(rmin,rmax,cmin,cmax);
+				SetDirty;
+				DrawCells(rmin,cmin,rmax,cmax);
+				AutoCalculate(true)
+			end
+		else
+			begin
+				RowsCheckOverflow(r,rbis,cmin,cmax);
+				if mve then from^.RowsCheckOverflow(rs,re,cminf,cmaxf);
+				SetDirty;
+				DrawCells(r,cmin,rbis,cmax);
+				AutoCalculate(true);
+				if mvrnd then
+					begin
+						from^.SetDirty;
+						from^.DrawCells(rs,cminf,re,cmaxf);
+						from^.AutoCalculate(true)
+					end
 			end;
 		_raus:
 		ArrowMouse
@@ -10475,7 +11228,7 @@ procedure TCalcWindow.DrawCells(rs,cs,re,ce: integer);
 
 	begin
 		wind_update(BEG_UPDATE);
-		if GetVisibleBlockRect(rs,cs,re,ce,sr) then WMRedraw(sr.X,sr.Y,sr.W,sr.H);
+		if GetVisibleBlockRect(rs,cs,re,ce,sr) then WMRedraw(sr.X-1,sr.Y-1,sr.W+2,sr.H+2);
 		wind_update(END_UPDATE)
 	end;
 
@@ -10610,7 +11363,7 @@ procedure TCalcWindow.SetInpline(cell: PCell);
 	
 		begin
 			q:=length(s);
-			if q<=54 { !!! } then inpline^.SetCursor(q)
+			if q<=54 { ... } then inpline^.SetCursor(q)
 			else
 				inpline^.SetCursor(0);
 			inpline^.SetText(s)
@@ -10687,6 +11440,13 @@ procedure TCalcWindow.Calculate(clr: boolean);
 					inc(longint(cell),CELLSIZE)
 				end;
 		ArrowMouse
+	end;
+
+
+procedure TCalcWindow.AutoCalculate(clr: boolean);
+
+	begin
+		if sheetbuffer.autocalc=bf_Checked then Calculate(clr)
 	end;
 
 
@@ -11816,7 +12576,7 @@ function TCalcWindow.Parse(s: string; var svar: string; var baum: PNode; acell: 
 												begin
 													if varerr then
 														begin
-															Application^.Alert(@self,1,NOTE,'Die Variable '+StrPUpper(bvar)+' ist bereits in Zelle '+GetColumnIndex(RefCol)+GetRowIndex(RefRow)+' definiert.','  &OK  ');
+															Application^.Alert(@self,1,NOTE,MESSAGE_WINDOW_VAR1+StrPUpper(bvar)+MESSAGE_WINDOW_VAR2+GetColumnIndex(RefCol)+GetRowIndex(RefRow)+MESSAGE_WINDOW_VAR3,BUTTON_OK);
 															exit
 														end
 													else
@@ -12595,6 +13355,82 @@ function TCalcWindow.EvalNode(cell: PCell; knoten: PNode): TNumber;
 								sorted:=false
 							end
 				until sorted
+		end;
+
+	function scriptno(oldval: TNumber; extnum: integer): TNumber;
+		var q,qbis,
+		    cx,cy : integer;
+		    prm   : string;
+
+		begin
+			scriptno:=oldval;
+			qbis:=knoten^.Count;
+			prm:='';
+			Cell2RC(cell,ar,ac);
+			cx:=ac;
+			cy:=ar;
+			if extnum<NT_EXTMIN then
+				begin
+					node:=PNode(knoten^.Left.List^[0]);
+					if node=nil then
+						begin
+							fnerror:=FE_UNDEFINED;
+							fnecell:=cell;
+							scriptno:=0.0;
+							exit
+						end;
+					if node^.Typ=NT_RANGE then
+						begin
+							fnerror:=FE_UNDEFINED;
+							fnecell:=cell;
+							scriptno:=0.0;
+							exit
+						end;
+					dummy:=EvalNode(cell,node);
+					if fnerror<>FE_OK then
+						begin
+							scriptno:=0.0;
+							exit
+						end;
+					if not(isint(dummy)) then
+						begin
+							fnerror:=FE_UNDEFINED;
+							fnecell:=cell;
+							scriptno:=0.0;
+							exit
+						end;
+					q:=1
+				end
+			else
+				begin
+					dummy:=extnum-10000;
+					q:=0
+				end;
+			while (q<qbis) and (fnerror=FE_OK) do
+				begin
+					node:=PNode(knoten^.Left.List^[q]);
+					if node<>nil then
+						begin
+							if node^.Typ<>NT_RANGE then prm:=prm+' '+Val2TxtF(EvalNode(cell,node),15,0,nil)
+							else
+								begin
+									if getrange(node) then
+										begin
+											scriptno:=0.0;
+											exit
+										end;
+									prm:=prm+' '+GetColumnIndex(xvon)+GetRowIndex(yvon)+':'+GetColumnIndex(xbis)+GetRowIndex(ybis)
+								end
+						end;
+					inc(q)
+				end;
+			if fnerror=FE_OK then
+				if not(TexelApp.ScriptByNumber(trunc(dummy),GetWindowFileName,GetColumnIndex(cx)+GetRowIndex(cy),prm)) then
+					begin
+						fnerror:=FE_EXTERN;
+						fnecell:=cell;
+						scriptno:=0.0
+					end
 		end;
 	
 	function quantil(alpha: TNumber): TNumber;
@@ -13613,7 +14449,7 @@ function TCalcWindow.EvalNode(cell: PCell; knoten: PNode): TNumber;
 											else
 												if dummy2>=0.0 then EvalNode:=arctan(dummy2/dummy)+pi
 												else
-													EvalNode:=arctan(-dummy2/dummy)-ev_pihalbe
+													EvalNode:=arctan(-dummy/dummy2)-ev_pihalbe
 								end
 						end;
 					NT_ARCCOT:
@@ -13863,6 +14699,8 @@ function TCalcWindow.EvalNode(cell: PCell; knoten: PNode): TNumber;
 						EvalNode:=EvalNode(cell,Left.Node)*ev_rad2grad;
 					NT_RAD:
 						EvalNode:=EvalNode(cell,Left.Node)*ev_grad2rad;
+					NT_SCRIPTNO:
+						EvalNode:=scriptno(cell^.Data.Formula^.Value,0);
 					NT_BALMER:
 						begin
 							dummy:=EvalNode(cell,Left.Node);
@@ -14091,7 +14929,22 @@ function TCalcWindow.EvalNode(cell: PCell; knoten: PNode): TNumber;
 									EvalNode:=0.0
 						end;
 					NT_STDNORMVERT:
-						EvalNode:=ev_normalfaktor*exp(-sqr(EvalNode(cell,Left.Node))/2);
+						EvalNode:=ev_normalfaktor*exp(-sqr(EvalNode(cell,Left.Node))/2.0);
+					NT_NORMVERT:
+						begin
+							dummy2:=EvalNode(cell,PNode(Left.List^[1]));
+							dummy3:=EvalNode(cell,PNode(Left.List^[2]));
+							if fnerror<>FE_OK then EvalNode:=0.0
+							else
+								if dummy3<=0.0 then
+									begin
+										EvalNode:=0.0;
+										fnerror:=FE_UNDEFINED;
+										fnecell:=cell
+									end
+								else
+									EvalNode:=ev_normalfaktor*exp(-sqr(EvalNode(cell,PNode(Left.List^[0]))-dummy2)/(2.0*dummy3))/sqrt(dummy3)
+						end;
 					NT_EXPVERT:
 						begin
 							dummy:=EvalNode(cell,Left.Node);
@@ -14489,10 +15342,15 @@ function TCalcWindow.EvalNode(cell: PCell; knoten: PNode): TNumber;
 							EvalNode:=0.0;
 					else
 						begin
-							EvalNode:=0.0;
-							fnerror:=FE_OPUNKNOWN;
-							fneOp:=Typ;
-							fnecell:=cell
+							if (Typ>=NT_EXTMIN) and (Typ<=NT_EXTMAX) then
+								EvalNode:=scriptno(cell^.Data.Formula^.Value,Typ)
+							else
+								begin
+									EvalNode:=0.0;
+									fnerror:=FE_OPUNKNOWN;
+									fneOp:=Typ;
+									fnecell:=cell
+								end
 						end
 					end
 				end
@@ -14603,9 +15461,11 @@ function TCalcWindow.Error2Txt(err: shortint): string;
 		FE_OPUNKNOWN:
 			Error2Txt:='#OPCODE?';
 		FE_ERROR:
-			Error2Txt:='#FEHLER';
+			Error2Txt:='#'+STRING_ERR_ERROR;
 		FE_OVERFLOW:
-			Error2Txt:='#öBERLAUF';
+			Error2Txt:='#'+STRING_ERR_OVERFLOW;
+		FE_EXTERN:
+			Error2Txt:='#EXTERN?';
 		FE_OK:
 			Error2Txt:='#OK!'
 		else
@@ -14619,6 +15479,7 @@ procedure TCalcWindow.ChangeCell(cell: PCell; intxt: string; r,c: integer; chgva
 
 	var vrnd,cclr: boolean;
 	    oldfpts  : byte;
+	    cmin,cmax,
 	    oldctyp,q: integer;
 	    vars,otxt: string;
 	    pc       : PConst;
@@ -14720,6 +15581,9 @@ procedure TCalcWindow.ChangeCell(cell: PCell; intxt: string; r,c: integer; chgva
 
 	begin
 		cclr:=true;
+		cmin:=c;
+		cmax:=c;
+		RowsClearOverflow(r,r,cmin,cmax);
 		oldctyp:=cell^.Typ;
 		case oldctyp of
 		CTYPE_CONST:
@@ -14864,11 +15728,59 @@ procedure TCalcWindow.ChangeCell(cell: PCell; intxt: string; r,c: integer; chgva
 		if inpcancel<>nil then inpcancel^.Hide(true);
 		if inpok<>nil then inpok^.Hide(true);
 		inpline^.Disable;
-		DrawCells(r,c,r,c);
+		RowsCheckOverflow(r,r,cmin,cmax);
+		DrawCells(r,cmin,r,cmax);
 		if vrnd then
 			begin
 				SetDirty;
-				if sheetbuffer.autocalc=bf_Checked then Calculate(cclr)
+				AutoCalculate(cclr)
+			end
+	end;
+
+
+procedure TCalcWindow.CheckToolbarTextFX(cell: PCell);
+
+	begin
+		with cell^ do
+			begin
+				if pfett<>nil then
+					begin
+						if bTst(TxtVal.Effects,TF_THICKENED) then pfett^.Check
+						else
+							pfett^.Uncheck
+					end;
+				if pkursiv<>nil then
+					begin
+						if bTst(TxtVal.Effects,TF_SLANTED) then pkursiv^.Check
+						else
+							pkursiv^.Uncheck
+					end;
+				if punter<>nil then
+					begin
+						if bTst(TxtVal.Effects,TF_UNDERLINED) then punter^.Check
+						else
+							punter^.Uncheck
+					end;
+				case (TxtVal.Align and $0f) of
+				TA_CENTER:
+					begin
+						if palignleft<>nil then palignleft^.Uncheck;
+						if paligncenter<>nil then paligncenter^.Check;
+						if palignright<>nil then palignright^.Uncheck
+					end;
+				TA_RIGHT:
+					begin
+						if palignleft<>nil then palignleft^.Uncheck;
+						if paligncenter<>nil then paligncenter^.Uncheck;
+						if palignright<>nil then palignright^.Check
+					end
+				else
+					begin
+						if palignleft<>nil then palignleft^.Check;
+						if paligncenter<>nil then paligncenter^.Uncheck;
+						if palignright<>nil then palignright^.Uncheck
+					end
+				end
 			end
 	end;
 
@@ -14912,53 +15824,25 @@ procedure TCalcWindow.SetCursorPos(r,c: integer; scrl: boolean);
 										newsize:=-1
 									end
 							end;
-				if pcbox<>nil then pcbox^.SetSelection(Color,false);
+				if pcbox<>nil then
+					begin
+						if Interior=FIS_HOLLOW then pcbox^.SetSelection(White,false)
+						else
+							pcbox^.SetSelection(Color,false)
+					end;
 				if ptcbox<>nil then ptcbox^.SetSelection(TxtVal.Color,false);
 				if ppbox<>nil then
 					begin
-						if Style=8 then ppbox^.SetSelection(7,false)
+						if Interior=FIS_SOLID then ppbox^.SetSelection(7,false)
 						else
-							ppbox^.SetSelection(Style,false)
-					end;
-				if pfett<>nil then
-					begin
-						if bTst(TxtVal.Effects,TF_THICKENED) then pfett^.Check
-						else
-							pfett^.Uncheck
-					end;
-				if pkursiv<>nil then
-					begin
-						if bTst(TxtVal.Effects,TF_SLANTED) then pkursiv^.Check
-						else
-							pkursiv^.Uncheck
-					end;
-				if punter<>nil then
-					begin
-						if bTst(TxtVal.Effects,TF_UNDERLINED) then punter^.Check
-						else
-							punter^.Uncheck
-					end;
-				case (TxtVal.Align and $0f) of
-				TA_CENTER:
-					begin
-						if palignleft<>nil then palignleft^.Uncheck;
-						if paligncenter<>nil then paligncenter^.Check;
-						if palignright<>nil then palignright^.Uncheck
-					end;
-				TA_RIGHT:
-					begin
-						if palignleft<>nil then palignleft^.Uncheck;
-						if paligncenter<>nil then paligncenter^.Uncheck;
-						if palignright<>nil then palignright^.Check
+							if Interior=FIS_HOLLOW then ppbox^.SetSelection(0,false)
+							else
+								if Style=8 then ppbox^.SetSelection(7,false)
+								else
+									ppbox^.SetSelection(Style,false)
 					end
-				else
-					begin
-						if palignleft<>nil then palignleft^.Check;
-						if paligncenter<>nil then paligncenter^.Uncheck;
-						if palignright<>nil then palignright^.Uncheck
-					end
-				end
 			end;
+		CheckToolbarTextFX(cell);
 		SetInpline(cell);
 		if scrl then
 			begin
@@ -15066,6 +15950,7 @@ procedure TCalcWindow.SetScrollerRange;
 		for q:=0 to Parms.Columns do inc(w,GetColWidth(q));
 		h:=1;
 		for q:=0 to Parms.Rows do inc(h,GetRowHeight(q));
+		Scroller^.SetPageSize;
 		Scroller^.SetRange(w,h)
 	end;
 
@@ -15150,7 +16035,7 @@ procedure TCalcWindow.SetWindowFileName(s: string);
 
 	begin
 		SetTitle(CompressPath(s,76));
-		if TexelApp.abruf<>nil then TexelApp.abruf^.Add(s);
+		if TexelApp.abruf<>nil then TexelApp.abruf^.Add(s,true);
 		if (s<>longfile) and (length(longfile)>0) then
 			if Application^.OLGAManager>=0 then
 				begin
@@ -15187,7 +16072,9 @@ procedure TCalcWindow.SetDirty;
 		if not(Dirty) then
 			begin
 				SetTitle('* '+GetTitle);
-				Dirty:=true
+				Dirty:=true;
+				if abandon<>nil then
+					if length(GetWindowFileName)>0 then abandon^.Enable
 			end;
 		if pagepreview<>nil then pagepreview^.Update(false)
 	end;
@@ -15201,7 +16088,8 @@ procedure TCalcWindow.ClearDirty;
 			begin
 				Dirty:=false;
 				s:=GetTitle;
-				if StrPLeft(s,2)='* ' then SetTitle(StrPRight(s,length(s)-2))
+				if StrPLeft(s,2)='* ' then SetTitle(StrPRight(s,length(s)-2));
+				if abandon<>nil then abandon^.Disable
 			end
 	end;
 
@@ -15338,6 +16226,7 @@ function TCalcWindow.FontSize2Index(asize: integer): integer;
 
 function TCalcWindow.FontChanged(OrgID,AnID,ASize,AColor,BackColor,TheEffects,ARotation,ASkew,HorAlign,VertAlign,AWidth,TrackKern: integer; Size31: fix31; PairKern,cWnd: boolean): boolean;
 	var rs,cs,re,ce,
+	    cmin,cmax,
 	    x,y        : integer;
 	    cell       : PCell;
 
@@ -15371,6 +16260,9 @@ function TCalcWindow.FontChanged(OrgID,AnID,ASize,AColor,BackColor,TheEffects,AR
 			TVA_BOTTOM:
 				VertAlign:=TA_UNTEN
 			end;
+		cmin:=cs;
+		cmax:=ce;
+		RowsClearOverflow(rs,re,cmin,cmax);
 		for y:=rs to re do
 			begin
 				cell:=GetCell(y,cs);
@@ -15404,8 +16296,9 @@ function TCalcWindow.FontChanged(OrgID,AnID,ASize,AColor,BackColor,TheEffects,AR
 						inc(longint(cell),CELLSIZE)
 					end
 			end;
+		RowsCheckOverflow(rs,re,cmin,cmax);
 		SetDirty;
-		DrawCells(rs,cs,re,ce)
+		DrawCells(rs,cmin,re,cmax)
 	end;
 
 
@@ -15562,6 +16455,7 @@ procedure TCalcWindow.FontSelect;
 
 procedure TCalcWindow.Cut;
 	var p: PEmbedded;
+	    q: integer;
 
 	begin
 		if inpstat then inherited Cut
@@ -15569,11 +16463,11 @@ procedure TCalcWindow.Cut;
 			begin
 				p:=FirstSelectedObject;
 				if p<>nil then
-					if Application^.Alert(@self,1,WAIT,'Objekt oder Zellen ausschneiden?','&Objekt|&Zellen|&Abbruch')=1 then
-						begin
-							p^.Cut;
-							exit
-						end;
+					begin
+						q:=Application^.Alert(@self,1,WAIT,MESSAGE_WINDOW_CUT,BUTTON_OBJCELLCANCEL);
+						if q=1 then p^.Cut;
+						if q<>2 then exit
+					end;
 				CutCells
 			end
 	end;
@@ -15581,6 +16475,7 @@ procedure TCalcWindow.Cut;
 
 procedure TCalcWindow.Copy;
 	var p: PEmbedded;
+	    q: integer;
 
 	begin
 		if inpstat then inherited Copy
@@ -15588,11 +16483,11 @@ procedure TCalcWindow.Copy;
 			begin
 				p:=FirstSelectedObject;
 				if p<>nil then
-					if Application^.Alert(@self,1,WAIT,'Objekt oder Zellen kopieren?','&Objekt|&Zellen|&Abbruch')=1 then
-						begin
-							p^.Copy;
-							exit
-						end;
+					begin
+						q:=Application^.Alert(@self,1,WAIT,MESSAGE_WINDOW_COPY,BUTTON_OBJCELLCANCEL);
+						if q=1 then p^.Copy;
+						if q<>2 then exit
+					end;
 				CopyCells
 			end
 	end;
@@ -15609,6 +16504,7 @@ procedure TCalcWindow.Paste;
 
 procedure TCalcWindow.Delete;
 	var p: PEmbedded;
+	    q: integer;
 
 	begin
 		if inpstat then inherited Delete
@@ -15616,11 +16512,11 @@ procedure TCalcWindow.Delete;
 			begin
 				p:=FirstSelectedObject;
 				if p<>nil then
-					if Application^.Alert(@self,1,WAIT,'Objekt oder Zellen lîschen?','&Objekt|&Zellen|&Abbruch')=1 then
-						begin
-							p^.Destroy;
-							exit
-						end;
+					begin
+						q:=Application^.Alert(@self,1,WAIT,MESSAGE_WINDOW_DELETE,BUTTON_OBJCELLCANCEL);
+						if q=1 then p^.Destroy;
+						if q<>2 then exit
+					end;
 				if clrinh<>nil then clrinh^.HandleMenu(2)
 			end
 	end;
@@ -15882,29 +16778,32 @@ procedure TCalcWindow.InsertFromClipboard(what,op: integer; empty,transpose,repo
 	var ttxt,
 	    utxt,
 	    tname,
-	    tdescr : string;
-	    header : TTexelHeader;
-	    bheader: TBlockHeader;
+	    tdescr  : string;
+	    header  : TTexelHeader;
+	    bheader : TBlockHeader;
 	    oldfpos,
-	    res,q  : longint;
+	    res,q   : longint;
+	    cmin,
+	    cmax,
 	    x,y,i,
 	    rs,cs,
 	    re,ce,
 	    crr,crc,
 	    xo,yo,e,
 	    xo2,yo2,
-	    hdl,w  : integer;
-	    coffs  : word;
-	    cell   : PCell;
-	    dcell  : TCell;
+	    hdl,w   : integer;
+	    coffs   : word;
+	    cell    : PCell;
+	    dcell   : TCell;
+	    ocleared,
 	    lossy,
 	    vrnd,
 	    vorh,
-	    rerror : boolean;
+	    rerror  : boolean;
 	    l,fpt,
-	    err    : byte;
-	    rval   : real;
-	    pp     : PParameter;
+	    err     : byte;
+	    rval    : real;
+	    pp      : PParameter;
 
 	function bread(var buffer; count: longint): boolean;
 		var len: longint;
@@ -15992,6 +16891,7 @@ procedure TCalcWindow.InsertFromClipboard(what,op: integer; empty,transpose,repo
 			if alloc then
 				begin
 					dcell.Flags:=(dcell.Flags and CELL_EMPTYMASK) or (cell^.Flags and CELL_SELECTED);
+					dcell.TxtVal.Flags:=dcell.TxtVal.Flags and not(TFL_OVERFLOWMASK);
 					if bTst(what,INS_FORMAT) then
 						begin
 							vrnd:=true;
@@ -16270,6 +17170,7 @@ procedure TCalcWindow.InsertFromClipboard(what,op: integer; empty,transpose,repo
 	begin
 		if Clipboard=nil then exit;
 		vrnd:=false;
+		ocleared:=false;
 		with Clipboard^ do
 			begin
 				if not(OpenClipboard(false)) then exit;
@@ -16331,9 +17232,13 @@ procedure TCalcWindow.InsertFromClipboard(what,op: integer; empty,transpose,repo
 										end
 								end;
 						if lossy then
-							if TexelApp.Message(@self,1,WAIT,MESSAGE_WINDOW_CCPCOPY)<>1 then goto _fehler;
+							if Application^.Alert(@self,1,WAIT,MESSAGE_WINDOW_CCPCOPY,BUTTON_GOCANCEL)<>1 then goto _fehler;
 						if op=INS_OP_NONE then
 							if IsBlockUsed(rs,cs,re,ce,1) then goto _fehler;
+						cmin:=cs;
+						cmax:=ce;
+						RowsClearOverflow(rs,re,cmin,cmax);
+						ocleared:=true;
 						xo:=cs-bheader.ColOffs;
 						yo:=rs-bheader.RowOffs;
 						if transpose then
@@ -16496,24 +17401,33 @@ procedure TCalcWindow.InsertFromClipboard(what,op: integer; empty,transpose,repo
 				else
 					begin
 						{ andere Formate... }
-						if report then Application^.Alert(@self,1,NOTE,'Im Klemmbrett befinden sich keine passenden Daten, die eingefÅgt werden kînnen.','  &OK  ')
+						if report then Application^.Alert(@self,1,NOTE,MESSAGE_CLIP_PASTE,BUTTON_OK)
 						else
 							Application^.Bing
 					end;
 				_raus:
 				CloseClipboard
 			end;
+		if ocleared then RowsCheckOverflow(rs,re,cmin,cmax);
 		if vrnd then
 			begin
 				SetDirty;
-				DrawCells(rs,cs,re,ce);
-				Calculate(true)
+				DrawCells(rs,cmin,re,cmax);
+				AutoCalculate(true);
+				if not(Parms.Cursor.Block) then
+					begin
+						cell:=GetCell(Parms.Cursor.Row,Parms.Cursor.Col);
+						CheckToolbarTextFX(cell);
+						SetInpline(cell)
+					end
 			end
 	end;
 
 
 procedure TCalcWindow.DeleteCells;
 	var x,y,
+	    cmin,
+	    cmax,
 	    rs,re,
 	    cs,ce : integer;
 	    cell  : PCell;
@@ -16536,6 +17450,9 @@ procedure TCalcWindow.DeleteCells;
 					cs:=Col;
 					ce:=Col
 				end;
+		cmin:=cs;
+		cmax:=ce;
+		RowsClearOverflow(rs,re,cmin,cmax);
 		for y:=rs to re do
 			begin
 				cell:=GetCell(y,cs);
@@ -16549,11 +17466,12 @@ procedure TCalcWindow.DeleteCells;
 						inc(longint(cell),CELLSIZE)
 					end
 			end;
+		RowsCheckOverflow(rs,re,cmin,cmax);
 		if vrnd then
 			begin
 				SetDirty;
-				DrawCells(rs,cs,re,ce);
-				Calculate(true)
+				DrawCells(rs,cmin,re,cmax);
+				AutoCalculate(true)
 			end
 		else
 			Application^.Bing
@@ -16566,12 +17484,20 @@ procedure TCalcWindow.InsertCells(rs,cs,re,ce,dir: integer);
 	var x,y,
 	    von,
 	    anz,
+	    cmin,cmax,
+	    rmin,rmax,
 	    rdif,
-	    cdif    : integer;
+	    cdif     : integer;
 	    cell,
-	    ocell   : PCell;
-	    oldsel  : byte;
-	    movesize: boolean;
+	    ocell    : PCell;
+	    oldsel   : byte;
+	    movesize : boolean;
+
+	procedure blockclear;
+	
+		begin
+			RowsClearOverflow(rmin,rmax,cmin,cmax)
+		end;
 
 	begin
 		BusyMouse;
@@ -16579,6 +17505,11 @@ procedure TCalcWindow.InsertCells(rs,cs,re,ce,dir: integer);
 		CRS_LEFT:
 			begin
 				if IsBlockUsed(rs,0,re,ce-cs,0) then goto _raus;
+				rmin:=rs;
+				rmax:=re;
+				cmin:=0;
+				cmax:=ce;
+				blockclear;
 				movesize:=(rs=0) and (re=Parms.Rows);
 				FreeBlock(rs,0,re,ce-cs,false);
 				if cs>0 then
@@ -16611,6 +17542,11 @@ procedure TCalcWindow.InsertCells(rs,cs,re,ce,dir: integer);
 		CRS_RIGHT:
 			begin
 				if IsBlockUsed(rs,Parms.Columns+cs-ce,re,Parms.Columns,0) then goto _raus;
+				rmin:=rs;
+				rmax:=re;
+				cmin:=cs;
+				cmax:=Parms.Columns;
+				blockclear;
 				movesize:=(rs=0) and (re=Parms.Rows);
 				FreeBlock(rs,Parms.Columns+cs-ce,re,Parms.Columns,false);
 				anz:=Parms.Columns-ce;
@@ -16644,6 +17580,11 @@ procedure TCalcWindow.InsertCells(rs,cs,re,ce,dir: integer);
 		CRS_UP:
 			begin
 				if IsBlockUsed(0,cs,re-rs,ce,0) then goto _raus;
+				rmin:=0;
+				rmax:=re;
+				cmin:=cs;
+				cmax:=ce;
+				blockclear;
 				movesize:=(cs=0) and (ce=Parms.Columns);
 				FreeBlock(0,cs,re-rs,ce,false);
 				if rs>0 then
@@ -16675,6 +17616,11 @@ procedure TCalcWindow.InsertCells(rs,cs,re,ce,dir: integer);
 		CRS_DOWN:
 			begin
 				if IsBlockUsed(Parms.Rows+rs-re,cs,Parms.Rows,ce,0) then goto _raus;
+				rmin:=rs;
+				rmax:=Parms.Rows;
+				cmin:=cs;
+				cmax:=ce;
+				blockclear;
 				movesize:=(cs=0) and (ce=Parms.Columns);
 				FreeBlock(Parms.Rows+rs-re,cs,Parms.Rows,ce,false);
 				anz:=Parms.Rows-re;
@@ -16706,6 +17652,7 @@ procedure TCalcWindow.InsertCells(rs,cs,re,ce,dir: integer);
 			end
 		end;
 		TranslateCells(rs,cs,re,ce,rdif,cdif,false);
+		RowsCheckOverflow(rmin,rmax,cmin,cmax);
 		SetDirty;
 		if movesize then
 			begin
@@ -16713,8 +17660,8 @@ procedure TCalcWindow.InsertCells(rs,cs,re,ce,dir: integer);
 				ForceVRedraw
 			end
 		else
-			DrawCells(rs,cs,re,ce);
-		Calculate(true);
+			DrawCells(rmin,cmin,rmax,cmax);
+		AutoCalculate(true);
 		_raus:
 		ArrowMouse
 	end;
@@ -16828,10 +17775,6 @@ procedure TCalcWindow.ClearBlock(rs,cs,re,ce: integer);
 
 
 function TCalcWindow.IsBlockUsed(rs,cs,re,ce,tnum: integer): boolean;
-	const atxt: array [0..1] of string[69] =
-	            ('Beim Verschieben gehen Formel-, Text- oder Zahlendaten verloren.',
-	             'Im Zielbereich werden Daten Åberschrieben!');
-
 	var x,y : integer;
 	    cell: PCell;
 
@@ -16844,7 +17787,14 @@ function TCalcWindow.IsBlockUsed(rs,cs,re,ce,tnum: integer): boolean;
 					begin
 						if cell^.Data.Value<>0 then
 							begin
-								if Application^.Alert(@self,1,WAIT,atxt[tnum],' &Weiter |&Abbruch')<>1 then IsBlockUsed:=true;
+								if tnum=0 then
+									begin
+										if Application^.Alert(@self,1,WAIT,MESSAGE_WINDOW_BLOCK1,BUTTON_GOCANCEL)<>1 then IsBlockUsed:=true
+									end
+								else
+									begin
+										if Application^.Alert(@self,1,WAIT,MESSAGE_WINDOW_BLOCK2,BUTTON_GOCANCEL)<>1 then IsBlockUsed:=true
+									end;
 								exit
 							end;
 						inc(longint(cell),CELLSIZE)
@@ -16887,6 +17837,8 @@ procedure TCalcWindow.Sort(n1,n2,n3,nrs: integer; n1up,n2up,n3up,rows,cse,ebeg,l
 	    x,y,w,
 	    i,h,
 	    v,j,
+	    cmin,
+	    cmax,
 	    dummy : integer;
 	    n2offs,
 	    n3offs,
@@ -17271,6 +18223,9 @@ procedure TCalcWindow.Sort(n1,n2,n3,nrs: integer; n1up,n2up,n3up,rows,cse,ebeg,l
 			anz:=re-rs;
 		getmem(p,(anz+1) shl 1);
 		if p=nil then goto _raus;
+		cmin:=cs;
+		cmax:=ce;
+		RowsClearOverflow(rs,re,cmin,cmax);
 		if rows then
 			for q:=0 to anz do p^[q]:=cs+q
 		else
@@ -17434,11 +18389,12 @@ procedure TCalcWindow.Sort(n1,n2,n3,nrs: integer; n1up,n2up,n3up,rows,cse,ebeg,l
 					end
 			end;
 		freemem(p,(anz+1) shl 1);
+		RowsCheckOverflow(rs,re,cmin,cmax);
 		if valid then
 			begin
 				SetDirty;
-				DrawCells(rs,cs,re,ce);
-				Calculate(true)
+				DrawCells(rs,cmin,re,cmax);
+				AutoCalculate(true)
 			end;
 		Application^.Bing;
 		_raus:
@@ -17556,7 +18512,7 @@ function TCalcWindow.Num2Minute(num: TNumber): integer;
 	begin
 		if (num<=0.0) or (num>=109573.0) then Num2Minute:=0
 		else
-			Num2Minute:=trunc(frac(frac(num)*24.0)*60.0)
+			Num2Minute:=trunc(frac(frac(num+TIMEROUND)*24.0)*60.0)
 	end;
 
 
@@ -17565,7 +18521,7 @@ function TCalcWindow.Num2Second(num: TNumber): integer;
 	begin
 		if (num<=0.0) or (num>=109573.0) then Num2Second:=0
 		else
-			Num2Second:=trunc(frac(frac(frac(num)*24.0)*60.0)*60.0)
+			Num2Second:=trunc(frac(frac(frac(num+TIMEROUND)*24.0)*60.0)*60.0)
 	end;
 
 
@@ -17767,27 +18723,6 @@ function TCalcWindow.Time(Hour,Minute,Second: integer): TNumber;
 
 	begin
 		Time:=std1*Hour+min1*Minute+sek1*Second
-	end;
-
-
-function TCalcWindow.std1: TNumber;
-
-	begin
-		std1:=1.0/24.0
-	end;
-
-
-function TCalcWindow.min1: TNumber;
-
-	begin
-		min1:=1.0/1440.0
-	end;
-
-
-function TCalcWindow.sek1: TNumber;
-
-	begin
-		sek1:=1.0/86400.0
 	end;
 
 
@@ -18046,7 +18981,7 @@ function TCalcWindow.FirstSelectedObject: PEmbedded;
 	end;
 
 
-procedure TCalcWindow.Embed(poi: POLGAObjectInfo; srvid: integer; ow,oh,x100,y100,dlen: longint; dat: pointer; poabuf: PEmbedBuf; pdb: PDiagrammBuf; xyvalid,prop,embd,drty,istad: boolean);
+procedure TCalcWindow.Embed(poi: POLGAObjectInfo; srvid: integer; ow,oh,x100,y100,dlen: longint; dat: pointer; poabuf: PEmbedBuf; pdb: PDiagrammBuf; xyvalid,prop,embd,drty,istad,prntflg,lckflg: boolean);
 	var pe: PEmbedded;
 	    r : GRECT;
 	    s : string;
@@ -18055,9 +18990,9 @@ procedure TCalcWindow.Embed(poi: POLGAObjectInfo; srvid: integer; ow,oh,x100,y10
 		poi^.ClientData:=0;
 		GetSheetRect(r);
 		s:=StrPPas(poi^.Filename);
-		if (StrPUpper(StrPRight(s,4))='.TAD') or istad then pe:=new(PEmbeddedTAD,Init(@self,poi,s,srvid,r.X,r.Y,0,0,ow,oh,x100,y100,dlen,dat,xyvalid,true,prop,embd,poabuf,pdb))
+		if (StrPUpper(StrPRight(s,4))='.TAD') or istad then pe:=new(PEmbeddedTAD,Init(@self,poi,s,srvid,r.X,r.Y,0,0,ow,oh,x100,y100,dlen,dat,xyvalid,true,prop,embd,prntflg,lckflg,poabuf,pdb))
 		else
-			new(pe,Init(@self,poi,s,srvid,r.X,r.Y,0,0,ow,oh,x100,y100,dlen,dat,xyvalid,true,prop,embd,poabuf));
+			new(pe,Init(@self,poi,s,srvid,r.X,r.Y,0,0,ow,oh,x100,y100,dlen,dat,xyvalid,true,prop,embd,prntflg,lckflg,poabuf));
 		if pe<>nil then
 			if drty then SetDirty;
 		Top
@@ -18098,6 +19033,7 @@ function TCalcWindow.PasteObject: boolean;
 	    tdb      : TDiagrammBuf;
 	    dbvalid,
 	    skal,umbr,
+	    prntflg,
 	    prop,embd: boolean;
 	    r        : GRECT;
 	    pet      : PEmbeddedText;
@@ -18163,19 +19099,20 @@ function TCalcWindow.PasteObject: boolean;
 		if bread(h100,4) then goto _fehler;
 		if bread(prop,sizeof(boolean)) then goto _fehler;
 		if bread(embd,sizeof(boolean)) then goto _fehler;
+		if bread(prntflg,sizeof(boolean)) then goto _fehler;
 		case typ of
 		0:
-			EmbedNewObject(fname,w100,h100,0,0,0,nil,@oabuf,nil,false,prop,embd,true,false);
+			EmbedNewObject(fname,w100,h100,0,0,0,nil,@oabuf,nil,false,prop,embd,true,false,prntflg,false);
 		1:
 			begin
 				if bread(skal,sizeof(boolean)) then goto _fehler;
-				new(pei,Init(@self,fname,r.X,r.Y,0,0,w100,h100,0,0,0,nil,false,true,prop,embd,skal,@oabuf));
+				new(pei,Init(@self,fname,r.X,r.Y,0,0,w100,h100,0,0,0,nil,false,true,prop,embd,skal,prntflg,false,@oabuf));
 				if pei<>nil then SetDirty
 			end;
 		2:
 			begin
 				if bread(umbr,sizeof(boolean)) then goto _fehler;
-				new(pet,Init(@self,fname,r.X,r.Y,0,0,w100,h100,0,0,0,nil,false,true,prop,embd,umbr,@oabuf));
+				new(pet,Init(@self,fname,r.X,r.Y,0,0,w100,h100,0,0,0,nil,false,true,prop,embd,umbr,prntflg,false,@oabuf));
 				if pet<>nil then SetDirty
 			end;
 		3:
@@ -18184,10 +19121,10 @@ function TCalcWindow.PasteObject: boolean;
 				if dbvalid then
 					begin
 						if bread(tdb,sizeof(TDiagrammBuf)) then goto _fehler;
-						EmbedNewObject(fname,w100,h100,0,0,0,nil,@oabuf,@tdb,false,prop,embd,true,true)
+						EmbedNewObject(fname,w100,h100,0,0,0,nil,@oabuf,@tdb,false,prop,embd,true,true,prntflg,false)
 					end
 				else
-					EmbedNewObject(fname,w100,h100,0,0,0,nil,@oabuf,nil,false,prop,embd,true,true)
+					EmbedNewObject(fname,w100,h100,0,0,0,nil,@oabuf,nil,false,prop,embd,true,true,prntflg,false)
 			end
 		end;
 		PasteObject:=true;
@@ -18198,7 +19135,7 @@ function TCalcWindow.PasteObject: boolean;
 	end;
 
 
-procedure TCalcWindow.EmbedNewObject(fname: string; w100,h100,x100,y100,dlen: longint; dat: pointer; poabuf: PEmbedBuf; pdb: PDiagrammBuf; xyvalid,prop,embd,drty,istad: boolean);
+procedure TCalcWindow.EmbedNewObject(fname: string; w100,h100,x100,y100,dlen: longint; dat: pointer; poabuf: PEmbedBuf; pdb: PDiagrammBuf; xyvalid,prop,embd,drty,istad,prntflg,lckflg: boolean);
 	var exts,s: string;
 	    ret   : longint;
 	    q,hdl : integer;
@@ -18274,6 +19211,8 @@ procedure TCalcWindow.EmbedNewObject(fname: string; w100,h100,x100,y100,dlen: lo
 		if pdb<>nil then toi^.diabuf:=pdb^
 		else
 			toi^.diabuf.rb1:=0;
+		toi^.prntflg:=prntflg;
+		toi^.lckflg:=lckflg;
 		pipe[0]:=OLGA_EMBED;
 		pipe[1]:=Application^.apID;
 		pipe[2]:=0;
@@ -18336,7 +19275,8 @@ function TCalcWindow.GetPercent: real;
 function TCalcWindow.IsNormalPrintArea: boolean;
 
 	begin
-		if TexelApp.ExtPrnSel(wnd_prnt_set,TexelApp.app_prnt_set) then IsNormalPrintArea:=(length(StrPTrimF(Parms.psbuffer.bereich))=0)
+		if TexelApp.ExtPrnSel(wnd_prnt_set,TexelApp.app_prnt_set) then
+			IsNormalPrintArea:=((prnRangeFlag=1) or ((prnRangeFlag=0) and (length(StrPTrimF(Parms.psbuffer.bereich))=0)))
 		else
 			IsNormalPrintArea:=((prnbuffer.alles=bf_Checked) or ((prnbuffer.pblock=bf_Checked) and (length(StrPTrimF(Parms.psbuffer.bereich))=0)))
 	end;
@@ -18345,7 +19285,8 @@ function TCalcWindow.IsNormalPrintArea: boolean;
 function TCalcWindow.IsBlockPrintArea: boolean;
 
 	begin
-		if TexelApp.ExtPrnSel(wnd_prnt_set,TexelApp.app_prnt_set) then IsBlockPrintArea:=true
+		if TexelApp.ExtPrnSel(wnd_prnt_set,TexelApp.app_prnt_set) then
+			IsBlockPrintArea:=(prnRangeFlag=0)
 		else
 			IsBlockPrintArea:=(prnbuffer.pblock=bf_Checked)
 	end;
@@ -18429,6 +19370,107 @@ function TCalcWindow.ClearDispList: boolean;
 				num:=-1
 			end;
 		ClearDispList:=((num=DEV_PRINTER) or (num=DEV_META) or (num=DEV_PLOTTER) or (num=DEV_CAMERA))
+	end;
+
+
+procedure TCalcWindow.SetTextColor(ntc: integer);
+	var cell : PCell;
+	    x,y,
+	    rs,cs,
+	    cmin,
+	    cmax,
+	    re,ce: integer;
+
+	begin
+		if Attr.Status<>ws_Open then exit;
+		if (ntc<0) or (ntc>15) then ntc:=Black;
+		with Parms.Cursor do
+			if Block then
+				begin
+					rs:=RowStart;
+					re:=RowEnd;
+					cs:=ColStart;
+					ce:=ColEnd
+				end
+			else
+				begin
+					rs:=Row;
+					re:=Row;
+					cs:=Col;
+					ce:=Col
+				end;
+		cmin:=cs;
+		cmax:=ce;
+		RowsClearOverflow(rs,re,cmin,cmax);
+		for y:=rs to re do
+			begin
+				cell:=GetCell(y,cs);
+				for x:=cs to ce do
+					begin
+						cell^.TxtVal.Color:=ntc;
+						inc(longint(cell),CELLSIZE)
+					end
+			end;
+		RowsCheckOverflow(rs,re,cmin,cmax);
+		SetDirty;
+		DrawCells(rs,cmin,re,cmax)
+	end;
+
+
+procedure TCalcWindow.SetCellColor(nc: integer);
+	var x,y : integer;
+	    cell: PCell;
+
+	begin
+		if Attr.Status<>ws_Open then exit;
+		if (nc<0) or (nc>15) then nc:=Black;
+		with Parms.Cursor do
+			if Block then
+				begin
+					for y:=RowStart to RowEnd do
+						begin
+							cell:=GetCell(y,ColStart);
+							for x:=ColStart to ColEnd do
+								begin
+									if nc=White then
+										begin
+											cell^.Color:=Black;
+											cell^.Interior:=FIS_HOLLOW;
+											cell^.Style:=8
+										end
+									else
+										begin
+											cell^.Color:=nc;
+											if cell^.Interior=FIS_HOLLOW then cell^.Interior:=FIS_SOLID
+										end;
+									inc(longint(cell),CELLSIZE)
+								end
+						end;
+					DrawCells(RowStart,ColStart,RowEnd,ColEnd)
+				end
+			else
+				begin
+					cell:=GetCell(Row,Col);
+					if nc=White then
+						begin
+							cell^.Color:=Black;
+							cell^.Interior:=FIS_HOLLOW;
+							cell^.Style:=8
+						end
+					else
+						begin
+							cell^.Color:=nc;
+							if cell^.Interior=FIS_HOLLOW then cell^.Interior:=FIS_SOLID
+						end;
+					DrawCells(Row,Col,Row,Col);
+					if ppbox<>nil then
+						begin
+							if nc=White then ppbox^.SetSelection(0,false)
+							else
+								if cell^.Interior=FIS_SOLID then ppbox^.SetSelection(7,false)
+						end
+				end;
+		SetDirty
 	end;
 
 
@@ -18575,40 +19617,48 @@ procedure TTexelApplication.InitInstance;
 	    opp      : boolean;
 	    tp       : PTree;
 	    startup  : PDialog;
-	    st       : PStatic;
+	    st,sta   : PStatic;
 	    ewrkout  : workout_ARRAY;
 	    pipe     : Pipearray;
 
+	procedure SetAction(s: string);
+	
+		begin
+			if sta<>nil then sta^.SetText(s+'...')
+		end;
+
 	begin
 		startup:=nil;
+		sccsid:='@(#)Spreadsheet/Texel '+VtoS(TEXELVER)+' ('+TEXELDATE+'), Copyright 1994-97 Thomas Much.'#0;
+		{$IFDEF ENGLISH}
+		Attr.Country:=UK;
+		{$ELSE}
+		{$IFDEF FRENCH}
+		Attr.Country:=FRA;
+		{$ELSE}
+		Attr.Country:=FRG;
+		{$ENDIF}
+		{$ENDIF}
 		{$IFNDEF BETA}
 		if not(KeyCorrect('','')) then
 			begin
-				Alert(nil,1,STOP,'TEXEL:|Texel wurde nicht korrekt installiert/registriert.','  &OK  ');
+				Alert(nil,1,STOP,MESSAGE_STARTUP_UNREG,BUTTON_OK);
 				Quit;
 				exit
 			end;
 		{$ENDIF}
 		if ((Attr.MaxPX+1) div Attr.charSWidth<80) or ((Attr.MaxPY+1) div Attr.charSHeight<25) then
 			begin
-				Alert(nil,1,STOP,'Texel benîtigt eine Auflîsung von mind. 80x25 Zeichen. Bitte wÑhlen sie eine hîhere Auflîsung oder einen kleineren Systemfont.','  &OK  ');
+				Alert(nil,1,STOP,MESSAGE_STARTUP_SCREEN,BUTTON_OK);
 				Quit;
 				exit
 			end;
-		{IFDEF COPRO
-		if not(FPUAvailable) then
-			begin
-				Alert(nil,1,STOP,'TEXEL:|Diese Version von Texel benîtigt einen Coprozessor.','  &OK  ');
-				Quit;
-				exit
-			end;
-		ENDIF...}
 		randomize;
 		{$IFNDEF DEMO}
 		{$IFDEF BETA}
 		if gettime>EXPIRE then
 			begin
-				Alert(nil,1,STOP,'TEXEL:|Diese Betaversion ist zu alt.','  &OK  ');
+				Alert(nil,1,STOP,MESSAGE_STARTUP_BETA,BUTTON_OK);
 				Quit;
 				exit
 			end;
@@ -18695,6 +19745,10 @@ procedure TTexelApplication.InitInstance;
 		for q:=0 to ColorTable.Count do vq_color(vdiHandle,q,1,ColorTable.Colors[q].RGB);
 		{$IFDEF ENGLISH}
 		BubbleHelpActive:=false;
+		{$ELSE}
+		{$IFDEF FRENCH}
+		BubbleHelpActive:=false;
+		{$ENDIF}
 		{$ENDIF}
 		ArrowMouse;
 		{$IFDEF DEMO}
@@ -18707,11 +19761,14 @@ procedure TTexelApplication.InitInstance;
 			end;
 		DeactivateExtResource;
 		{$ENDIF}
+		sta:=nil;
 		new(startup,Init(nil,'',RTSTART));
 		if startup<>nil then
 			begin
 				new(st,Init(startup,RTSTVERSION,13,false,''));
 				if st<>nil then st^.SetText('Version '+VtoS(TEXELVER));
+				new(sta,Init(startup,RTSTACTION,30,false,''));
+				SetAction('');
 				with startup^ do
 					begin
 						Attr.Style:=0;
@@ -18719,6 +19776,7 @@ procedure TTexelApplication.InitInstance;
 						WMRedraw(Work.X,Work.Y,Work.W,Work.H)
 					end
 			end;
+		SetAction(STARTUP_INF);
 		SliceMouse;
 		setupbuffer.opennew:=GetPrivateProfileInt('Setup','OpenNew',bf_Unchecked,TEXELINF);
 		SliceMouseNext;
@@ -18735,6 +19793,22 @@ procedure TTexelApplication.InitInstance;
 		setupbuffer.online:=GetPrivateProfileInt('Setup','Online',bf_Checked,TEXELINF);
 		SliceMouseNext;
 		setupbuffer.bak:=GetPrivateProfileInt('Setup','Backup',bf_Checked,TEXELINF);
+		SliceMouseNext;
+		setupbuffer.toolbar:=GetPrivateProfileInt('Setup','Toolbar',bf_Checked,TEXELINF);
+		SliceMouseNext;
+		{$IFDEF FRENCH}
+		setupbuffer.currency:=GetPrivateProfileInt('Setup','Currency',3,TEXELINF);
+		{$ELSE}
+		{$IFDEF ENGLISH}
+		setupbuffer.currency:=GetPrivateProfileInt('Setup','Currency',1,TEXELINF);
+		{$ELSE}
+		setupbuffer.currency:=GetPrivateProfileInt('Setup','Currency',0,TEXELINF);
+		{$ENDIF}
+		{$ENDIF}
+		SliceMouseNext;
+		setupbuffer.overflow:=GetPrivateProfileInt('Setup','Overflow',bf_Checked,TEXELINF);
+		SliceMouseNext;
+		setupbuffer.bottomline:=GetPrivateProfileInt('Setup','BottomLine',bf_Unchecked,TEXELINF);
 		SliceMouseNext;
 		setupbuffer.pixw:=GetPrivateProfileInt('Setup','WYSIWYG.PixW',282,TEXELINF);
 		SliceMouseNext;
@@ -18753,6 +19827,8 @@ procedure TTexelApplication.InitInstance;
 		setupbuffer.history:=GetPrivateProfileString('Setup','History','4',TEXELINF);
 		SliceMouseNext;
 		UseExtPrn:=(GetPrivateProfileInt('Setup','ExtPrnSel',bf_Checked,TEXELINF)=bf_Checked);
+		SliceMouseNext;
+		UseNewToolbar:=(GetPrivateProfileInt('Setup','NewToolbar',bf_Checked,TEXELINF)=bf_Checked);
 		SliceMouseNext;
 		CheckHistory:=(GetPrivateProfileInt('Setup','CheckHistory',bf_Checked,TEXELINF)=bf_Checked);
 		SliceMouseNext;
@@ -18815,6 +19891,8 @@ procedure TTexelApplication.InitInstance;
 		SliceMouseNext;
 		ascbuf.numbers:=GetPrivateProfileInt('Import','Numbers',0,TEXELINF);
 		SliceMouseNext;
+		ascbuf.filter:=GetPrivateProfileInt('Import','Filter',0,TEXELINF);
+		SliceMouseNext;
 		stdpsbuffer.oben:=GetPrivateProfileString('Page Setup','Oben','0',TEXELINF);
 		SliceMouseNext;
 		stdpsbuffer.unten:=GetPrivateProfileString('Page Setup','Unten','0',TEXELINF);
@@ -18869,14 +19947,15 @@ procedure TTexelApplication.InitInstance;
 		SliceMouseNext;
 		stdpsbuffer.images:=GetPrivateProfileInt('Page Setup','Images',bf_Checked,TEXELINF);
 		SliceMouseNext;
-		WebASH:=GetPrivateProfileString('Web','ASH','http://members.aol.com/ashinfo',TEXELINF);
+		WebASH:=GetPrivateProfileString('Web','ASH',STRING_WEB_HOMEPAGE,TEXELINF);
 		SliceMouseNext;
-		WebMail:=GetPrivateProfileString('Web','Support','mailto:VRitzhaupt@aol.com',TEXELINF);
+		WebMail:=GetPrivateProfileString('Web','Support',STRING_WEB_SUPPORT,TEXELINF);
 		SliceMouseNext;
 		regname:=GetPrivateProfileString('Beta','Name','',TEXELINF);
 		SliceMouseNext;
 		regkey:=GetPrivateProfileString('Beta','Key','',TEXELINF);
 		ArrowMouse;
+		SetAction(STARTUP_PATHS);
 		BusyMouse;
 		for q:=0 to PFMAX do
 			begin
@@ -18909,6 +19988,7 @@ procedure TTexelApplication.InitInstance;
 		if length(LastFile[11])=0 then LastFile[11]:='gemfile.gem';
 		if length(LastPath[14])=0 then LastPath[14]:=GetTempDir;
 		if length(LastFile[14])=0 then LastFile[14]:='page0001.img';
+		SetAction(STARTUP_STRUCTS);
 		with ascbuf do
 			begin
 				rcTxt:=StrPMid(rcTxt,2,length(rcTxt)-2);
@@ -18957,13 +20037,15 @@ procedure TTexelApplication.InitInstance;
 			if (opennew=bf_Unchecked) and (loaddoc=bf_Unchecked) and (nothing=bf_Unchecked) then nothing:=bf_Checked;
 		if setupbuffer.xinputmode=bf_Checked then Attr.Style:=Attr.Style or as_XInputMode;
 		if setupbuffer.closercancel=bf_Checked then Attr.Style:=Attr.Style or as_CancelOnClose;
-		GlobalAlloc(helpbuf,768);
+		GEMScriptID:=-1;
+		GlobalAlloc(helpbuf,768+sizeof(TGSInfo));
 		if helpbuf=nil then
 			begin
 				filebuf:=nil;
 				mailbuf:=nil;
 				HelpID:=-1;
-				WebID:=-1
+				WebID:=-1;
+				GSInfo:=nil
 			end
 		else
 			begin
@@ -18983,6 +20065,14 @@ procedure TTexelApplication.InitInstance;
 						pipe[7]:=0;
 						appl_write(WebID,16,@pipe);
 						WebID:=-1
+					end;
+				GSInfo:=PGSInfo(longint(helpbuf)+768);
+				with GSInfo^ do
+					begin
+						Len:=sizeof(TGSInfo);
+						Version:=$0100;
+						Msgs:=GSM_COMMAND;
+						Ext:=#0#0#0#0
 					end
 			end;
 		new(about,Init(@self,RTMABOUT,nil,false));
@@ -18993,6 +20083,7 @@ procedure TTexelApplication.InitInstance;
 		DeactivateExtResource;
 		if abruf<>nil then
 			begin
+				SetAction(STARTUP_HISTORY);
 				res:=fopen(GetHomeDir(false)+'defaults\'+TEXELHISTORY,0);
 				if res<0 then res:=fopen(GetHomeDir(false)+TEXELHISTORY,0);
 				if res>=0 then
@@ -19005,14 +20096,14 @@ procedure TTexelApplication.InitInstance;
 									if fread(hdl,1,@txt[0])<>1 then goto _fehler;
 									if ord(txt[0])>0 then
 										if fread(hdl,ord(txt[0]),@txt[1])<>ord(txt[0]) then goto _fehler;
-									if not(CheckHistory) then abruf^.Add(txt)
+									if not(CheckHistory) then abruf^.Add(txt,false)
 									else
 										begin
 											aret:=fopen(txt,FO_READ);
 											if aret>=0 then
 												begin
 													fclose(integer(aret));
-													abruf^.Add(txt)
+													abruf^.Add(txt,false)
 												end
 										end
 								end;
@@ -19021,13 +20112,20 @@ procedure TTexelApplication.InitInstance;
 					end;
 				abruf^.Dirty:=false
 			end;
+		SetAction(STARTUP_MENUS);
 		new(openurl,Init(@self,K_ALT,Alt_U,RTMURLOPEN,RTM2));
 		if openurl<>nil then openurl^.Disable;
 		new(import,Init(@self,RTMIMPORT,RTPOPUPS,RTPIMPORT));
-		if import<>nil then import^.ascii:=nil;
+		if import<>nil then
+			begin
+				import^.ascii:=nil;
+				import^.gdbc:=nil;
+				import^.quelle:=''
+			end;
 		new(PSpecialChars,Init(@self,K_SHIFT,Shift_Ins,RTMSPECIALCHARS,RTM4));
 		new(POptions,Init(@self,K_CTRL+K_SHIFT,Ctrl_E,RTMOPTIONS,RTM4));
 		new(PSaveOpt,Init(@self,K_CTRL+K_SHIFT,Ctrl_S,RTMSAVEOPTIONS,RTM4));
+		new(PSaveWork,Init(@self,RTMSAVEWORK,nil,false));
 		new(webhelp,Init(@self,RTMHELPASH,nil,false));
 		if webhelp<>nil then webhelp^.Disable;
 		new(websupport,Init(@self,RTMHELPSUPPORT,nil,false));
@@ -19061,23 +20159,25 @@ procedure TTexelApplication.InitInstance;
 		new(UsrForm,Init(30,20));
 		if (Functions=nil) or (Categories=nil) or (FormCategories=nil) or (Formats=nil) or (UsrForm=nil) then
 			begin
-				Alert(nil,1,STOP,'TEXEL:|Zu wenig freier Speicher!','  &OK  ');
+				Alert(nil,1,STOP,MESSAGE_GENERAL_MEMORY,BUTTON_OK);
 				Quit;
 				exit
 			end;
 		if not(Exist(DataPath+TEXELDAT)) then
 			begin
-				Alert(nil,1,STOP,'TEXEL:|Datei "'+CompressPath(DataPath+TEXELDAT,78)+'" nicht gefunden.','  &OK  ');
+				Alert(nil,1,STOP,MESSAGE_STARTUP_FOUND1+CompressPath(DataPath+TEXELDAT,78)+MESSAGE_STARTUP_FOUND2,BUTTON_OK);
 				Quit;
 				exit
 			end;
 		buf:=GetMemBuffer(16384,128,bufsize);
 		if buf=nil then
 			begin
-				Alert(nil,1,STOP,'TEXEL:|Datei "'+TEXELDAT+'" konnte nicht geladen werden.','  &OK  ');
+				Alert(nil,1,STOP,MESSAGE_STARTUP_LOAD1+TEXELDAT+MESSAGE_STARTUP_LOAD2,BUTTON_OK);
 				Quit;
 				exit
 			end;
+		Functions^.Sort:=true;
+		Functions^.CaseSensitive:=false;
 		Categories^.Sort:=false;
 		FormCategories^.Sort:=false;
 		Formats^.Sort:=false;
@@ -19089,11 +20189,12 @@ procedure TTexelApplication.InitInstance;
 				pcg^.Name:=NewStr('  '+STRING_ALL+' '#0);
 				Categories^.Insert(pcg)
 			end;
+		SetAction(STARTUP_DAT);
 		BusyMouse;
 		res:=fopen(TexelApp.DataPath+TEXELDAT,FO_READ);
 		if res<0 then
 			begin
-				Alert(nil,1,STOP,'TEXEL:|Datei "'+TEXELDAT+'" konnte nicht geladen werden.','  &OK  ');
+				Alert(nil,1,STOP,MESSAGE_STARTUP_LOAD1+TEXELDAT+MESSAGE_STARTUP_LOAD2,BUTTON_OK);
 				Quit;
 				exit
 			end;
@@ -19196,10 +20297,82 @@ procedure TTexelApplication.InitInstance;
 						if buf^[w]>=32 then txt:=txt+chr(buf^[w])
 		until res<>bufsize;
 		fclose(hdl);
+		SetAction(STARTUP_USRDAT);
+		res:=fopen(TexelApp.DataPath+TEXELUSRDAT,FO_READ);
+		if res>=0 then
+			begin
+				txt:='';
+				hdl:=integer(res);
+				repeat
+					res:=fread(hdl,bufsize,buf);
+					if res>0 then
+						for w:=0 to res-1 do
+							if buf^[w]=CR then
+								begin
+									StrPTrim(txt);
+									if length(txt)>0 then
+										if txt[1]<>';' then
+											begin
+												q:=pos(';',txt);
+												if q>0 then
+													begin
+														fdescr1:=StrPTrimF(StrPRight(txt,length(txt)-q));
+														txt:=StrPTrimF(StrPLeft(txt,q-1));
+														q:=pos('|',fdescr1);
+														if q>0 then
+															begin
+																fdescr2:=StrPTrimF(StrPRight(fdescr1,length(fdescr1)-q));
+																fdescr1:=StrPTrimF(StrPLeft(fdescr1,q-1))
+															end
+														else
+															fdescr2:=''
+													end
+												else
+													begin
+														fdescr1:='';
+														fdescr2:=''
+													end;
+												q:=pos(' ',txt);
+												if q=0 then continue;
+												fname:=StrPLeft(txt,q-1);
+												opc:=atol(StrPTrimF(StrPRight(txt,length(txt)-q)));
+												if not(Between(opc,0,22000)) then continue;
+												new(pf);
+												if pf<>nil then
+													begin
+														pf^.Opcode:=10000+opc;
+														pf^.Group:=12;
+														pf^.Name:=NewStr(fname);
+														if pf^.Name=nil then dispose(pf)
+														else
+															begin
+																pf^.Parms:=NewStr('#*');
+																if pf^.Parms=nil then
+																	begin
+																		DisposeStr(pf^.Name);
+																		dispose(pf)
+																	end
+																else
+																	begin
+																		pf^.Descr1:=NewStr(fdescr1);
+																		pf^.Descr2:=NewStr(fdescr2);
+																		Functions^.Insert(pf)
+																	end
+															end
+													end
+											end;
+									txt:=''
+								end
+							else
+								if buf^[w]>=32 then txt:=txt+chr(buf^[w])
+				until res<>bufsize;
+				fclose(hdl)
+			end;
+		SetAction(STARTUP_FRM);
 		res:=fopen(TexelApp.DataPath+TEXELFRM,FO_READ);
 		if res<0 then
 			begin
-				Alert(nil,1,STOP,'TEXEL:|Datei "'+TEXELFRM+'" konnte nicht geladen werden.','  &OK  ');
+				Alert(nil,1,STOP,MESSAGE_STARTUP_LOAD1+TEXELFRM+MESSAGE_STARTUP_LOAD2,BUTTON_OK);
 				Quit;
 				exit
 			end;
@@ -19340,10 +20513,11 @@ procedure TTexelApplication.InitInstance;
 		fclose(hdl);
 		if Formats^.Count<>FormPredef+1 then
 			begin
-				Alert(nil,1,STOP,'TEXEL:|Datei "'+TEXELFRM+'" fehlerhaft ('+ltoa(Formats^.Count)+'/'+ltoa(FormPredef)+').','  &OK  ');
+				Alert(nil,1,STOP,MESSAGE_STARTUP_FRM1+TEXELFRM+MESSAGE_STARTUP_FRM2+' ('+ltoa(Formats^.Count)+'/'+ltoa(FormPredef)+').',BUTTON_OK);
 				Quit;
 				exit
 			end;
+		SetAction(STARTUP_USRFRM);
 		res:=fopen(TexelApp.DataPath+TEXELUSRFRM,FO_READ);
 		if res>=0 then
 			begin
@@ -19376,6 +20550,7 @@ procedure TTexelApplication.InitInstance;
 				fclose(hdl)
 			end;
 		freemem(buf,bufsize);
+		SetAction(STARTUP_PRINTDIAL);
 		if ExtPrnSel(app_prnt_set,nil) then
 			if app_prnt_set^.magic='pset' then
 				begin
@@ -19401,6 +20576,7 @@ procedure TTexelApplication.InitInstance;
 						end
 				end;
 		ArrowMouse;
+		SetAction(STARTUP_FINISH);
 		inherited InitInstance;
 		if startup<>nil then dispose(startup,Done);
 		SetQuit(RTMQUIT,RTM2)
@@ -19427,7 +20603,7 @@ procedure TTexelApplication.LoadFile(p: PCalcWindow; s: string);
 			end
 		else if ext='.DBF' then
 			begin
-				if import<>nil then import^.LoadDBF(s)
+				if import<>nil then import^.ImportDBF(s,nil)
 			end
 		else if ext='.LDP' then
 			begin
@@ -19444,7 +20620,7 @@ procedure TTexelApplication.LoadFile(p: PCalcWindow; s: string);
 						for q:=0 to OLETypes^.Count-1 do
 							if StrPLeft(ext,4)=POLEType(OLETypes^.At(q))^.Ext then
 								begin
-									p^.EmbedNewObject(s,0,0,0,0,0,nil,nil,nil,false,false,false,true,false);
+									p^.EmbedNewObject(s,0,0,0,0,0,nil,nil,nil,false,false,false,true,false,true,false);
 									exit
 								end;
 				if opennewdoc<>nil then opennewdoc^.Load(s)
@@ -19453,18 +20629,77 @@ procedure TTexelApplication.LoadFile(p: PCalcWindow; s: string);
 
 
 procedure TTexelApplication.InitMainWindow;
-	var q: integer;
+	var q,hdl,
+	    anz  : integer;
+	    ret  : longint;
+	    s,s2 : string;
+
+	function dequote(sq: string): string;
+		var i: integer;
+	
+		begin
+			i:=1;
+			while i<length(sq) do
+				begin
+					if sq[i]='''' then
+						if sq[i+1]='''' then sq:=StrPLeft(sq,i)+StrPRight(sq,length(sq)-i-1);
+					inc(i)
+				end;
+			dequote:=sq
+		end;
 
 	begin
+		anz:=0;
+		ret:=fopen(GetHomeDir(false)+'defaults\'+TEXELWORK,0);
+		if ret<0 then ret:=fopen(GetHomeDir(false)+TEXELWORK,0);
+		if ret>=0 then
+			begin
+				hdl:=integer(ret);
+				if fread(hdl,2,@anz)<>2 then anz:=0;
+				if anz>0 then
+					for q:=1 to anz do
+						if fread(hdl,256,@s[0])=256 then LoadFile(nil,s);
+				fclose(hdl)
+			end;
 		if paramcount>0 then
 			begin
-				for q:=1 to paramcount do LoadFile(nil,paramstr(q));
+				q:=1;
+				while q<=paramcount do
+					begin
+						s:=paramstr(q);
+						inc(q);
+						if length(s)>0 then
+							begin
+								if s[1]='''' then
+									begin
+										CutLeft(s,1);
+										while q<=paramcount do
+											begin
+												s2:=paramstr(q);
+												inc(q);
+												if StrPRight(s2,1)='''' then
+													begin
+														s:=s+' '+dequote(CutRightF(s2,1));
+														LoadFile(nil,s);
+														break
+													end
+												else
+													s:=s+' '+dequote(s2);
+											end
+									end
+								else
+									LoadFile(nil,s)
+							end
+					end;
 				exit
 			end;
-		if setupbuffer.opennew=bf_Checked then new(PCalcWindow,Init)
-		else
-			if setupbuffer.loaddoc=bf_Checked then
-				if opennewdoc<>nil then opennewdoc^.Work
+		if anz=0 then
+			begin
+				if setupbuffer.opennew=bf_Checked then new(PCalcWindow,Init)
+				else
+					if setupbuffer.loaddoc=bf_Checked then
+						if opennewdoc<>nil then opennewdoc^.Work
+			end
 	end;
 
 
@@ -19502,6 +20737,18 @@ procedure TTexelApplication.Terminate;
 					pipe[7]:=0;
 					appl_write(WebID,16,@pipe)
 				end;
+		if GEMScriptID>=0 then
+			begin
+				pipe[0]:=GS_QUIT;
+				pipe[1]:=apID;
+				pipe[2]:=0;
+				pipe[3]:=0;
+				pipe[4]:=0;
+				pipe[5]:=0;
+				pipe[6]:=0;
+				pipe[7]:=0;
+				appl_write(GEMScriptID,16,@pipe)
+			end;
 		if Fonts<>nil then dispose(Fonts,Done);
 		if Functions<>nil then dispose(Functions,Done);
 		if Categories<>nil then dispose(Categories,Done);
@@ -19594,7 +20841,7 @@ procedure TTexelApplication.FileSelected(Window: PWindow; OrgID: integer; Group:
 		FSEL_EMBED:
 			if Window<>nil then
 				with PCalcWindow(Window)^ do
-					while Files<>nil do EmbedNewObject(getxfname(17,''),0,0,0,0,0,nil,nil,nil,false,false,false,true,false);
+					while Files<>nil do EmbedNewObject(getxfname(17,''),0,0,0,0,0,nil,nil,nil,false,false,false,true,false,true,false);
 		FSEL_EXPORT:
 			if Window<>nil then
 				with PCalcWindow(Window)^ do
@@ -19629,7 +20876,7 @@ procedure TTexelApplication.FileSelected(Window: PWindow; OrgID: integer; Group:
 				while Files<>nil do import^.LoadXLS(getxfname(7,'xls'));
 		FSEL_LOADDBF:
 			if import<>nil then
-				while Files<>nil do import^.LoadDBF(getxfname(12,'dbf'));
+				while Files<>nil do import^.LoadGDBC(getxfname(12,'dbf'));
 		FSEL_LOAD123:
 			if import<>nil then
 				while Files<>nil do import^.Load123(getxfname(10,'wk1'));
@@ -19848,6 +21095,821 @@ procedure TTexelApplication.Unembed(srvID: integer);
 	end;
 
 
+function TTexelApplication.ScriptByNumber(nr: longint; datei,zelle,prm: string): boolean;
+	var script,
+	    scrapp,
+	    scripter: string;
+	    scrid,q : integer;
+	    len     : longint;
+	    answ    : ARRAY_8;
+	    pc,pc2  : PChar;
+
+	begin
+		ScriptByNumber:=false;
+		if length(zelle)=0 then exit;
+		scripter:=GetEnv('GEMSCRIPT');
+		if length(scripter)=0 then exit;
+		script:=DataPath+TEXELSCRIPTPATH+ltoa(nr)+'.'+TEXELSCRIPTEXT;
+		if not(Exist(script)) then exit;
+		scrapp:=StrPUpper(GetFilename(scripter,false));
+		if length(scrapp)=0 then exit;
+		scrid:=appl_find(scrapp+StrPSpace(8-length(scrapp)));
+		if scrid<0 then scrid:=StartApp(scripter,'');
+		if scrid>=0 then
+			begin
+				if length(datei)=0 then datei:=#1;
+				len:=4+1+length(script)+1+length(datei)+1+length(zelle)+1+length(prm)+1;
+				GlobalAlloc(pointer(pc),len);
+				if pc=nil then exit;
+				ScriptByNumber:=true;
+				if GEMScriptID<>scrid then
+					begin
+						answ[0]:=GS_REQUEST;
+						answ[1]:=apID;
+						answ[2]:=0;
+						answ[3]:=integer(HiWord(GSInfo));
+						answ[4]:=integer(LoWord(GSInfo));
+						answ[5]:=0;
+						answ[6]:=0;
+						answ[7]:=0;
+						appl_write(scrid,16,@answ)
+					end;
+				pc2:=pc;
+				StrPCopy(pc2,'Exec');
+				inc(longint(pc2),5);
+				StrPCopy(pc2,script);
+				inc(longint(pc2),length(script)+1);
+				StrPCopy(pc2,datei);
+				inc(longint(pc2),length(datei)+1);
+				StrPCopy(pc2,zelle);
+				inc(longint(pc2),length(zelle)+1);
+				if length(prm)>0 then
+					begin
+						StrPTrim(prm);
+						q:=pos(' ',prm);
+						while q>0 do
+							begin
+								StrPCopy(pc2,StrPLeft(prm,q-1));
+								inc(longint(pc2),q);
+								prm:=StrPRight(prm,length(prm)-q);
+								q:=pos(' ',prm)
+							end;
+						StrPCopy(pc2,prm);
+						inc(longint(pc2),length(prm)+1)
+					end;
+				pc2^:=#0;
+				answ[0]:=GS_COMMAND;
+				answ[1]:=apID;
+				answ[2]:=0;
+				answ[3]:=integer(HiWord(pc));
+				answ[4]:=integer(LoWord(pc));
+				answ[5]:=0;
+				answ[6]:=0;
+				answ[7]:=0;
+				appl_write(scrid,16,@answ)
+			end
+	end;
+
+
+function TTexelApplication.InterpreteScript(pcmd: PChar; var answ: Pipearray): integer;
+	label _error;
+	
+	var pw   : PCalcWindow;
+	    txt,
+	    txt2 : string;
+	    pbuf : pointer;
+	    pn   : PChar;
+	    ibuf,
+	    rs,cs,
+	    re,ce,
+	    f1,f2: integer;
+	    cell : PCell;
+	    nval : TNumber;
+	    isrc : boolean;
+
+	function IsCmd(cmd: PChar): boolean;
+	
+		begin
+			if stricomp(pcmd,cmd)=0 then
+				begin
+					inc(longint(pcmd),StrLen(cmd)+1);
+					IsCmd:=true
+				end
+			else
+				IsCmd:=false
+		end;
+
+	function NextToken: boolean;
+		label _again;
+	
+		begin
+			NextToken:=false;
+			if pcmd=nil then exit;
+			_again:
+			if pcmd^=#0 then
+				begin
+					pn:=pcmd;
+					exit
+				end;
+			if pcmd^ in [#2..#6] then
+				begin
+					inc(longint(pcmd),StrLen(pcmd)+1);
+					goto _again
+				end;
+			if pcmd^=#1 then
+				begin
+					inc(longint(pcmd),StrLen(pcmd)+1);
+					pn:=PChar(longint(pcmd)-1)
+				end
+			else
+				begin
+					pn:=pcmd;
+					inc(longint(pcmd),StrLen(pcmd)+1)
+				end;
+			NextToken:=true
+		end;
+
+	function findtopsheet: PCalcWindow;
+		var pfw  : PWindow;
+		    o1,g1,
+		    u1,
+		    dummy: integer;
+
+		begin
+			wind_update(BEG_UPDATE);
+			u1:=DESK;
+			wind_get(DESK,WF_TOP,o1,dummy,u1,dummy);
+			if o1<0 then o1:=u1;
+			pfw:=nil;
+			if not(appl_xgetinfo(11,g1,dummy,dummy,dummy)) then g1:=0;
+			repeat
+				pfw:=GetGPWindow(o1);
+				if pfw<>nil then
+					if pfw^.GetClassName<>TEXELWINDCLASS then pfw:=nil;
+				if pfw=nil then
+					if bTst(g1,16) then wind_get(o1,WF_OWNER,dummy,dummy,dummy,o1);
+			until (pfw<>nil) or (o1<=DESK) or not(bTst(g1,16));
+			wind_update(END_UPDATE);
+			findtopsheet:=PCalcWindow(pfw)
+		end;
+
+	function getwindow(p: PChar; usetop: boolean): PCalcWindow;
+		var ptw: PWindow;
+		    s  : string;
+	
+		begin
+			getwindow:=nil;
+			if p=nil then exit;
+			if p^=#0 then
+				begin
+					if usetop then getwindow:=findtopsheet
+				end
+			else
+				begin
+					s:=StrPUpper(StrPPas(p));
+					ptw:=MainWindow;
+					while ptw<>nil do
+						begin
+							if ptw^.GetClassName=TEXELWINDCLASS then
+								if StrPUpper(PCalcWindow(ptw)^.GetWindowFilename)=s then
+									begin
+										getwindow:=PCalcWindow(ptw);
+										exit
+									end;
+							ptw:=ptw^.Next
+						end;
+					if pos('\',s)>0 then exit;
+					s:=GetFilename(s,true);
+					ptw:=MainWindow;
+					while ptw<>nil do
+						begin
+							if ptw^.GetClassName=TEXELWINDCLASS then
+								if GetFilename(StrPUpper(PCalcWindow(ptw)^.GetWindowFilename),true)=s then
+									begin
+										getwindow:=PCalcWindow(ptw);
+										exit
+									end;
+							ptw:=ptw^.Next
+						end;
+					if pos('.',s)>0 then exit;
+					s:=GetFilename(s,false);
+					ptw:=MainWindow;
+					while ptw<>nil do
+						begin
+							if ptw^.GetClassName=TEXELWINDCLASS then
+								if GetFilename(StrPUpper(PCalcWindow(ptw)^.GetWindowFilename),false)=s then
+									begin
+										getwindow:=PCalcWindow(ptw);
+										exit
+									end;
+							ptw:=ptw^.Next
+						end
+				end
+		end;
+	
+	procedure answer(s: string);
+	
+		begin
+			s:=s+#0#0;
+			GlobalAlloc(pbuf,length(s));
+			if pbuf=nil then exit;
+			move(s[1],pbuf^,length(s));
+			answ[5]:=integer(HiWord(pbuf));
+			answ[6]:=integer(LoWord(pbuf))
+		end;
+
+	function exportfile: boolean;
+		var texbuf: TExportBuf;
+
+		begin
+			exportfile:=false;
+			if pw^.export=nil then exit;
+			with texbuf do
+				begin
+					exporttype:=-1;
+					if length(txt2)=0 then clipboard:=bf_Checked
+					else
+						clipboard:=bf_Unchecked;
+					bereich:=bf_Unchecked;
+					htmldoctype:=1;
+					htmlsavedt:=bf_Checked;
+					htmlcolor:=bf_Checked;
+					csvformula:=bf_Unchecked;
+					csvvalue:=bf_Checked;
+					difformula:=bf_Unchecked;
+					difvalue:=bf_Checked;
+					difstandard:=bf_Checked;
+					difexcel:=bf_Unchecked;
+					with ascii do
+						begin
+							hor:=bf_Checked;
+							vert:=bf_Unchecked;
+							rctxt:='13,10';
+							rcval:=0;
+							celltxt:='9';
+							cellval:=0;
+							texttxt:='34';
+							textval:=0;
+							quote:=bf_Checked;
+							numbers:=0;
+							formula:=bf_Unchecked;
+							value:=bf_Checked
+						end;
+					difformat:=bf_Checked;
+					csvformat:=bf_Checked;
+					asciiformat:=bf_Checked;
+					htmlembed:=bf_Unchecked;
+					filter:=0;
+					if (txt='SYLK') or (txt='SLK') then exporttype:=2
+					else if txt='DIF' then exporttype:=3
+					else if txt='CSV' then exporttype:=4
+					else if (txt='ASCII') or (txt='ASC') then exporttype:=5
+					else if txt='TXT' then exporttype:=6
+					else if txt='TEX' then exporttype:=7
+					else if (txt='HTML') or (txt='HTML-32') then exporttype:=8
+					else if txt='UDO' then exporttype:=9
+					else if txt='HTML-30' then
+						begin
+							exporttype:=8;
+							htmldoctype:=0
+						end
+					else if txt='HTML-40' then
+						begin
+							exporttype:=8;
+							htmldoctype:=2
+						end;
+				end;
+			exportfile:=pw^.export^.Export(texbuf,txt2)
+		end;
+
+	procedure getvariable;
+		var ret: real;
+		    w  : longint;
+	
+		begin
+			ret:=0.0;
+			with pw^ do
+				begin
+					if Variables<>nil then
+						if Variables^.Count>0 then
+							for w:=Variables^.Count-1 downto 0 do
+								with PVariable(Variables^.At(w))^ do
+									if txt=StrPUpper(Name^) then
+										if (RefRow>=0) and (RefRow<=Parms.Rows) and (RefCol>=0) and (RefCol<=Parms.Columns) then
+											begin
+												ret:=Evaluate(GetCell(RefRow,RefCol));
+												break
+											end
+				end;
+			answer(ftoa(ret))
+		end;
+
+	begin
+		InterpreteScript:=2;
+		if pcmd=nil then exit;
+		if pcmd^=#0 then exit;
+		InterpreteScript:=0;
+		if IsCmd('ReturnCellValue') then
+			begin
+				if not(NextToken) then goto _error;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(NextToken) then goto _error;
+				if not(pw^.GetBlock(StrPPas(pn),false,rs,cs,re,ce,f1,f2)) then goto _error;
+				cell:=pw^.GetCell(rs,cs);
+				if cell^.Typ<>CTYPE_FORMULA then goto _error;
+				with cell^.Data.Formula^.Func^ do
+					if (Typ<>NT_SCRIPTNO) and not(Between(Typ,NT_EXTMIN,NT_EXTMAX)) then goto _error;
+				if not(NextToken) then goto _error;
+				nval:=atof(StrPPas(pn));
+				if nval<>cell^.Data.Formula^.Value then
+					begin
+						cell^.Data.Formula^.Value:=nval;
+						pw^.DrawCells(rs,cs,rs,cs);
+						pw^.AutoCalculate(true)
+					end;
+				exit
+			end;
+		if IsCmd('GetVariable') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPUpper(StrPPas(pn));
+				if length(txt)=0 then goto _error;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				getvariable;
+				exit
+			end;
+		if IsCmd('Select') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.GotoBlock(txt);
+				exit
+			end;
+		if IsCmd('SetCell') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				if (txt[1] in ['0'..'9']) then
+					begin
+						rs:=atol(txt);
+						if not(NextToken) then goto _error;
+						cs:=atol(StrPPas(pn));
+						isrc:=true
+					end
+				else
+					isrc:=false;
+				if not(NextToken) then goto _error;
+				txt2:=StrPPas(pn);
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(isrc) then
+					if not(pw^.GetBlock(txt,false,rs,cs,re,ce,f1,f2)) then goto _error;
+				ibuf:=pw^.sheetbuffer.autocalc;
+				pw^.sheetbuffer.autocalc:=bf_Unchecked;
+				pw^.ChangeCell(pw^.GetCell(rs,cs),txt2,rs,cs,true);
+				pw^.sheetbuffer.autocalc:=ibuf;
+				exit
+			end;
+		if IsCmd('GetRange') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(pw^.GetBlock(txt,false,rs,cs,re,ce,f1,f2)) then goto _error;
+				answer(ltoa(rs)+#0+ltoa(cs)+#0+ltoa(re)+#0+ltoa(ce));
+				exit
+			end;
+		if IsCmd('Cell') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				if not(NextToken) then goto _error;
+				txt2:=StrPPas(pn);
+				if length(txt2)=0 then goto _error;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				answer(pw^.GetColumnName(atol(txt2))+pw^.GetRowIndex(atol(txt)));
+				exit
+			end;
+		if IsCmd('SetColor') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.SetCellColor(atol(txt));
+				exit
+			end;
+		if IsCmd('SetTextColor') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.SetTextColor(atol(txt));
+				exit
+			end;
+		if IsCmd('IsBlockUsed') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(pw^.GetBlock(txt,false,rs,cs,re,ce,f1,f2)) then goto _error;
+				if pw^.IsBlockUsed(rs,cs,re,ce,1) then answer('1')
+				else
+					answer('0');
+				exit
+			end;
+		if IsCmd('Cut') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.Cut;
+				exit
+			end;
+		if IsCmd('Copy') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.Copy;
+				exit
+			end;
+		if IsCmd('Paste') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.Paste;
+				exit
+			end;
+		if IsCmd('Delete') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.Delete;
+				exit
+			end;
+		if IsCmd('SelectAll') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.SelectAll;
+				exit
+			end;
+		if IsCmd('Print') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.Print;
+				exit
+			end;
+		if IsCmd('Save') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.save^.Work;
+				exit
+			end;
+		if IsCmd('SaveAs') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.saveas^.SaveAs(txt,0);
+				exit
+			end;
+		if IsCmd('ToFront') then
+			begin
+				if not(NextToken) then goto _error;
+				pw:=getwindow(pn,false);
+				if pw=nil then goto _error;
+				pw^.Top;
+				exit
+			end;
+		if IsCmd('GetFront') then
+			begin
+				pw:=findtopsheet;
+				if pw=nil then goto _error;
+				txt:=pw^.GetWindowFilename;
+				if length(txt)=0 then goto _error;
+				answer(txt);
+				exit
+			end;
+		if IsCmd('GetSelection') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				txt:=StrPTrimF(pw^.dblock^.GetText);
+				if length(txt)=0 then goto _error;
+				answer(txt);
+				exit
+			end;
+		if IsCmd('GetCell') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				if (txt[1] in ['0'..'9']) then
+					begin
+						rs:=atol(txt);
+						if not(NextToken) then goto _error;
+						cs:=atol(StrPPas(pn));
+						isrc:=true
+					end
+				else
+					isrc:=false;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(isrc) then
+					if not(pw^.GetBlock(txt,false,rs,cs,re,ce,f1,f2)) then goto _error;
+				cell:=pw^.GetCell(rs,cs);
+				case cell^.Typ of
+				CTYPE_TEXT:
+					txt:=cell^.Data.Txt^;
+				CTYPE_CONST:
+					txt:=pw^.Val2TxtF(cell^.Data.Konst^.Value,cell^.Data.Konst^.FPts,cell^.Format,nil);
+				CTYPE_FORMULA:
+					txt:=pw^.Val2TxtF(cell^.Data.Formula^.Value,cell^.Data.Formula^.FPts,cell^.Format,nil);
+				else
+					txt:=''
+				end;
+				if length(txt)=0 then txt:=#1;
+				answer(txt);
+				exit
+			end;
+		if IsCmd('GetCellFormula') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				if (txt[1] in ['0'..'9']) then
+					begin
+						rs:=atol(txt);
+						if not(NextToken) then goto _error;
+						cs:=atol(StrPPas(pn));
+						isrc:=true
+					end
+				else
+					isrc:=false;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(isrc) then
+					if not(pw^.GetBlock(txt,false,rs,cs,re,ce,f1,f2)) then goto _error;
+				cell:=pw^.GetCell(rs,cs);
+				case cell^.Typ of
+				CTYPE_TEXT:
+					txt:=cell^.Data.Txt^;
+				CTYPE_CONST:
+					begin
+						if cell^.Data.Konst^.Txt=nil then txt:=pw^.Val2TxtF(cell^.Data.Konst^.Value,15,0,nil)
+						else
+							txt:=cell^.Data.Konst^.Txt^
+					end;
+				CTYPE_FORMULA:
+					txt:=pw^.BuildFunction(cell,true);
+				else
+					txt:=''
+				end;
+				if length(txt)=0 then txt:=#1;
+				answer(txt);
+				exit
+			end;
+		if IsCmd('IsCellEmpty') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				if (txt[1] in ['0'..'9']) then
+					begin
+						rs:=atol(txt);
+						if not(NextToken) then goto _error;
+						cs:=atol(StrPPas(pn));
+						isrc:=true
+					end
+				else
+					isrc:=false;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(isrc) then
+					if not(pw^.GetBlock(txt,false,rs,cs,re,ce,f1,f2)) then goto _error;
+				cell:=pw^.GetCell(rs,cs);
+				if cell^.Typ=CTYPE_EMPTY then answer('1')
+				else
+					answer('0');
+				exit
+			end;
+		if IsCmd('IsCellText') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				if (txt[1] in ['0'..'9']) then
+					begin
+						rs:=atol(txt);
+						if not(NextToken) then goto _error;
+						cs:=atol(StrPPas(pn));
+						isrc:=true
+					end
+				else
+					isrc:=false;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(isrc) then
+					if not(pw^.GetBlock(txt,false,rs,cs,re,ce,f1,f2)) then goto _error;
+				cell:=pw^.GetCell(rs,cs);
+				if cell^.Typ=CTYPE_TEXT then answer('1')
+				else
+					answer('0');
+				exit
+			end;
+		if IsCmd('IsCellConst') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				if (txt[1] in ['0'..'9']) then
+					begin
+						rs:=atol(txt);
+						if not(NextToken) then goto _error;
+						cs:=atol(StrPPas(pn));
+						isrc:=true
+					end
+				else
+					isrc:=false;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(isrc) then
+					if not(pw^.GetBlock(txt,false,rs,cs,re,ce,f1,f2)) then goto _error;
+				cell:=pw^.GetCell(rs,cs);
+				if cell^.Typ=CTYPE_CONST then answer('1')
+				else
+					answer('0');
+				exit
+			end;
+		if IsCmd('IsCellFormula') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then goto _error;
+				if (txt[1] in ['0'..'9']) then
+					begin
+						rs:=atol(txt);
+						if not(NextToken) then goto _error;
+						cs:=atol(StrPPas(pn));
+						isrc:=true
+					end
+				else
+					isrc:=false;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(isrc) then
+					if not(pw^.GetBlock(txt,false,rs,cs,re,ce,f1,f2)) then goto _error;
+				cell:=pw^.GetCell(rs,cs);
+				if cell^.Typ=CTYPE_FORMULA then answer('1')
+				else
+					answer('0');
+				exit
+			end;
+		if IsCmd('GetRows') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				answer(ltoa(pw^.Parms.Rows+1));
+				exit
+			end;
+		if IsCmd('GetColumns') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				answer(ltoa(pw^.Parms.Columns+1));
+				exit
+			end;
+		if IsCmd('Goto') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPPas(pn);
+				if length(txt)=0 then
+					begin
+						rs:=0;
+						cs:=0;
+						isrc:=true
+					end
+				else
+					if (txt[1] in ['0'..'9']) then
+						begin
+							rs:=atol(txt);
+							if not(NextToken) then goto _error;
+							cs:=atol(StrPPas(pn));
+							isrc:=true
+						end
+					else
+						isrc:=false;
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(isrc) then
+					if not(pw^.GetBlock(txt,false,rs,cs,re,ce,f1,f2)) then goto _error;
+				pw^.SetCursorPos(rs,cs,true);
+				exit
+			end;
+		if IsCmd('Recalc') then
+			begin
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				pw^.Calculate(true);
+				exit
+			end;
+		if IsCmd('Close') then
+			begin
+				while NextToken do
+					begin
+						pw:=getwindow(pn,true);
+						if pw<>nil then pw^.WMClosed
+					end;
+				exit
+			end;
+		if IsCmd('Open') then
+			begin
+				if pcmd^=#0 then opennewdoc^.Work
+				else
+					while NextToken do
+						begin
+							if pn^=#0 then opennewdoc^.Work
+							else
+								LoadFile(nil,StrPPas(pn))
+						end;
+				exit
+			end;
+		if IsCmd('Export') then
+			begin
+				if not(NextToken) then goto _error;
+				txt:=StrPUpper(StrPPas(pn));
+				if length(txt)=0 then goto _error;
+				if not(NextToken) then goto _error;
+				txt2:=StrPPas(pn);
+				NextToken;
+				pw:=getwindow(pn,true);
+				if pw=nil then goto _error;
+				if not(exportfile) then goto _error;
+				exit
+			end;
+		if IsCmd('New') then
+			begin
+				new(PCalcWindow,Init);
+				exit
+			end;
+		if IsCmd('Quit') then
+			begin
+				Quit;
+				exit
+			end;
+		InterpreteScript:=1;
+		exit;
+		_error:
+		InterpreteScript:=2
+	end;
+
+
 procedure TTexelApplication.HandleMesag(Pipe: Pipearray);
 	var answ  : Pipearray;
 	    poi   : PTexelObjectInfo;
@@ -19855,225 +21917,6 @@ procedure TTexelApplication.HandleMesag(Pipe: Pipearray);
 	    pc,pc2: PChar;
 	    plen,
 	    len2  : longint;
-
-	function handle_gs(p: PChar): integer;
-		label _error;
-		
-		var pw  : PCalcWindow;
-		    txt : string;
-		    pbuf: pointer;
-
-		function findtopsheet: PCalcWindow;
-			var p    : PWindow;
-			    o1,g1,
-			    dummy: integer;
-		
-			begin
-				wind_get(DESK,WF_TOP,o1,dummy,dummy,dummy);
-				p:=nil;
-				if not(appl_xgetinfo(11,g1,dummy,dummy,dummy)) then g1:=0;
-				repeat
-					p:=GetGPWindow(o1);
-					if p<>nil then
-						if p^.GetClassName<>TEXELWINDCLASS then p:=nil;
-					if p=nil then
-						if bTst(g1,16) then wind_get(o1,WF_OWNER,dummy,dummy,dummy,o1)
-				until (p<>nil) or (o1=DESK) or not(bTst(g1,16));
-				findtopsheet:=PCalcWindow(p)
-			end;
-
-		function getwindow(p: PChar; usetop: boolean): PCalcWindow;
-			var ptw: PWindow;
-			    s  : string;
-		
-			begin
-				getwindow:=nil;
-				if p=nil then exit;
-				if p^=#0 then
-					begin
-						if usetop then getwindow:=findtopsheet
-					end
-				else
-					begin
-						s:=StrPUpper(StrPPas(p));
-						ptw:=MainWindow;
-						while ptw<>nil do
-							begin
-								if ptw^.GetClassName=TEXELWINDCLASS then
-									if StrPUpper(PCalcWindow(ptw)^.GetWindowFilename)=s then
-										begin
-											getwindow:=PCalcWindow(ptw);
-											exit
-										end;
-								ptw:=ptw^.Next
-							end;
-						if pos('\',s)>0 then exit;
-						s:=GetFilename(s,true);
-						ptw:=MainWindow;
-						while ptw<>nil do
-							begin
-								if ptw^.GetClassName=TEXELWINDCLASS then
-									if GetFilename(StrPUpper(PCalcWindow(ptw)^.GetWindowFilename),true)=s then
-										begin
-											getwindow:=PCalcWindow(ptw);
-											exit
-										end;
-								ptw:=ptw^.Next
-							end;
-						if pos('.',s)>0 then exit;
-						s:=GetFilename(s,false);
-						ptw:=MainWindow;
-						while ptw<>nil do
-							begin
-								if ptw^.GetClassName=TEXELWINDCLASS then
-									if GetFilename(StrPUpper(PCalcWindow(ptw)^.GetWindowFilename),false)=s then
-										begin
-											getwindow:=PCalcWindow(ptw);
-											exit
-										end;
-								ptw:=ptw^.Next
-							end
-					end
-			end;
-	
-		begin
-			handle_gs:=2;
-			if p=nil then exit;
-			if p^=#0 then exit;
-			handle_gs:=0;
-			{ !!! }
-			if stricomp(p,'Select')=0 then
-				begin
-					txt:=StrPPas(PChar(longint(p)+7));
-					if length(txt)=0 then goto _error;
-					pw:=getwindow(PChar(longint(p)+length(txt)+8),true);
-					if pw=nil then goto _error;
-					pw^.GotoBlock(txt);
-					exit
-				end;
-			if stricomp(p,'Cut')=0 then
-				begin
-					pw:=getwindow(PChar(longint(p)+4),true);
-					if pw=nil then goto _error;
-					pw^.Cut;
-					exit
-				end;
-			if stricomp(p,'Copy')=0 then
-				begin
-					pw:=getwindow(PChar(longint(p)+5),true);
-					if pw=nil then goto _error;
-					pw^.Copy;
-					exit
-				end;
-			if stricomp(p,'Paste')=0 then
-				begin
-					pw:=getwindow(PChar(longint(p)+6),true);
-					if pw=nil then goto _error;
-					pw^.Paste;
-					exit
-				end;
-			if stricomp(p,'Delete')=0 then
-				begin
-					pw:=getwindow(PChar(longint(p)+7),true);
-					if pw=nil then goto _error;
-					pw^.Delete;
-					exit
-				end;
-			if stricomp(p,'SelectAll')=0 then
-				begin
-					pw:=getwindow(PChar(longint(p)+10),true);
-					if pw=nil then goto _error;
-					pw^.SelectAll;
-					exit
-				end;
-			if stricomp(p,'Print')=0 then
-				begin
-					pw:=getwindow(PChar(longint(p)+6),true);
-					if pw=nil then goto _error;
-					pw^.Print;
-					exit
-				end;
-			if stricomp(p,'Save')=0 then
-				begin
-					pw:=getwindow(PChar(longint(p)+5),true);
-					if pw=nil then goto _error;
-					pw^.save^.Work;
-					exit
-				end;
-			if stricomp(p,'SaveAs')=0 then
-				begin
-					txt:=StrPPas(PChar(longint(p)+7));
-					if length(txt)=0 then goto _error;
-					pw:=getwindow(PChar(longint(p)+length(txt)+8),true);
-					if pw=nil then goto _error;
-					pw^.saveas^.SaveAs(txt,0);
-					exit
-				end;
-			if stricomp(p,'ToFront')=0 then
-				begin
-					pw:=getwindow(PChar(longint(p)+8),false);
-					if pw=nil then goto _error;
-					pw^.Top;
-					exit
-				end;
-			if stricomp(p,'GetFront')=0 then
-				begin
-					pw:=findtopsheet;
-					if pw=nil then goto _error;
-					txt:=pw^.GetWindowFilename;
-					if length(txt)=0 then goto _error;
-					GlobalAlloc(pbuf,length(txt)+2);
-					if pbuf=nil then exit;
-					StrPCopy(pbuf,txt);
-					PChar(longint(pbuf)+length(txt)+1)^:=#0;
-					answ[5]:=integer(HiWord(pbuf));
-					answ[6]:=integer(LoWord(pbuf));
-					exit
-				end;
-			if stricomp(p,'GetSelection')=0 then
-				begin
-					pw:=getwindow(PChar(longint(p)+13),true);
-					if pw=nil then goto _error;
-					txt:=StrPTrimF(pw^.dblock^.GetText);
-					if length(txt)=0 then goto _error;
-					GlobalAlloc(pbuf,length(txt)+2);
-					if pbuf=nil then exit;
-					StrPCopy(pbuf,txt);
-					PChar(longint(pbuf)+length(txt)+1)^:=#0;
-					answ[5]:=integer(HiWord(pbuf));
-					answ[6]:=integer(LoWord(pbuf));
-					exit
-				end;
-			if stricomp(p,'Close')=0 then
-				begin
-					pw:=getwindow(PChar(longint(p)+6),true);
-					if pw=nil then goto _error;
-					pw^.WMClosed;
-					exit
-				end;
-			if stricomp(p,'Open')=0 then
-				begin
-					inc(longint(p),5);
-					if p^=#0 then opennewdoc^.Work
-					else
-						opennewdoc^.Load(StrPPas(p));
-					exit
-				end;
-			if stricomp(p,'New')=0 then
-				begin
-					new(PCalcWindow,Init);
-					exit
-				end;
-			if stricomp(p,'Quit')=0 then
-				begin
-					Quit;
-					exit
-				end;
-			handle_gs:=1;
-			exit;
-			_error:
-			handle_gs:=2
-		end;
 
 	begin
 		case pipe[0] of
@@ -20100,15 +21943,15 @@ procedure TTexelApplication.HandleMesag(Pipe: Pipearray);
 								err:=false;
 						if err then
 							begin
-								Alert(nil,1,NOTE,'Beim Einbetten von "'+StrPPas(poi^.oi.Filename)+'" ist ein Fehler aufgetreten.','  &OK  ');
+								Alert(nil,1,NOTE,MESSAGE_WINDOW_EMBED1+StrPPas(poi^.oi.Filename)+MESSAGE_WINDOW_EMBED2,BUTTON_OK);
 								GlobalFree(pointer(poi),sizeof(TTexelObjectInfo))
 							end
 						else
 							begin
 								if (poi^.w100>0) and (poi^.h100>0) then
-									PCalcWindow(poi^.oi.ClientData)^.Embed(@poi^.oi,pipe[1],poi^.w100,poi^.h100,poi^.x100,poi^.y100,poi^.DataLen,poi^.Data,@poi^.oabuf,@poi^.diabuf,poi^.xyvalid,poi^.prop,poi^.embd,poi^.dirty,poi^.istad)
+									PCalcWindow(poi^.oi.ClientData)^.Embed(@poi^.oi,pipe[1],poi^.w100,poi^.h100,poi^.x100,poi^.y100,poi^.DataLen,poi^.Data,@poi^.oabuf,@poi^.diabuf,poi^.xyvalid,poi^.prop,poi^.embd,poi^.dirty,poi^.istad,poi^.prntflg,poi^.lckflg)
 								else
-									PCalcWindow(poi^.oi.ClientData)^.Embed(@poi^.oi,pipe[1],word(pipe[6]),word(pipe[7]),0,0,0,nil,nil,@poi^.diabuf,false,false,false,poi^.dirty,poi^.istad)
+									PCalcWindow(poi^.oi.ClientData)^.Embed(@poi^.oi,pipe[1],word(pipe[6]),word(pipe[7]),0,0,0,nil,nil,@poi^.diabuf,false,false,false,poi^.dirty,poi^.istad,poi^.prntflg,poi^.lckflg)
 							end
 					end
 			end;
@@ -20128,19 +21971,21 @@ procedure TTexelApplication.HandleMesag(Pipe: Pipearray);
 				answ[0]:=GS_REPLY;
 				answ[1]:=apID;
 				answ[2]:=0;
-				answ[3]:=$0040;
-				answ[4]:=GSM_COMMAND;
+				answ[3]:=integer(HiWord(GSInfo));
+				answ[4]:=integer(LoWord(GSInfo));
 				answ[5]:=0;
-				if pipe[3]>$0040 then answ[6]:=1
-				else
-					answ[6]:=0;
+				answ[6]:=1;
+				if (pipe[3]<>0) or (pipe[4]<>0) then
+					if PGSInfo(Ptr(word(pipe[3]),word(pipe[4])))^.Version>=$0070 then answ[6]:=0;
 				answ[7]:=Pipe[7];
 				appl_write(Pipe[1],16,@answ)
 			end;
 		GS_REPLY:
-			{ ... };
+			GEMScriptID:=pipe[1];
 		GS_QUIT:
-			{ ... };
+			begin
+				if pipe[1]=GEMScriptID then GEMScriptID:=-1
+			end;
 		GS_COMMAND:
 			begin
 				GSActive:=true;
@@ -20151,7 +21996,7 @@ procedure TTexelApplication.HandleMesag(Pipe: Pipearray);
 				answ[4]:=Pipe[4];
 				answ[5]:=0;
 				answ[6]:=0;
-				answ[7]:=handle_gs(Ptr(word(pipe[3]),word(pipe[4])));
+				answ[7]:=InterpreteScript(Ptr(word(pipe[3]),word(pipe[4])),answ);
 				GSActive:=false;
 				appl_write(Pipe[1],16,@answ)
 			end;
@@ -20200,6 +22045,13 @@ procedure TTexelApplication.HandleMesag(Pipe: Pipearray);
 			end;
 		GS_MACRO:
 			{ ... };
+		GO_PRIVATE:
+			if Pipe[3]=GOP_ABANDON then AbandonFile(PCalcWindow(Ptr(word(Pipe[4]),word(Pipe[5]))));
+		DHST_ACK:
+			begin
+				pc:=Ptr(word(Pipe[3]),word(Pipe[4]));
+				GlobalFree(pointer(pc),1024+sizeof(TDHSTInfo))
+			end;
 		CAB_HELLO:
 			begin
 				WebID:=Pipe[1];
@@ -20270,7 +22122,7 @@ procedure TTexelApplication.HandleMesag(Pipe: Pipearray);
 		CAB_MAILSENT:
 			if Pipe[3]=0 then
 				if Pipe[4]<>2 then
-					Alert(nil,1,NOTE,'Beim Versenden der EMail an den ASH-Texel-Support ist ein Fehler aufgetreten.','  &OK  ');
+					Alert(nil,1,NOTE,MESSAGE_WINDOW_EMAIL,BUTTON_OK);
 		end
 	end;
 
@@ -20708,7 +22560,7 @@ function TTexelApplication.Time2Str(time: longint): string;
 		ret:=ret+'.'+dummy+'.';
 		dummy:=ltoa((((time shr 25) and $7f)+80) mod 100);
 		if length(dummy)=1 then dummy:='0'+dummy;
-		ret:=ret+dummy+'  um  ';
+		ret:=ret+dummy+'  '+STRING_INFO_TIMEAT+'  ';
 		dummy:=ltoa((time shr 11) and $1f);
 		if length(dummy)=1 then dummy:='0'+dummy;
 		ret:=ret+dummy+':';
@@ -20821,9 +22673,9 @@ procedure TTexelApplication.OLGAAck(Pipe: Pipearray);
 				else
 					if pipe[6]=0 then
 						begin
-							if PCookieID(@pipe[4])^='.TAD' then Application^.Alert(nil,1,NOTE,'ArtWorx konnte nicht aufgerufen werden.','  &OK  ')
+							if PCookieID(@pipe[4])^='.TAD' then Application^.Alert(nil,1,NOTE,MESSAGE_EMBED_ARTWORX,BUTTON_OK)
 							else
-								Application^.Alert(nil,1,NOTE,'Der OLGA-"'+StrPTrimF(PCookieID(@pipe[4])^)+'"-Server konnte nicht aufgerufen werden.','  &OK  ')
+								Application^.Alert(nil,1,NOTE,MESSAGE_EMBED_OLGA1+StrPTrimF(PCookieID(@pipe[4])^)+MESSAGE_EMBED_OLGA2,BUTTON_OK)
 						end
 			end
 		end
@@ -21044,25 +22896,6 @@ function TTexelApplication.XAccText(OrgID: integer; pText: pointer): boolean;
 	end;
 
 
-function TTexelApplication.Message(AParent: PWindow; DefBtn: integer; Sign: longint; txt: string): integer;
-	var q  : integer;
-	    btn: string;
-
-	begin
-		Message:=id_No;
-		if length(txt)>0 then
-			begin
-				q:=pos(#9,txt);
-				if q>0 then
-					begin
-						btn:=StrPRight(txt,length(txt)-q);
-						txt:=StrPLeft(txt,q-1);
-						Message:=Alert(AParent,DefBtn,Sign,txt,btn)
-					end
-			end
-	end;
-
-
 function TTexelApplication.HelpAvailable(loadstg: boolean): boolean;
 	var s: string;
 
@@ -21092,17 +22925,385 @@ function TTexelApplication.HelpAvailable(loadstg: boolean): boolean;
 	end;
 
 
+procedure TTexelApplication.ErrorWindowMemory(p: PWindow);
+
+	begin
+		Alert(p,1,STOP,MESSAGE_WINDOW_MEMORY,BUTTON_OK)
+	end;
+
+
+procedure TTexelApplication.InitSheetStructs(var parms: TTexelParms; var shbuf: TSheetBuffer; var dgbuf: TDialogBuffer; var zwbuf: TZielBuf; var dibuf: TDiagrammBuf; var exbuf: TExportBuf;
+                                             var srbuf: TSortBuf; var inbuf: TInfoBuf; var fibuf: TFindBuf; var rebuf: TReplaceBuf; var flbuf: TFillBuffer);
+
+	begin
+		with parms do
+			begin
+				Percent:=100;
+				psbuffer:=stdpsbuffer;
+				Toolbar:=setupbuffer.toolbar;
+				with Cursor do
+					begin
+						Block:=false;
+						OldRow:=0;
+						OldCol:=0;
+						Row:=0;
+						Col:=0
+					end
+			end;
+		with shbuf do
+			begin
+				size:=setupbuffer.stdfsize;
+				font:=setupbuffer.stdfont;
+				gitter:=bf_Checked;
+				autocalc:=setupbuffer.autocalc;
+				vorlage:=bf_Unchecked;
+				lhor:=bf_Unchecked;
+				lvert:=bf_Unchecked;
+				lmouse:=bf_Checked;
+				llayout:=bf_Checked;
+				images:=bf_Checked;
+				protect:=bf_Unchecked;
+				umbruch:=bf_Checked
+			end;
+		with dgbuf do
+			begin
+				font:=setupbuffer.stdfont;
+				size:=setupbuffer.stdfsize;
+				percent:=3;
+				color:=White;
+				pattern:=0;
+				direction:=CRS_DOWN;
+				input:='';
+				txtcolor:=Black;
+				border:=0;
+				resvd1:=0;
+				resvd2:=0;
+				resvd3:=0;
+				resvd4:=0
+			end;
+		with zwbuf do
+			begin
+				zzelle:='';
+				vzelle:='';
+				wert:='0';
+				iterationen:='100'
+			end;
+		with dibuf do
+			begin
+				rb1:=bf_Checked;
+				rb2:=bf_Unchecked;
+				rb3:=bf_Unchecked;
+				rb4:=bf_Unchecked;
+				rb5:=bf_Unchecked;
+				typLinie:=bf_Checked;
+				typBalken:=bf_Unchecked;
+				typKreis:=bf_Unchecked;
+				Farbe:=bf_Checked;
+				Absolut:=bf_Checked;
+				xyLinear:=bf_Checked;
+				xyFirst:=bf_Unchecked;
+				xyAlternate:=bf_Unchecked;
+				xyLine:=bf_Unchecked;
+				xyPt:=bf_Unchecked;
+				xyLinept:=bf_Checked;
+				Stapeln:=bf_Unchecked;
+				DreiD:=bf_Unchecked;
+				Neben:=bf_Checked;
+				stilLinie:=0;
+				stilPunkt:=5;
+				Titel:='';
+				Legende:=bf_Checked;
+				Border:=bf_Checked;
+				nRow:=bf_Unchecked;
+				nColumn:=bf_Unchecked;
+				Size:=setupbuffer.stdfsize;
+				Font:=setupbuffer.stdfont;
+				dRows:=bf_Checked;
+				dColumns:=bf_Unchecked;
+				Ticks:=bf_Checked;
+				numTicks:='4';
+				alName:='Y';
+				alTicks:=bf_Checked;
+				alNum:='3';
+				alMin:='';
+				alMax:='';
+				auName:='X';
+				auTicks:=bf_Checked;
+				auNum:='3';
+				auMin:='';
+				auMax:='';
+				szWidth:='50.0';
+				szHeight:='50.0';
+				objFilename:=''
+			end;
+		with exbuf do
+			begin
+				exporttype:=0;
+				clipboard:=bf_Unchecked;
+				bereich:=bf_Unchecked;
+				htmldoctype:=0;
+				htmlsavedt:=bf_Checked;
+				htmlcolor:=bf_Checked;
+				csvformula:=bf_Unchecked;
+				csvvalue:=bf_Checked;
+				difformula:=bf_Unchecked;
+				difvalue:=bf_Checked;
+				difstandard:=bf_Checked;
+				difexcel:=bf_Unchecked;
+				with ascii do
+					begin
+						hor:=bf_Checked;
+						vert:=bf_Unchecked;
+						rctxt:='13,10';
+						rcval:=0;
+						celltxt:='9';
+						cellval:=0;
+						texttxt:='34';
+						textval:=0;
+						quote:=bf_Checked;
+						numbers:=0;
+						formula:=bf_Unchecked;
+						value:=bf_Checked
+					end;
+				difformat:=bf_Checked;
+				csvformat:=bf_Checked;
+				asciiformat:=bf_Checked;
+				htmlembed:=bf_Unchecked;
+				filter:=0
+			end;
+		with srbuf do
+			begin
+				Pop1:=0;
+				Up1:=bf_Checked;
+				Down1:=bf_Unchecked;
+				Pop2:=0;
+				Up2:=bf_Checked;
+				Down2:=bf_Unchecked;
+				Pop3:=0;
+				Up3:=bf_Checked;
+				Down3:=bf_Unchecked;
+				Columns:=bf_Checked;
+				Rows:=bf_Unchecked;
+				Ins:=bf_Checked;
+				Pre:=bf_Unchecked;
+				Post:=bf_Unchecked;
+				Chars:=bf_Unchecked;
+				EmptyPre:=bf_Unchecked;
+				EmptyPost:=bf_Checked;
+				Lexikal:=bf_Checked;
+				Absolut:=bf_Unchecked;
+				Attribute:=bf_Unchecked
+			end;
+		with inbuf do
+			begin
+				Autor:='';
+				Stichwort:='';
+				Rem1:='';
+				Rem2:='';
+				Rem3:='';
+				Rem4:='';
+				Encrypt:=bf_Checked;
+				Resvd:=0;
+				Created:=gettime;
+				Last:=gettime;
+				Resvd0:=0;
+				Used:=1;
+				Printed:=0;
+				Version:=0;
+				Release:=0
+			end;
+		with fibuf do
+			begin
+				search:='';
+				rows:=bf_Checked;
+				columns:=bf_Unchecked;
+				cse:=bf_Unchecked;
+				complete:=bf_Unchecked;
+				formula:=bf_Checked;
+				value:=bf_Checked;
+				txt:=bf_Checked;
+				iform:=bf_Unchecked;
+				ival:=bf_Checked;
+				vor:=bf_Checked;
+				zurueck:=bf_Unchecked;
+				resvd:=0
+			end;
+		with rebuf do
+			begin
+				search:='';
+				replace:='';
+				rows:=bf_Checked;
+				columns:=bf_Unchecked;
+				cse:=bf_Unchecked;
+				complete:=bf_Unchecked;
+				formula:=bf_Checked;
+				value:=bf_Checked;
+				txt:=bf_Checked;
+				vor:=bf_Checked;
+				zurueck:=bf_Unchecked;
+				resvd:=0
+			end;
+		with flbuf do
+			begin
+				rows:=bf_Checked;
+				columns:=bf_Unchecked;
+				arithm:=bf_Checked;
+				geom:=bf_Unchecked;
+				date:=bf_Unchecked;
+				cpy:=bf_Unchecked;
+				trend:=bf_Unchecked;
+				day:=bf_Checked;
+				wday:=bf_Unchecked;
+				month:=bf_Unchecked;
+				year:=bf_Unchecked;
+				stepval:='1';
+				endval:=''
+			end
+	end;
+
+
+procedure TTexelApplication.FilterString(id: integer; var s: string);
+	var i,nr: integer;
+
+	begin
+		if length(s)>0 then
+			begin
+				nr:=pkt^.GetImportFilter(nil,nil,0,0,0,id);
+				for i:=1 to length(s) do s[i]:=pkt^.ImportChar(nil,nil,0,0,0,nr,s[i])
+			end
+	end;
+
+
+function TTexelApplication.dosmask(s: string): string;
+	var i: integer;
+
+	procedure replace(alt,neu: char);
+	
+		begin
+			i:=pos(alt,s);
+			while i>0 do
+				begin
+					s[i]:=neu;
+					i:=pos(alt,s)
+				end
+		end;
+	
+	begin
+		if InitKeyTab then FilterString(KEYTAB_ID_ANSI,s)
+		else
+			begin
+				replace(#228,'Ñ');
+				replace(#246,'î');
+				replace(#252,'Å');
+				replace(#223,'û');
+				replace(#196,'é');
+				replace(#214,'ô');
+				replace(#220,'ö');
+				replace(#178,#253);
+				replace(#179,#254);
+				replace(#181,#230)
+			end;
+		dosmask:=s
+	end;
+
+
+function TTexelApplication.macmask(s: string): string;
+	var i: integer;
+
+	procedure replace(alt,neu: char);
+	
+		begin
+			i:=pos(alt,s);
+			while i>0 do
+				begin
+					s[i]:=neu;
+					i:=pos(alt,s)
+				end
+		end;
+	
+	begin
+		if InitKeyTab then FilterString(KEYTAB_ID_MAC,s)
+		else
+			begin
+				replace(#138,'Ñ');
+				replace('ö','î');
+				replace(#159,'Å');
+				replace('Ä','é');
+				replace(#133,'ô');
+				replace('Ü','ö');
+				replace(#167,'û')
+			end;
+		macmask:=s
+	end;
+
+
+function TTexelApplication.IsLongFileName(fname: string): boolean;
+	var maxmode: longint;
+
+	begin
+		fname:=GetPath(fname);
+		if length(fname)=0 then IsLongFileName:=false
+		else
+			begin
+				maxmode:=dpathconf(fname,-1);
+				if maxmode<3 then IsLongFileName:=false
+				else
+					IsLongFileName:=(dpathconf(fname,3)>12)
+			end
+	end;
+
+
+procedure TTexelApplication.AbandonFile(p: PCalcWindow);
+	var s: string;
+
+	begin
+		if (p=nil) or (opennewdoc=nil) then exit;
+		s:=p^.GetWindowFileName;
+		if length(s)=0 then exit;
+		if not(Exist(s)) then exit;
+		if Alert(p,1,WAIT,MESSAGE_WINDOW_ABANDON1+CompressPath(s,78)+MESSAGE_WINDOW_ABANDON2,BUTTON_YESNO)=1 then
+			begin
+				p^.ClearDirty;
+				dispose(p,Done);
+				opennewdoc^.Load(s)
+			end
+	end;
+
+
+procedure TTexelApplication.InitCells(cell: PCell; rmax,cmax: integer);
+	var w,q: integer;
+
+	begin
+		for q:=0 to rmax-1 do
+			for w:=0 to cmax-1 do
+				begin
+					with cell^ do
+						begin
+							Color:=Black;
+							Style:=8;
+							TxtVal.Color:=Black
+						end;
+					inc(longint(cell),CELLSIZE)
+				end
+	end;
+
+
 procedure TAboutDialog.EndDlg(Indx: integer; DblClick: boolean);
+	var s: string;
 
 	begin
 		if (Indx=RTAASH) and DblClick then
-			if Exist(TexelApp.DataPath+GEMJING) then
-				if Exist(TexelApp.DataPath+TEXELSOUND) then
-					begin
-						BusyMouse;
-						Application^.StartApp(TexelApp.DataPath+GEMJING,'-q '+TexelApp.DataPath+TEXELSOUND);
-						ArrowMouse
-					end;
+			begin
+				s:=GetEnv('GEMJINGPATH');
+				if length(s)=0 then s:=TexelApp.DataPath+GEMJING;
+				if Exist(s) then
+					if Exist(TexelApp.DataPath+TEXELSOUND) then
+						begin
+							BusyMouse;
+							Application^.StartApp(s,'-q '+TexelApp.DataPath+TEXELSOUND);
+							ArrowMouse
+						end
+			end;
 		inherited EndDlg(Indx,DblClick)
 	end;
 
@@ -21115,6 +23316,7 @@ procedure TAbout.Work;
 	begin
 		if ADialog=nil then
 			begin
+				TexelApp.ActivateExtResource;
 				ADialog:=new(PAboutDialog,Init(nil,TITLE_ABOUT,STG_ABOUT,ICNTITLE_ABOUT,RTABOUT));
 				if ADialog<>nil then
 					begin
@@ -21140,12 +23342,6 @@ procedure TAbout.Work;
 							end;
 						new(p,Init(ADialog,RTADATE,13,false,BUBBLE_EASTEREGG));
 						if p<>nil then p^.SetText('('+TEXELDATE+')');
-						new(p,Init(ADialog,RTACOPRO,6,false,BUBBLE_ABOUT_COPRO));
-						{$IFDEF COPRO}
-						if p<>nil then p^.Unhide;
-						{$ELSE}
-						if p<>nil then p^.Hide(false);
-						{$ENDIF}
 						new(p,Init(ADialog,RTANAME,41,false,''));
 						if p<>nil then
 							begin
@@ -21189,7 +23385,8 @@ procedure TAbout.Work;
 						new(pc,Init(ADialog,RTAASH,''));
 						if pc<>nil then pc^.ID:=id_NoExit;
 						new(PButton,Init(ADialog,RTAOK,id_OK,true,BUBBLE_ABOUT_OK))
-					end
+					end;
+				TexelApp.DeactivateExtResource
 			end;
 		if ADialog<>nil then ADialog^.MakeWindow
 	end;
@@ -21218,9 +23415,9 @@ procedure TMinMaxValidator.Error;
 			with Application^ do
 				begin
 					if (Attr.Country=FRG) or (Attr.Country=SWG) then
-						Alert(Window,1,NOTE,' Wert nicht im Bereich von ('+ftoa(MinVal)+','+ftoa(MaxVal)+')','  &OK  ')
+						Alert(Window,1,NOTE,' Wert nicht im Bereich von ('+ftoa(MinVal)+','+ftoa(MaxVal)+')',BUTTON_OK)
 					else
-						Alert(Window,1,NOTE,' Value not in range ('+ftoa(MinVal)+','+ftoa(MaxVal)+')','  &OK  ')
+						Alert(Window,1,NOTE,' Value not in range ('+ftoa(MinVal)+','+ftoa(MaxVal)+')',BUTTON_OK)
 			end
 	end;
 
@@ -21268,9 +23465,9 @@ procedure TPosRealValidator.Error;
 			with Application^ do
 				begin
 					if (Attr.Country=FRG) or (Attr.Country=SWG) then
-						Alert(Window,1,NOTE,' Wert darf nicht negativ sein.','  &OK  ')
+						Alert(Window,1,NOTE,' Wert darf nicht negativ sein.',BUTTON_OK)
 					else
-						Alert(Window,1,NOTE,' Value must not be negative.','  &OK  ')
+						Alert(Window,1,NOTE,' Value must not be negative.',BUTTON_OK)
 			end
 	end;
 
@@ -21297,6 +23494,7 @@ function TPosRealValidator.IsValidInput(var s: string; SuppressFill: boolean): b
 function TPSDialog.OK: boolean;
 	var psd: TPSBuffer;
 	    ops: PPSBuffer;
+	    but: integer;
 
 	function BlockCorrect(blck: string): boolean;
 		var c: integer;
@@ -21343,19 +23541,23 @@ function TPSDialog.OK: boolean;
 		TransferBuffer:=ops;
 		if not(BlockCorrect(psd.bereich)) then
 			begin
-				Application^.Alert(@self,1,NOTE,'Bitte geben Sie einen gÅltigen Druckbereich ein.','  &OK  ');
+				Application^.Alert(@self,1,NOTE,MESSAGE_LAYOUT_RANGE,BUTTON_OK);
 				OK:=false
 			end
 		else
 			begin
 				if ((atof(psd.kopf)<=0.0) and (((psd.hlefton=bf_Checked) and (length(psd.hleft)>0)) or ((psd.hcenteron=bf_Checked) and (length(psd.hmid)>0)) or ((psd.hrighton=bf_Checked) and (length(psd.hright)>0)))) or
 				   ((atof(psd.fuss)<=0.0) and (((psd.flefton=bf_Checked) and (length(psd.fleft)>0)) or ((psd.fcenteron=bf_Checked) and (length(psd.fmid)>0)) or ((psd.frighton=bf_Checked) and (length(psd.fright)>0)))) then
-					if Application^.Alert(@self,1,NOTE,'Sie haben eine Kopf- bzw. Fuûzeile definiert, ohne den entsprechenden Rand festzulegen.','  &OK  |&Abbruch')<>1 then
-						begin
-							{ !!! }
-							OK:=false;
-							exit
-						end;
+					begin
+						but:=Application^.Alert(@self,2,NOTE,MESSAGE_LAYOUT_HEADFOOT,BUTTON_OKMINIMALCANCEL);
+						if but=2 then MinimalHeadFoot
+						else
+							if but<>1 then
+								begin
+									OK:=false;
+									exit
+								end
+					end;
 				if inherited OK then
 					begin
 						OK:=true;
@@ -21367,7 +23569,7 @@ function TPSDialog.OK: boolean;
 	end;
 
 
-function TPSDialog.ExitDlg(AnIndx: integer): boolean;
+procedure TPSDialog.MinimalHeadFoot;
 	label _fertig;
 
 	var p         : PCalcWindow;
@@ -21381,57 +23583,62 @@ function TPSDialog.ExitDlg(AnIndx: integer): boolean;
 	    ops       : PPSBuffer;
 
 	begin
+		BusyMouse;
+		p:=PCalcWindow(Parent);
+		ops:=TransferBuffer;
+		TransferBuffer:=@psd;
+		TransferData(tf_GetData);
+		TransferBuffer:=ops;
+		hmin:=0.0;
+		fmin:=0.0;
+		if not(Application^.GDOSActive) then goto _fertig;
+		if ((psd.hlefton=bf_Unchecked) or (length(psd.hleft)=0)) and ((psd.hcenteron=bf_Unchecked) or (length(psd.hmid)=0)) and ((psd.hrighton=bf_Unchecked) or (length(psd.hright)=0)) and
+		   ((psd.flefton=bf_Unchecked) or (length(psd.fleft)=0)) and ((psd.fcenteron=bf_Unchecked) or (length(psd.fmid)=0)) and ((psd.frighton=bf_Unchecked) or (length(psd.fright)=0)) then goto _fertig;
+		if p^.prnt=nil then goto _fertig;
+		if not(p^.prnt^.IsAvailable(true)) then goto _fertig;
+		num:=p^.prnt^.GetDevice;
+		if (num<11) or (num>99) then goto _fertig;
+		vOpnwk(num,hndl,wrkout,p^.prnt^.GetPaperSize,'',p^.wnd_prnt_set);
+		if hndl<>0 then
+			begin
+				inc(wrkout[10],vst_load_fonts(hndl,0));
+				vq_extnd(hndl,1,ewrkout);
+				vst_font(hndl,p^.GetStdFontIndex);
+				if p^.Speedo then vst_arbpt(hndl,p^.GetStdFontSize,q,q,q,hcell)
+				else
+					vst_point(hndl,p^.GetStdFontSize,q,q,q,hcell);
+				vst_unload_fonts(hndl,0);
+				v_clswk(hndl);
+				case ewrkout[20] of
+				1:
+					yfak:=longint(ewrkout[22])/longint(100);
+				2:
+					yfak:=longint(ewrkout[22])/longint(1000);
+				3:
+					yfak:=longint(ewrkout[22])/longint(10000)
+				else
+					yfak:=longint(wrkout[4])/longint(10)
+				end;
+				yfak:=round(yfak*(hcell+1))/100.0;
+				if (((psd.hlefton=bf_Checked) and (length(psd.hleft)>0)) or ((psd.hcenteron=bf_Checked) and (length(psd.hmid)>0)) or ((psd.hrighton=bf_Checked) and (length(psd.hright)>0))) then hmin:=yfak;
+				if (((psd.flefton=bf_Checked) and (length(psd.fleft)>0)) or ((psd.fcenteron=bf_Checked) and (length(psd.fmid)>0)) or ((psd.frighton=bf_Checked) and (length(psd.fright)>0))) then fmin:=yfak
+			end;
+		_fertig:
+		ed1^.SetText(ftoa(hmin));
+		ed2^.SetText(ftoa(fmin));
+		ArrowMouse
+	end;
+
+
+function TPSDialog.ExitDlg(AnIndx: integer): boolean;
+
+	begin
 		ExitDlg:=false;
 		case AnIndx of
 		RTPSSET:
 			OK;
 		RTPSMINIMAL:
-			begin
-				BusyMouse;
-				p:=PCalcWindow(Parent);
-				ops:=TransferBuffer;
-				TransferBuffer:=@psd;
-				TransferData(tf_GetData);
-				TransferBuffer:=ops;
-				hmin:=0.0;
-				fmin:=0.0;
-				if not(Application^.GDOSActive) then goto _fertig;
-				if ((psd.hlefton=bf_Unchecked) or (length(psd.hleft)=0)) and ((psd.hcenteron=bf_Unchecked) or (length(psd.hmid)=0)) and ((psd.hrighton=bf_Unchecked) or (length(psd.hright)=0)) and
-				   ((psd.flefton=bf_Unchecked) or (length(psd.fleft)=0)) and ((psd.fcenteron=bf_Unchecked) or (length(psd.fmid)=0)) and ((psd.frighton=bf_Unchecked) or (length(psd.fright)=0)) then goto _fertig;
-				if p^.prnt=nil then goto _fertig;
-				if not(p^.prnt^.IsAvailable(true)) then goto _fertig;
-				num:=p^.prnt^.GetDevice;
-				if (num<11) or (num>99) then goto _fertig;
-				vOpnwk(num,hndl,wrkout,p^.prnt^.GetPaperSize,'',p^.wnd_prnt_set);
-				if hndl<>0 then
-					begin
-						inc(wrkout[10],vst_load_fonts(hndl,0));
-						vq_extnd(hndl,1,ewrkout);
-						vst_font(hndl,p^.GetStdFontIndex);
-						if p^.Speedo then vst_arbpt(hndl,p^.GetStdFontSize,q,q,q,hcell)
-						else
-							vst_point(hndl,p^.GetStdFontSize,q,q,q,hcell);
-						vst_unload_fonts(hndl,0);
-						v_clswk(hndl);
-						case ewrkout[20] of
-						1:
-							yfak:=longint(ewrkout[22])/longint(100);
-						2:
-							yfak:=longint(ewrkout[22])/longint(1000);
-						3:
-							yfak:=longint(ewrkout[22])/longint(10000)
-						else
-							yfak:=longint(wrkout[4])/longint(10)
-						end;
-						yfak:=round(yfak*(hcell+1))/100.0;
-						if (((psd.hlefton=bf_Checked) and (length(psd.hleft)>0)) or ((psd.hcenteron=bf_Checked) and (length(psd.hmid)>0)) or ((psd.hrighton=bf_Checked) and (length(psd.hright)>0))) then hmin:=yfak;
-						if (((psd.flefton=bf_Checked) and (length(psd.fleft)>0)) or ((psd.fcenteron=bf_Checked) and (length(psd.fmid)>0)) or ((psd.frighton=bf_Checked) and (length(psd.fright)>0))) then fmin:=yfak
-					end;
-				_fertig:
-				ed1^.SetText(ftoa(hmin));
-				ed2^.SetText(ftoa(fmin));
-				ArrowMouse
-			end
+			MinimalHeadFoot
 		end
 	end;
 
@@ -21622,6 +23829,7 @@ procedure TCategoryBox.Work;
 		flist^.FreeAll;
 		grp:=PCategory(TexelApp.Categories^.At(sel))^.Group;
 		flist^.Sort:=true;
+		flist^.CaseSensitive:=false;
 		for q:=0 to TexelApp.Functions^.Count-1 do
 			if (grp=0) or (PFunction(TexelApp.Functions^.At(q))^.Group=grp) then
 				flist^.Insert(NewStr('  '+StrPLeft(PFunction(TexelApp.Functions^.At(q))^.Name^,30)+' '#0));
@@ -21851,6 +24059,10 @@ function TDiagrammDialog.CreateDiagram(tadname: string; emb: boolean): boolean;
 	    p    : PCalcWindow;
 	    cell2,
 	    cell : PCell;
+	    almin,
+	    almax,
+	    aumin,
+	    aumax,
 	    xcmp,
 	    xmin,
 	    xmax,
@@ -21907,7 +24119,7 @@ function TDiagrammDialog.CreateDiagram(tadname: string; emb: boolean): boolean;
 		if Application^.Multitasking and emb then
 			if Application^.OLGAManager<0 then
 				begin
-					Application^.Alert(@self,1,NOTE,'Kein OLGA-Manager installiert.','  &OK  ');
+					Application^.Alert(@self,1,NOTE,MESSAGE_GENERAL_OLGA,BUTTON_OK);
 					exit
 				end;
 		p:=PCalcWindow(Parent);
@@ -21916,11 +24128,15 @@ function TDiagrammDialog.CreateDiagram(tadname: string; emb: boolean): boolean;
 		lr.w:=round(atof(p^.diagrammbuf.szWidth)*1000.0);
 		lr.h:=round(atof(p^.diagrammbuf.szHeight)*1000.0);
 		if not(p^.GetBlock(p^.dblock^.GetText,false,rs,cs,re,ce,dummy,dummy)) then exit;
+		almin:=atof(p^.diagrammbuf.AlMin);
+		almax:=atof(p^.diagrammbuf.AlMax);
+		aumin:=atof(p^.diagrammbuf.AuMin);
+		aumax:=atof(p^.diagrammbuf.AuMax);
 		if p^.diagrammbuf.nRow=bf_Checked then
 			begin
 				if re<=rs then
 					begin
-						Application^.Alert(@self,1,NOTE,'Zu wenig Zeilen markiert.','  &OK  ');
+						Application^.Alert(@self,1,NOTE,MESSAGE_DIAGRAM_ROWS,BUTTON_OK);
 						exit
 					end;
 				rowl:=1
@@ -21931,7 +24147,7 @@ function TDiagrammDialog.CreateDiagram(tadname: string; emb: boolean): boolean;
 			begin
 				if ce<=cs then
 					begin
-						Application^.Alert(@self,1,NOTE,'Zu wenig Spalten markiert.','  &OK  ');
+						Application^.Alert(@self,1,NOTE,MESSAGE_DIAGRAM_COLUMNS,BUTTON_OK);
 						exit
 					end;
 				coll:=1
@@ -21943,31 +24159,31 @@ function TDiagrammDialog.CreateDiagram(tadname: string; emb: boolean): boolean;
 			anz:=1;
 		if (ce+1-cs-coll)*(re+1-rs-rowl)<=anz then
 			begin
-				Application^.Alert(@self,1,NOTE,'Zu wenig Zellen markiert.','  &OK  ');
+				Application^.Alert(@self,1,NOTE,MESSAGE_DIAGRAM_CELLS,BUTTON_OK);
 				exit
 			end;
 		if (p^.diagrammbuf.typLinie=bf_Checked) and (p^.diagrammbuf.xyLinear=bf_Unchecked) then
 			begin
 				if (p^.diagrammbuf.dRows=bf_Checked) and (re-rs-rowl<1) then
 					begin
-						Application^.Alert(@self,1,NOTE,'Zu wenig Zeilen markiert.','  &OK  ');
+						Application^.Alert(@self,1,NOTE,MESSAGE_DIAGRAM_ROWS,BUTTON_OK);
 						exit
 					end;
 				if (p^.diagrammbuf.dColumns=bf_Checked) and (ce-cs-coll<1) then
 					begin
-						Application^.Alert(@self,1,NOTE,'Zu wenig Spalten markiert.','  &OK  ');
+						Application^.Alert(@self,1,NOTE,MESSAGE_DIAGRAM_COLUMNS,BUTTON_OK);
 						exit
 					end;
 				if p^.diagrammbuf.xyAlternate=bf_Checked then
 					begin
 						if (p^.diagrammbuf.dRows=bf_Checked) and (((re+1-rs-rowl) mod 2)<>0) then
 							begin
-								Application^.Alert(@self,1,NOTE,'Bitte markieren Sie eine gerade Anzahl Datenzeilen.','  &OK  ');
+								Application^.Alert(@self,1,NOTE,MESSAGE_DIAGRAM_ROWEVEN,BUTTON_OK);
 								exit
 							end;
 						if (p^.diagrammbuf.dColumns=bf_Checked) and (((ce+1-cs-coll) mod 2)<>0) then
 							begin
-								Application^.Alert(@self,1,NOTE,'Bitte markieren Sie eine gerade Anzahl Datenspalten.','  &OK  ');
+								Application^.Alert(@self,1,NOTE,MESSAGE_DIAGRAM_COLEVEN,BUTTON_OK);
 								exit
 							end
 					end
@@ -22350,6 +24566,19 @@ function TDiagrammDialog.CreateDiagram(tadname: string; emb: boolean): boolean;
 				tag.tag_len:=sizeof(achse)+length(s);
 				tag.tag_flags:=$00030000;
 				if bwrite(@tag,sizeof(TTAG)) then goto _error;
+				if almin<>almax then
+					begin
+						if almin>almax then
+							begin
+								vmin:=almax;
+								vmax:=almin
+							end
+						else
+							begin
+								vmin:=almin;
+								vmax:=almax
+							end
+					end;
 				if p^.diagrammbuf.typBalken=bf_Checked then
 					begin
 						if (vmin>0) and (vmax>0) then vmin:=0
@@ -22387,8 +24616,24 @@ function TDiagrammDialog.CreateDiagram(tadname: string; emb: boolean): boolean;
 									end
 							end;
 						if bwrite(@tag,sizeof(TTAG)) then goto _error;
-						achse.amin:=0.0;
-						achse.amax:=re+2-rs-rowl;
+						if aumin<>aumax then
+							begin
+								if aumin>aumax then
+									begin
+										achse.amin:=aumax;
+										achse.amax:=aumin
+									end
+								else
+									begin
+										achse.amin:=aumin;
+										achse.amax:=aumax
+									end
+							end
+						else
+							begin
+								achse.amin:=0.0;
+								achse.amax:=re+2-rs-rowl
+							end;
 						achse.ticks:=re+3-rs-rowl;
 						if p^.diagrammbuf.auTicks=bf_Checked then achse.subticks:=atol(p^.diagrammbuf.auNum)+2
 						else
@@ -22505,8 +24750,24 @@ function TDiagrammDialog.CreateDiagram(tadname: string; emb: boolean): boolean;
 									end
 							end;
 						if bwrite(@tag,sizeof(TTAG)) then goto _error;
-						achse.amin:=0.0;
-						achse.amax:=ce+2-cs-coll;
+						if aumin<>aumax then
+							begin
+								if aumin>aumax then
+									begin
+										achse.amin:=aumax;
+										achse.amax:=aumin
+									end
+								else
+									begin
+										achse.amin:=aumin;
+										achse.amax:=aumax
+									end
+							end
+						else
+							begin
+								achse.amin:=0.0;
+								achse.amax:=ce+2-cs-coll
+							end;
 						achse.ticks:=ce+3-cs-coll;
 						if p^.diagrammbuf.auTicks=bf_Checked then achse.subticks:=atol(p^.diagrammbuf.auNum)+2
 						else
@@ -22619,7 +24880,7 @@ function TDiagrammDialog.CreateDiagram(tadname: string; emb: boolean): boolean;
 		fclose(hdl);
 		if res<0 then goto _raus;
 		TexelApp.FileChanged(fname);
-		if Application^.Multitasking and emb then p^.EmbedNewObject(fname,0,0,0,0,0,nil,nil,@p^.diagrammbuf,false,false,false,true,true);
+		if Application^.Multitasking and emb then p^.EmbedNewObject(fname,0,0,0,0,0,nil,nil,@p^.diagrammbuf,false,false,false,true,true,true,false);
 		if length(tadname)=0 then
 			if p^.diagramm<>nil then p^.diagramm^.SetFile('');
 		CreateDiagram:=true;
@@ -22821,97 +25082,93 @@ procedure TDiagram.Work;
 				ADialog:=new(PDiagrammDialog,Init(p,TEXELWINDPREFIX+TITLE_DIAGRAM,STG_DIAGRAM,ICNTITLE_DIAGRAM,RTDIAGRAM));
 				if ADialog<>nil then
 					begin
-						new(PGroupBox,Init(ADialog,RTDIBEREICH,GROUP_GENERAL_RANGE,'')); { ... }
-						new(PGroupBox,Init(ADialog,RTDICHANGE,GROUP_DIAGRAM_CHANGE,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.gb1,Init(ADialog,RTDIGRPTYP,'','')); { ... }
-						new(PDiagrammDialog(ADialog)^.gb2,Init(ADialog,RTDIGRPACHSE,'','')); { ... }
-						new(PDiagrammDialog(ADialog)^.gb3,Init(ADialog,RTDIGRPREIHE,'','')); { ... }
-						new(PDiagrammDialog(ADialog)^.gb4,Init(ADialog,RTDIGRPLEGENDE,'','')); { ... }
-						new(PDiagrammDialog(ADialog)^.gb5,Init(ADialog,RTDIGRPOBJEKT,'','')); { ... }
-						new(PDiagrammDialog(ADialog)^.bedt,Init(ADialog,RTDIBEDIT,16,false,'')); { ... }
+						new(PGroupBox,Init(ADialog,RTDIBEREICH,GROUP_GENERAL_RANGE,BUBBLE_GENERAL_RANGE));
+						new(PGroupBox,Init(ADialog,RTDICHANGE,GROUP_DIAGRAM_CHANGE,BUBBLE_DIAGRAM_CHANGE));
+						new(PDiagrammDialog(ADialog)^.gb1,Init(ADialog,RTDIGRPTYP,'',BUBBLE_DIAGRAM_GRPTYPE));
+						new(PDiagrammDialog(ADialog)^.gb2,Init(ADialog,RTDIGRPACHSE,'',BUBBLE_DIAGRAM_GRPAXIS));
+						new(PDiagrammDialog(ADialog)^.gb3,Init(ADialog,RTDIGRPREIHE,'',BUBBLE_DIAGRAM_GRPDATA));
+						new(PDiagrammDialog(ADialog)^.gb4,Init(ADialog,RTDIGRPLEGENDE,'',BUBBLE_DIAGRAM_GRPLEG));
+						new(PDiagrammDialog(ADialog)^.gb5,Init(ADialog,RTDIGRPOBJEKT,'',BUBBLE_DIAGRAM_GRPOBJ));
+						new(PDiagrammDialog(ADialog)^.bedt,Init(ADialog,RTDIBEDIT,16,false,BUBBLE_GENERAL_RANGE));
 						new(PDiagrammDialog(ADialog)^.tc,Init(ADialog,RTDIPICON,''));
-						new(PDiagrammDialog(ADialog)^.rb1,Init(ADialog,RTDITYP,true,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.rb2,Init(ADialog,RTDIACHSEN,true,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.rb3,Init(ADialog,RTDIREIHE,true,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.rb4,Init(ADialog,RTDILEGENDE,true,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.rb5,Init(ADialog,RTDIOBJEKT,true,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.rbt1,Init(ADialog,RTDILINIEN,false,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.rbt2,Init(ADialog,RTDIBALKEN,false,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.rbt3,Init(ADialog,RTDIKREIS,false,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTDIFARBE,true,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.cb1,Init(ADialog,RTDIVALUE,true,'')); { ... }
+						new(PDiagrammDialog(ADialog)^.rb1,Init(ADialog,RTDITYP,true,BUBBLE_DIAGRAM_RTYPE));
+						new(PDiagrammDialog(ADialog)^.rb2,Init(ADialog,RTDIACHSEN,true,BUBBLE_DIAGRAM_RAXIS));
+						new(PDiagrammDialog(ADialog)^.rb3,Init(ADialog,RTDIREIHE,true,BUBBLE_DIAGRAM_RDATA));
+						new(PDiagrammDialog(ADialog)^.rb4,Init(ADialog,RTDILEGENDE,true,BUBBLE_DIAGRAM_RLEG));
+						new(PDiagrammDialog(ADialog)^.rb5,Init(ADialog,RTDIOBJEKT,true,BUBBLE_DIAGRAM_ROBJ));
+						new(PDiagrammDialog(ADialog)^.rbt1,Init(ADialog,RTDILINIEN,false,BUBBLE_DIAGRAM_LINE));
+						new(PDiagrammDialog(ADialog)^.rbt2,Init(ADialog,RTDIBALKEN,false,BUBBLE_DIAGRAM_BLOCK));
+						new(PDiagrammDialog(ADialog)^.rbt3,Init(ADialog,RTDIKREIS,false,BUBBLE_DIAGRAM_CIRCLE));
+						new(PCheckBox,Init(ADialog,RTDIFARBE,true,BUBBLE_DIAGRAM_COLOR));
+						new(PDiagrammDialog(ADialog)^.cb1,Init(ADialog,RTDIVALUE,true,BUBBLE_DIAGRAM_VALUE));
 						new(PDiagrammDialog(ADialog)^.pc1,Init(ADialog,RTDILGRP1,''));
 						new(PDiagrammDialog(ADialog)^.pc2,Init(ADialog,RTDILGRP2,''));
 						new(PDiagrammDialog(ADialog)^.pc3,Init(ADialog,RTDIBGRP,''));
-						new(PRadioButton,Init(ADialog,RTDIXLINEAR,true,'')); { ... }
-						new(pr,Init(ADialog,RTDIX1REIHE,true,'')); { ... }
+						new(PRadioButton,Init(ADialog,RTDIXLINEAR,true,BUBBLE_DIAGRAM_XLINEAR));
+						new(pr,Init(ADialog,RTDIX1REIHE,true,BUBBLE_DIAGRAM_X1DATA));
 						if pr<>nil then pr^.Disable; { !!! }
-						new(pr,Init(ADialog,RTDIXYABWECHS,true,'')); { ... }
+						new(pr,Init(ADialog,RTDIXYABWECHS,true,BUBBLE_DIAGRAM_XYALT));
 						if pr<>nil then pr^.Disable; { !!! }
-						new(PRadioButton,Init(ADialog,RTDILLINES,true,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTDILPOINTS,true,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTDILBOTH,true,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTDISTAPELN,true,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTDIHINTEREIN,true,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTDINEBENEIN,true,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.pdb1,Init(ADialog,RTDILINESTYLE,RTDILSCYC,RTDILSTITLE,RTPOPUPS2,RTP2LINIENSTIL,id_No,true,false,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.pdb2,Init(ADialog,RTDIPOINTSTYLE,RTDIPSCYC,RTDIPSTITLE,RTPOPUPS2,RTP2PUNKTSTIL,id_No,true,false,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.ed1,Init(ADialog,RTDITITEL,41,'')); { ... }
+						new(PRadioButton,Init(ADialog,RTDILLINES,true,BUBBLE_DIAGRAM_LLINES));
+						new(PRadioButton,Init(ADialog,RTDILPOINTS,true,BUBBLE_DIAGRAM_LPOINTS));
+						new(PRadioButton,Init(ADialog,RTDILBOTH,true,BUBBLE_DIAGRAM_LBOTH));
+						new(PRadioButton,Init(ADialog,RTDISTAPELN,true,BUBBLE_DIAGRAM_STACK));
+						new(PRadioButton,Init(ADialog,RTDIHINTEREIN,true,BUBBLE_DIAGRAM_BEHIND));
+						new(PRadioButton,Init(ADialog,RTDINEBENEIN,true,BUBBLE_DIAGRAM_SIDE));
+						new(PDiagrammDialog(ADialog)^.pdb1,Init(ADialog,RTDILINESTYLE,RTDILSCYC,RTDILSTITLE,RTPOPUPS2,RTP2LINIENSTIL,id_No,true,false,BUBBLE_DIAGRAM_LSTYLE));
+						new(PDiagrammDialog(ADialog)^.pdb2,Init(ADialog,RTDIPOINTSTYLE,RTDIPSCYC,RTDIPSTITLE,RTPOPUPS2,RTP2PUNKTSTIL,id_No,true,false,BUBBLE_DIAGRAM_PSTYLE));
+						new(PDiagrammDialog(ADialog)^.ed1,Init(ADialog,RTDITITEL,41,BUBBLE_DIAGRAM_TITLE));
 						if PDiagrammDialog(ADialog)^.ed1<>nil then PDiagrammDialog(ADialog)^.ed1^.Clear;
-						new(PCheckBox,Init(ADialog,RTDILEGENDEANZ,true,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTDIUMRAHMEN,true,'')); { ... }
-						new(PGroupBox,Init(ADialog,RTDINAMES,GROUP_DIAGRAM_NAMESIN,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTDINROW,true,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTDINCOL,true,'')); { ... }
-						new(pfb,InitCollection(ADialog,RTDIFONTPOP,RTDIFONTCYC,RTDIFONTTITLE,26,p^.Fonts,false,false,false,'')); { ... }
+						new(PCheckBox,Init(ADialog,RTDILEGENDEANZ,true,BUBBLE_DIAGRAM_LCOUNT));
+						new(PCheckBox,Init(ADialog,RTDIUMRAHMEN,true,BUBBLE_DIAGRAM_BORDER));
+						new(PGroupBox,Init(ADialog,RTDINAMES,GROUP_DIAGRAM_NAMESIN,BUBBLE_DIAGRAM_NAMES));
+						new(PCheckBox,Init(ADialog,RTDINROW,true,BUBBLE_DIAGRAM_NROW));
+						new(PCheckBox,Init(ADialog,RTDINCOL,true,BUBBLE_DIAGRAM_NCOL));
+						new(pfb,InitCollection(ADialog,RTDIFONTPOP,RTDIFONTCYC,RTDIFONTTITLE,26,p^.Fonts,false,false,false,BUBBLE_DIAGRAM_FONTID));
 						if pfb<>nil then
 							begin
 								pfb^.newsize:=-1;
 								new(fsizes,Init(130,20));
-								new(pfsb,InitCollection(ADialog,RTDISIZEPOP,RTDISIZECYC,RTDISIZETITLE,6,fsizes,true,false,false,'')); { ... }
+								new(pfsb,InitCollection(ADialog,RTDISIZEPOP,RTDISIZECYC,RTDISIZETITLE,6,fsizes,true,false,false,BUBBLE_DIAGRAM_FONTSIZE));
 								pfsb^.setsize:=true;
 								pfb^.fsizebox:=pfsb;
 								pfb^.Work
 							end;
-						new(PGroupBox,Init(ADialog,RTDIREIHEN,GROUP_DIAGRAM_DATA,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTDIDROWS,true,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTDIDCOLUMNS,true,'')); { ... }
-						new(PGroupBox,Init(ADialog,RTDIRTICKS,'','')); { ... }
-						new(PCheckBox,Init(ADialog,RTDITICKS,true,'')); { ... }
-						new(PEdit,Init(ADialog,RTDINUMTICKS,3,'')); { ... }
-						new(PGroupBox,Init(ADialog,RTDIAXISLEFT,GROUP_DIAGRAM_AXISLEFT,'')); { ... }
-						new(PEdit,Init(ADialog,RTDIALNAME,41,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTDIALSUBTICKS,true,'')); { ... }
-						new(PEdit,Init(ADialog,RTDIALSUBNUM,3,'')); { ... }
-						new(pe,Init(ADialog,RTDIALMIN,13,'')); { ... }
-						if pe<>nil then pe^.Disable; { !!! }
-						new(pe,Init(ADialog,RTDIALMAX,13,'')); { ... }
-						if pe<>nil then pe^.Disable; { !!! }
-						new(PGroupBox,Init(ADialog,RTDIAXISBOTTOM,GROUP_DIAGRAM_AXISBOTM,'')); { ... }
-						new(PEdit,Init(ADialog,RTDIAUNAME,41,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTDIAUSUBTICKS,true,'')); { ... }
-						new(PEdit,Init(ADialog,RTDIAUSUBNUM,3,'')); { ... }
-						new(pe,Init(ADialog,RTDIAUMIN,13,'')); { ... }
-						if pe<>nil then pe^.Disable; { !!! }
-						new(pe,Init(ADialog,RTDIAUMAX,13,'')); { ... }
-						if pe<>nil then pe^.Disable; { !!! }
-						new(PGroupBox,Init(ADialog,RTDISIZE,GROUP_DIAGRAM_SIZE,'')); { ... }
-						new(pe,Init(ADialog,RTDIWIDTH,7,'')); { ... }
+						new(PGroupBox,Init(ADialog,RTDIREIHEN,GROUP_DIAGRAM_DATA,BUBBLE_DIAGRAM_DATA));
+						new(PRadioButton,Init(ADialog,RTDIDROWS,true,BUBBLE_DIAGRAM_DROWS));
+						new(PRadioButton,Init(ADialog,RTDIDCOLUMNS,true,BUBBLE_DIAGRAM_DCOLUMNS));
+						new(PGroupBox,Init(ADialog,RTDIRTICKS,'',BUBBLE_DIAGRAM_RTICKS));
+						new(PCheckBox,Init(ADialog,RTDITICKS,true,BUBBLE_DIAGRAM_TICKS));
+						new(PEdit,Init(ADialog,RTDINUMTICKS,3,BUBBLE_DIAGRAM_NUMTICKS));
+						new(PGroupBox,Init(ADialog,RTDIAXISLEFT,GROUP_DIAGRAM_AXISLEFT,BUBBLE_DIAGRAM_AXISLEFT));
+						new(PEdit,Init(ADialog,RTDIALNAME,41,BUBBLE_DIAGRAM_ALNAME));
+						new(PCheckBox,Init(ADialog,RTDIALSUBTICKS,true,BUBBLE_DIAGRAM_ALSUBT));
+						new(PEdit,Init(ADialog,RTDIALSUBNUM,3,BUBBLE_DIAGRAM_ALSUBNUM));
+						new(PEdit,Init(ADialog,RTDIALMIN,13,BUBBLE_DIAGRAM_ALMIN));
+						new(PEdit,Init(ADialog,RTDIALMAX,13,BUBBLE_DIAGRAM_ALMAX));
+						new(PGroupBox,Init(ADialog,RTDIAXISBOTTOM,GROUP_DIAGRAM_AXISBOTM,BUBBLE_DIAGRAM_AXISBOTM));
+						new(PEdit,Init(ADialog,RTDIAUNAME,41,BUBBLE_DIAGRAM_ABNAME));
+						new(PCheckBox,Init(ADialog,RTDIAUSUBTICKS,true,BUBBLE_DIAGRAM_ABSUBT));
+						new(PEdit,Init(ADialog,RTDIAUSUBNUM,3,BUBBLE_DIAGRAM_ABSUBNUM));
+						new(PEdit,Init(ADialog,RTDIAUMIN,13,BUBBLE_DIAGRAM_ABMIN));
+						new(PEdit,Init(ADialog,RTDIAUMAX,13,BUBBLE_DIAGRAM_ABMAX));
+						new(PGroupBox,Init(ADialog,RTDISIZE,GROUP_DIAGRAM_SIZE,BUBBLE_DIAGRAM_SIZE));
+						new(pe,Init(ADialog,RTDIWIDTH,7,BUBBLE_DIAGRAM_WIDTH));
 						if pe<>nil then pe^.SetValidator(new(PMinMaxValidator,Init(4.0,999.99)));
-						new(pe,Init(ADialog,RTDIHEIGHT,7,'')); { ... }
+						new(pe,Init(ADialog,RTDIHEIGHT,7,BUBBLE_DIAGRAM_HEIGHT));
 						if pe<>nil then pe^.SetValidator(new(PMinMaxValidator,Init(4.0,999.99)));
-						new(PButton,Init(ADialog,RTDIDATEI,id_No,true,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.pb1,Init(ADialog,RTDITEMPDATEI,id_No,true,'')); { ... }
-						new(PDiagrammDialog(ADialog)^.ofname,Init(ADialog,RTDIDATEINAME,39,false,'')); { ... }
-						new(pb,Init(ADialog,RTDIHELP,id_Help,false,'')); { ... }
+						new(PButton,Init(ADialog,RTDIDATEI,id_No,true,BUBBLE_DIAGRAM_FILE));
+						new(PDiagrammDialog(ADialog)^.pb1,Init(ADialog,RTDITEMPDATEI,id_No,true,BUBBLE_DIAGRAM_TEMPFILE));
+						new(PDiagrammDialog(ADialog)^.ofname,Init(ADialog,RTDIDATEINAME,39,false,BUBBLE_DIAGRAM_FILENAME));
+						new(pb,Init(ADialog,RTDIHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(ADialog,RTDIABBRUCH,id_Cancel,true,'')); { ... }
-						new(PButton,Init(ADialog,RTDICREATETAD,id_No,true,'')); { ... }
-						new(pb,Init(ADialog,RTDIINSERT,id_No,true,'')); { ... }
+						new(PButton,Init(ADialog,RTDIABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
+						new(PButton,Init(ADialog,RTDICREATETAD,id_No,true,BUBBLE_DIAGRAM_CREATAD));
+						new(pb,Init(ADialog,RTDIINSERT,id_No,true,BUBBLE_DIAGRAM_INSERT));
 						if pb<>nil then
 							if not(Application^.Multitasking) then pb^.Disable;
-						new(pb,Init(ADialog,RTDIOK,id_OK,true,'')); { ... }
+						new(pb,Init(ADialog,RTDIOK,id_OK,true,BUBBLE_DIAGRAM_OK));
 						if pb<>nil then
 							if not(Application^.Multitasking) then pb^.Disable;
 						ADialog^.TransferBuffer:=@p^.diagrammbuf;
@@ -22983,11 +25240,15 @@ function TObjSizeDialog.ExitDlg(AnIndx: integer): boolean;
 					with PEmbedded(embedobj)^ do
 						begin
 							Redraw;
-							XPos_mm100:=round(atof(osbuf.x)*100.0);
-							YPos_mm100:=round(atof(osbuf.y)*100.0);
-							Width_mm100:=round(atof(osbuf.width)*100.0);
-							Height_mm100:=round(atof(osbuf.height)*100.0);
-							Redraw
+							if IsLocked then Application^.Bing
+							else
+								begin
+									XPos_mm100:=round(atof(osbuf.x)*100.0);
+									YPos_mm100:=round(atof(osbuf.y)*100.0);
+									Width_mm100:=round(atof(osbuf.width)*100.0);
+									Height_mm100:=round(atof(osbuf.height)*100.0);
+									Redraw
+								end
 						end;
 					PCalcWindow(Parent)^.SetDirty
 				end
@@ -23035,7 +25296,7 @@ function TObjAttrDialog.ExitDlg(AnIndx: integer): boolean;
 	end;
 
 
-constructor TProtoEmbedded.Init(otyp: integer; fname: string; fdat: pointer; fdatlen,x,y,w100,h100: longint; const oab: TEmbedBuf; pdb: PDiagrammBuf; prp,emb,skl,umb: boolean);
+constructor TProtoEmbedded.Init(otyp: integer; fname: string; fdat: pointer; fdatlen,x,y,w100,h100: longint; const oab: TEmbedBuf; pdb: PDiagrammBuf; prp,emb,skl,umb,prnt,lck: boolean);
 
 	begin
 		if not(inherited Init) then fail;
@@ -23053,7 +25314,9 @@ constructor TProtoEmbedded.Init(otyp: integer; fname: string; fdat: pointer; fda
 		prop:=prp;
 		embd:=emb;
 		skal:=skl;
-		umbr:=umb
+		umbr:=umb;
+		prntflg:=prnt;
+		lckflg:=lck
 	end;
 
 
@@ -23070,20 +25333,20 @@ procedure TProtoEmbedded.Realize(p: PCalcWindow);
 	begin
 		case ObjTyp of
 		0:
-			p^.EmbedNewObject(FileName,Width100,Height100,X100,Y100,DataLen,Data,@oabuf,nil,true,prop,embd,false,false);
+			p^.EmbedNewObject(FileName,Width100,Height100,X100,Y100,DataLen,Data,@oabuf,nil,true,prop,embd,false,false,prntflg,lckflg);
 		1:
-			new(PEmbeddedIMG,Init(p,FileName,0,0,0,0,Width100,Height100,X100,Y100,DataLen,Data,true,true,prop,embd,skal,@oabuf));
+			new(PEmbeddedIMG,Init(p,FileName,0,0,0,0,Width100,Height100,X100,Y100,DataLen,Data,true,true,prop,embd,skal,prntflg,lckflg,@oabuf));
 		2:
-			new(PEmbeddedText,Init(p,FileName,0,0,0,0,Width100,Height100,X100,Y100,DataLen,Data,true,true,prop,embd,umbr,@oabuf));
+			new(PEmbeddedText,Init(p,FileName,0,0,0,0,Width100,Height100,X100,Y100,DataLen,Data,true,true,prop,embd,umbr,prntflg,lckflg,@oabuf));
 		3:
-			p^.EmbedNewObject(FileName,Width100,Height100,X100,Y100,DataLen,Data,@oabuf,diabuf,true,prop,embd,false,true)
+			p^.EmbedNewObject(FileName,Width100,Height100,X100,Y100,DataLen,Data,@oabuf,diabuf,true,prop,embd,false,true,prntflg,lckflg)
 		end;
 		if Next<>nil then Next^.Realize(p);
 		Free
 	end;
 
 
-constructor TEmbedded.Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: string; srvid,pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd: boolean; poa: PEmbedBuf);
+constructor TEmbedded.Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: string; srvid,pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,prntflg,lckflg: boolean; poa: PEmbedBuf);
 	var p: PEmbedded;
 
 	begin
@@ -23105,11 +25368,23 @@ constructor TEmbedded.Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: st
 		YPos_mm100:=0;
 		Width_mm100:=0;
 		Height_mm100:=0;
+		printflag:=true;
+		with osbuf do
+			begin
+				x:='';
+				y:='';
+				width:='';
+				height:='';
+				prop:=bf_Unchecked;
+				sperr:=bf_Unchecked
+			end;
 		if poa<>nil then
 			begin
 				oabuf:=poa^;
 				embedflag:=embd;
-				proportional:=prop
+				if prop then SetPropFlag
+				else
+					ClearPropFlag
 			end
 		else
 			begin
@@ -23120,14 +25395,7 @@ constructor TEmbedded.Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: st
 						border:=bf_Checked
 					end;
 				embedflag:=false;
-				proportional:=true
-			end;
-		with osbuf do
-			begin
-				x:='';
-				y:='';
-				width:='';
-				height:=''
+				SetPropFlag
 			end;
 		if Parent^.Embedded=nil then Parent^.Embedded:=@self
 		else
@@ -23140,6 +25408,9 @@ constructor TEmbedded.Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: st
 		if Parent^.objects<>nil then Parent^.objects^.Enable;
 		if objectinfo<>nil then objectinfo^.ClientData:=longint(@self);
 		ClearDirtyFlag;
+		if prntflg then SetPrintFlag
+		else
+			ClearPrintFlag;
 		if (Data=nil) or (DataLen=0) then CheckLink;
 		Link;
 		if draw then
@@ -23148,6 +25419,9 @@ constructor TEmbedded.Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: st
 				selected:=true
 			end;
 		Resize(pixx,pixy,pixw,pixh,w100,h100,x100,y100,xyvalid,draw);
+		if lckflg then Lock
+		else
+			Unlock;
 		if Parent^.links<>nil then Parent^.links^.AddObject(@self)
 	end;
 
@@ -23228,6 +25502,7 @@ function TEmbedded.Save(hdl: integer; emb: boolean): boolean;
 
 function TEmbedded.SaveData(hdl: integer; emb: boolean): boolean;
 	var dummy: longint;
+	    prp  : boolean;
 
 	begin
 		SaveData:=true;
@@ -23249,8 +25524,11 @@ function TEmbedded.SaveData(hdl: integer; emb: boolean): boolean;
 		if bwrite(hdl,sizeof(oabuf),oabuf) then exit;
 		if bwrite(hdl,4,Width_mm100) then exit;
 		if bwrite(hdl,4,Height_mm100) then exit;
-		if bwrite(hdl,sizeof(boolean),proportional) then exit;
+		prp:=IsProportional;
+		if bwrite(hdl,sizeof(boolean),prp) then exit;
 		if bwrite(hdl,sizeof(boolean),embedflag) then exit;
+		prp:=CanPrint;
+		if bwrite(hdl,sizeof(boolean),prp) then exit;
 		SaveData:=false
 	end;
 
@@ -23504,7 +25782,13 @@ procedure TEmbedded.Paint(handle: integer; const clip: GRECT; screen: boolean);
 						vs_clip(handle,CLIP_ON,clip.A2);
 						vswr_mode(handle,MD_REPLACE);
 						vsf_perimeter(handle,PER_ON);
-						vsf_interior(handle,FIS_SOLID);
+						if IsLocked then
+							begin
+								vsf_interior(handle,FIS_PATTERN);
+								vsf_style(handle,4)
+							end
+						else
+							vsf_interior(handle,FIS_SOLID);
 						vsf_color(handle,Black);
 						d:=round(8.0*Parent^.PercentSize);
 						ps[0]:=pxy[0];
@@ -23527,7 +25811,7 @@ procedure TEmbedded.Paint(handle: integer; const clip: GRECT; screen: boolean);
 						ps[2]:=pxy[0]+d;
 						ps[3]:=pxy[3];
 						v_bar(handle,ps);
-						if not(proportional) then
+						if not(IsProportional) then
 							begin
 								ps[0]:=(pxy[0]+pxy[2]-d) shr 1;
 								ps[1]:=pxy[1];
@@ -23545,7 +25829,8 @@ procedure TEmbedded.Paint(handle: integer; const clip: GRECT; screen: boolean);
 								ps[0]:=pxy[0];
 								ps[2]:=pxy[0]+d;
 								v_bar(handle,ps)
-							end
+							end;
+						vsf_interior(handle,FIS_SOLID)
 					end;
 				g.X:=PaintX;
 				g.Y:=PaintY;
@@ -23679,32 +25964,42 @@ procedure TEmbedded.Resize(pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100: lo
 	begin
 		if draw then
 			if (Width_mm100>0) and (Height_mm100>0) then Redraw;
-		if xyvalid then
+		if IsLocked then Application^.Bing
+		else
 			begin
-				XPos_mm100:=x100;
-				YPos_mm100:=y100
+				if xyvalid then
+					begin
+						XPos_mm100:=x100;
+						YPos_mm100:=y100
+					end
+				else
+					begin
+						XPos_mm100:=round((longint(pixx)+Parent^.Scroller^.XPos-Parent^.LeftColWidth-Parent^.Work.X)*longint(Application^.Attr.PixW)/(10.0*Parent^.PercentSize));
+						YPos_mm100:=round((longint(pixy)+Parent^.Scroller^.YPos-Parent^.PaintOffs-Parent^.TopRowHeight-Parent^.Work.Y-1)*longint(Application^.Attr.PixH)/(10.0*Parent^.PercentSize))
+					end;
+				if w100>0 then Width_mm100:=w100
+				else
+					Width_mm100:=round(longint(pixw-1)*longint(Application^.Attr.PixW)/(10.0*Parent^.PercentSize));
+				if h100>0 then Height_mm100:=h100
+				else
+					Height_mm100:=round(longint(pixh-1)*longint(Application^.Attr.PixH)/(10.0*Parent^.PercentSize));
+				{ CELL_INVISIBLE !!! }
+				if draw then Redraw;
+				with osbuf do
+					begin
+						x:=ftoa(XPos_mm100/100.0);
+						y:=ftoa(YPos_mm100/100.0);
+						width:=ftoa(Width_mm100/100.0);
+						height:=ftoa(Height_mm100/100.0);
+						if objsize<>nil then
+							begin
+								if objsize^.ed1<>nil then objsize^.ed1^.SetText(x);
+								if objsize^.ed2<>nil then objsize^.ed2^.SetText(y);
+								if objsize^.ed3<>nil then objsize^.ed3^.SetText(width);
+								if objsize^.ed4<>nil then objsize^.ed4^.SetText(height)
+							end
+					end
 			end
-		else
-			begin
-				XPos_mm100:=round((longint(pixx)+Parent^.Scroller^.XPos-Parent^.LeftColWidth-Parent^.Work.X)*longint(Application^.Attr.PixW)/(10.0*Parent^.PercentSize));
-				YPos_mm100:=round((longint(pixy)+Parent^.Scroller^.YPos-Parent^.PaintOffs-Parent^.TopRowHeight-Parent^.Work.Y-1)*longint(Application^.Attr.PixH)/(10.0*Parent^.PercentSize))
-			end;
-		if w100>0 then Width_mm100:=w100
-		else
-			Width_mm100:=round(longint(pixw-1)*longint(Application^.Attr.PixW)/(10.0*Parent^.PercentSize));
-		if h100>0 then Height_mm100:=h100
-		else
-			Height_mm100:=round(longint(pixh-1)*longint(Application^.Attr.PixH)/(10.0*Parent^.PercentSize));
-		{ CELL_INVISIBLE !!! }
-		if draw then Redraw;
-		with osbuf do
-			begin
-				x:=ftoa(XPos_mm100/100.0);
-				y:=ftoa(YPos_mm100/100.0);
-				width:=ftoa(Width_mm100/100.0);
-				height:=ftoa(Height_mm100/100.0)
-			end;
-		if objsize<>nil then objsize^.TransferData(tf_SetData)
 	end;
 
 
@@ -23789,7 +26084,7 @@ procedure TEmbedded.Click(mX,mY,KStat: integer);
 								if mY<=y+d then el:=0
 								else if mY>=y+h-d then el:=6
 								else
-									if not(proportional) then
+									if not(IsProportional) then
 										if Between(mY,y+((h-d) shr 1),y+((h+d) shr 1)) then el:=7
 							end
 						else if mX>=x+w-d then
@@ -23797,11 +26092,11 @@ procedure TEmbedded.Click(mX,mY,KStat: integer);
 								if mY<=y+d then el:=2
 								else if mY>=y+h-d then el:=4
 								else
-									if not(proportional) then
+									if not(IsProportional) then
 										if Between(mY,y+((h-d) shr 1),y+((h+d) shr 1)) then el:=3
 							end
 						else
-							if not(proportional) then
+							if not(IsProportional) then
 								if Between(mX,x+((w-d) shr 1),x+((w+d) shr 1)) then
 									begin
 										if mY<=y+d then el:=1
@@ -23857,7 +26152,7 @@ procedure TEmbedded.Click(mX,mY,KStat: integer);
 								begin
 									pxya[0]:=mX+xdif;
 									if pxya[0]>pxya[2]-d then pxya[0]:=pxya[2]-d;
-									if proportional then
+									if IsProportional then
 										begin
 											if round(longint(h)*longint(pxya[2]-pxya[0])/longint(w))<d then pxya[0]:=pxya[2]-round(longint(d)*longint(w)/longint(h));
 											pxya[1]:=pxya[5]-round(longint(h)*longint(pxya[2]-pxya[0])/longint(w))
@@ -23883,7 +26178,7 @@ procedure TEmbedded.Click(mX,mY,KStat: integer);
 								begin
 									pxya[2]:=mX+xdif;
 									if pxya[2]<pxya[0]+d then pxya[2]:=pxya[0]+d;
-									if proportional then
+									if IsProportional then
 										begin
 											if round(longint(h)*longint(pxya[2]-pxya[0])/longint(w))<d then pxya[2]:=round(longint(d)*longint(w)/longint(h))+pxya[0];
 											pxya[3]:=pxya[5]-round(longint(h)*longint(pxya[2]-pxya[0])/longint(w))
@@ -23907,7 +26202,7 @@ procedure TEmbedded.Click(mX,mY,KStat: integer);
 								begin
 									pxya[4]:=mX+xdif;
 									if pxya[4]<pxya[0]+d then pxya[4]:=pxya[0]+d;
-									if proportional then
+									if IsProportional then
 										begin
 											if round(longint(h)*longint(pxya[4]-pxya[0])/longint(w))<d then pxya[4]:=round(longint(d)*longint(w)/longint(h))+pxya[0];
 											pxya[5]:=pxya[1]+round(longint(h)*longint(pxya[4]-pxya[0])/longint(w))
@@ -23930,7 +26225,7 @@ procedure TEmbedded.Click(mX,mY,KStat: integer);
 								begin
 									pxya[6]:=mX+xdif;
 									if pxya[6]>pxya[2]-d then pxya[6]:=pxya[2]-d;
-									if proportional then
+									if IsProportional then
 										begin
 											if round(longint(h)*longint(pxya[2]-pxya[6])/longint(w))<d then pxya[6]:=pxya[2]-round(longint(d)*longint(w)/longint(h));
 											pxya[7]:=pxya[1]+round(longint(h)*longint(pxya[2]-pxya[6])/longint(w))
@@ -24072,19 +26367,19 @@ procedure TEmbedded.DoMenu(mX,mY: integer);
 				if (Application^.OLGAManager<0) or (not(Exist(GetFile)) and ((DataLen<=0) or (Data=nil))) then p^.Disable(6);
 				ArrowMouse;
 				if IsEmbedded then p^.Check(11);
-				if proportional then p^.Check(12);
+				if CanPrint then p^.Check(12);
 				HandleMenu(Application^.Popup(p,mX,mY,POP_CENTER))
 			end
 	end;
 
 
 procedure TEmbedded.HandleMenu(indx: integer);
-	var path,name,
-	    ext      : string;
-	    ret      : longint;
-	    hdl      : integer;
-	    pb       : PButton;
-	    pe       : PEdit;
+	var path,
+	    name,
+	    ext : string;
+	    ret : longint;
+	    hdl : integer;
+	    pb  : PButton;
 
 	begin
 		case indx of
@@ -24095,7 +26390,7 @@ procedure TEmbedded.HandleMenu(indx: integer);
 		2:
 			Paste;
 		3:
-			if Application^.Alert(Parent,2,WAIT,'Objekt wirklich lîschen?','  &Ja  | &Nein ')=1 then Destroy;
+			if Application^.Alert(Parent,2,WAIT,MESSAGE_EMBED_DELETE,BUTTON_YESNO)=1 then Destroy;
 		5:
 			begin
 				path:='';
@@ -24106,7 +26401,7 @@ procedure TEmbedded.HandleMenu(indx: integer);
 				if FileSelect(Parent,FSELTITLE_OBJECTSAVEAS,'*'+ext,path,name,false) then
 					begin
 						if Exist(path+name) then
-							if Application^.Alert(Parent,1,WAIT,'Die Datei "'+CompressPath(path+name,78)+'" existiert bereits. öberschreiben?','  &Ja  | &Nein ')<>1 then exit;
+							if Application^.Alert(Parent,1,WAIT,MESSAGE_EMBED_EXIST1+CompressPath(path+name,78)+MESSAGE_EMBED_EXIST2,BUTTON_YESNO)<>1 then exit;
 						ret:=fcreate(path+name,0);
 						if ret>=0 then
 							begin
@@ -24126,15 +26421,18 @@ procedure TEmbedded.HandleMenu(indx: integer);
 						new(objsize,Init(Parent,@self,TEXELWINDPREFIX+TITLE_OBJSIZE,STG_OBJSIZE,ICNTITLE_OBJSIZE,RTOBJSIZE));
 						if objsize<>nil then
 							begin
-								new(PGroupBox,Init(objsize,RTOSSIZE,'','')); { ... }
-								new(pe,Init(objsize,RTOSX,8,'')); { ... }
-								if pe<>nil then pe^.SetValidator(new(PMinMaxValidator,Init(-999.99,999.99)));
-								new(pe,Init(objsize,RTOSY,8,'')); { ... }
-								if pe<>nil then pe^.SetValidator(new(PMinMaxValidator,Init(-999.99,999.99)));
-								new(pe,Init(objsize,RTOSWIDTH,8,'')); { ... }
-								if pe<>nil then pe^.SetValidator(new(PMinMaxValidator,Init(5.0,999.99)));
-								new(pe,Init(objsize,RTOSHEIGHT,8,'')); { ... }
-								if pe<>nil then pe^.SetValidator(new(PMinMaxValidator,Init(5.0,999.99)));
+								new(PGroupBox,Init(objsize,RTOSSIZE,'',BUBBLE_OBJSIZE_SIZE));
+								new(PGroupBox,Init(objsize,RTOSFLAGS,'',BUBBLE_OBJSIZE_FLAGS));
+								new(objsize^.ed1,Init(objsize,RTOSX,8,BUBBLE_OBJSIZE_X));
+								if objsize^.ed1<>nil then objsize^.ed1^.SetValidator(new(PMinMaxValidator,Init(-999.99,999.99)));
+								new(objsize^.ed2,Init(objsize,RTOSY,8,BUBBLE_OBJSIZE_Y));
+								if objsize^.ed2<>nil then objsize^.ed2^.SetValidator(new(PMinMaxValidator,Init(-999.99,999.99)));
+								new(objsize^.ed3,Init(objsize,RTOSWIDTH,8,BUBBLE_OBJSIZE_WIDTH));
+								if objsize^.ed3<>nil then objsize^.ed3^.SetValidator(new(PMinMaxValidator,Init(5.0,999.99)));
+								new(objsize^.ed4,Init(objsize,RTOSHEIGHT,8,BUBBLE_OBJSIZE_HEIGHT));
+								if objsize^.ed4<>nil then objsize^.ed4^.SetValidator(new(PMinMaxValidator,Init(5.0,999.99)));
+								new(objsize^.cb1,Init(objsize,RTOSPROP,true,BUBBLE_OBJSIZE_PROP));
+								new(objsize^.cb2,Init(objsize,RTOSSPERR,true,BUBBLE_OBJSIZE_SPERR));
 								new(pb,Init(objsize,RTOSHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 								if pb<>nil then
 									if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
@@ -24155,10 +26453,10 @@ procedure TEmbedded.HandleMenu(indx: integer);
 						new(objattr,Init(Parent,@self,TEXELWINDPREFIX+TITLE_OBJATTR,STG_OBJATTR,ICNTITLE_OBJATTR,RTOBJATTR,RTOASET));
 						if objattr<>nil then
 							begin
-								new(PGroupBox,Init(objattr,RTOABACKGROUND,GROUP_OBJECT_BACKGR,'')); { ... }
+								new(PGroupBox,Init(objattr,RTOABACKGROUND,GROUP_OBJECT_BACKGR,BUBBLE_OBJATTR_BACKGR));
 								new(objattr^.pbg,Init(objattr,RTOACOLOR,RTOACOLCYC,RTOACOLTITLE,RTPOPUPS2,RTP2COLOR,RTP2COLSTART,false,false,BUBBLE_OBJATTR_BGCOL));
-								new(PObjAttrBox,Init(objattr,RTOATRANS,true,'')); { ... }
-								new(PCheckBox,Init(objattr,RTOABORDER,true,'')); { ... }
+								new(PObjAttrBox,Init(objattr,RTOATRANS,true,BUBBLE_OBJATTR_TRANS));
+								new(PCheckBox,Init(objattr,RTOABORDER,true,BUBBLE_OBJATTR_BORDER));
 								new(pb,Init(objattr,RTOAHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 								if pb<>nil then
 									if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
@@ -24179,9 +26477,9 @@ procedure TEmbedded.HandleMenu(indx: integer);
 			end;
 		12:
 			begin
-				proportional:=not(proportional);
-				Redraw;
-				Parent^.SetDirty
+				if CanPrint then ClearPrintFlag
+				else
+					SetPrintFlag
 			end
 		end
 	end;
@@ -24214,6 +26512,8 @@ procedure TEmbedded.ClearEmbedFlag;
 
 procedure TEmbedded.Select;
 	var pe: PEmbedded;
+	    p : PCalcWindow;
+	    q : integer;
 
 	begin
 		if IsSelected then exit;
@@ -24235,7 +26535,18 @@ procedure TEmbedded.Select;
 					end
 			end;
 		selected:=true;
-		Redraw
+		Redraw;
+		p:=PCalcWindow(Parent);
+		if p^.links<>nil then
+			if p^.links^.linklist<>nil then
+				if p^.links^.linklist^.Count>0 then
+					for q:=0 to p^.links^.linklist^.Count-1 do
+						if PLinkData(p^.links^.linklist^.At(q))^.ObjRef=@self then
+							begin
+								p^.links^.plb^.SetSelection(q);
+								p^.links^.plb^.ScrollBar^.SetPosition(q);
+								break
+							end
 	end;
 
 
@@ -24364,6 +26675,89 @@ function TEmbedded.IsDirty: boolean;
 	end;
 
 
+procedure TEmbedded.SetPropFlag;
+
+	begin
+		if IsProportional then exit;
+		osbuf.prop:=bf_Checked;
+		if objsize<>nil then
+			if objsize^.cb1<>nil then objsize^.cb1^.Check;
+		Parent^.SetDirty
+	end;
+
+
+procedure TEmbedded.ClearPropFlag;
+
+	begin
+		if not(IsProportional) then exit;
+		osbuf.prop:=bf_Unchecked;
+		if objsize<>nil then
+			if objsize^.cb1<>nil then objsize^.cb1^.Uncheck;
+		Parent^.SetDirty
+	end;
+
+
+function TEmbedded.IsProportional: boolean;
+
+	begin
+		IsProportional:=(osbuf.prop=bf_Checked)
+	end;
+
+
+procedure TEmbedded.Lock;
+
+	begin
+		if IsLocked then exit;
+		osbuf.sperr:=bf_Checked;
+		if objsize<>nil then
+			if objsize^.cb2<>nil then objsize^.cb2^.Check;
+		Parent^.SetDirty
+	end;
+
+
+procedure TEmbedded.Unlock;
+
+	begin
+		if not(IsLocked) then exit;
+		osbuf.sperr:=bf_Unchecked;
+		if objsize<>nil then
+			if objsize^.cb2<>nil then objsize^.cb2^.Uncheck;
+		Parent^.SetDirty
+	end;
+
+
+function TEmbedded.IsLocked: boolean;
+
+	begin
+		IsLocked:=(osbuf.sperr=bf_Checked)
+	end;
+
+
+procedure TEmbedded.SetPrintFlag;
+
+	begin
+		if CanPrint then exit;
+		printflag:=true;
+		Parent^.SetDirty
+	end;
+
+
+procedure TEmbedded.ClearPrintFlag;
+
+	begin
+		if not(CanPrint) then exit;
+		printflag:=false;
+		Parent^.SetDirty
+	end;
+
+
+function TEmbedded.CanPrint: boolean;
+
+	begin
+		CanPrint:=printflag
+	end;
+
+
 procedure TEmbedded.SetFile(s: string);
 	var p   : PCalcWindow;
 	    q   : longint;
@@ -24409,7 +26803,7 @@ procedure TEmbedded.SetFile(s: string);
 								end;
 							if length(edsc)>25 then edsc:=StrPLeft(edsc,22)+'...';
 							pld^.Descr:=NewStr('  '+edsc+StrPSpace(27-length(edsc))+CompressPath(s,40)+#0);
-							p^.links^.UpdateList
+							p^.links^.UpdateList(nil)
 						end
 				end
 	end;
@@ -24431,12 +26825,13 @@ function TEmbedded.bwrite(hdl: integer; count: longint; var buffer): boolean;
 	end;
 
 
-constructor TEmbeddedTAD.Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: string; srvid,pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd: boolean; poa: PEmbedBuf; pdb: PDiagrammBuf);
+constructor TEmbeddedTAD.Init(AParent: PCalcWindow; poi: POLGAObjectInfo; fName: string; srvid,pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer;
+                              xyvalid,draw,prop,embd,prntflg,lckflg: boolean; poa: PEmbedBuf; pdb: PDiagrammBuf);
 
 	begin
 		fname:=GetPath(fname)+GetFilename(fname,false)+'.cwg';
 		StrPCopy(poi^.Filename,fname);
-		if not(inherited Init(AParent,poi,fname,srvid,pixx,pixy,pixw,pixh,w100,h100,x100,y100,dlen,dat,xyvalid,draw,prop,embd,poa)) then fail;
+		if not(inherited Init(AParent,poi,fname,srvid,pixx,pixy,pixw,pixh,w100,h100,x100,y100,dlen,dat,xyvalid,draw,prop,embd,prntflg,lckflg,poa)) then fail;
 		if poa=nil then embedflag:=true;
 		if pdb<>nil then
 			begin
@@ -24483,7 +26878,7 @@ procedure TEmbeddedTAD.DoMenu(mX,mY: integer);
 				ArrowMouse;
 				if not(dbvalid) or (Parent^.diagramm=nil) then p^.Disable(7);
 				if IsEmbedded then p^.Check(12);
-				if proportional then p^.Check(13);
+				if CanPrint then p^.Check(13);
 				ret:=Application^.Popup(p,mX,mY,POP_CENTER);
 				if ret=7 then
 					begin
@@ -24518,17 +26913,17 @@ function TEmbeddedStatic.GetExt(embed,default: boolean): string;
 	end;
 
 
-constructor TEmbeddedIMG.Init(AParent: PCalcWindow; fName: string; pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,skal: boolean; poa: PEmbedBuf);
+constructor TEmbeddedIMG.Init(AParent: PCalcWindow; fName: string; pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,skal,prntflg,lckflg: boolean; poa: PEmbedBuf);
 
 	begin
 		fillchar(srcMFDB,sizeof(srcMFDB),0);
 		fd_dlen:=0;
-		if not(inherited Init(AParent,nil,fName,id_No,pixx,pixy,pixw,pixh,w100,h100,x100,y100,dlen,dat,xyvalid,draw,prop,embd,poa)) then fail;
+		if not(inherited Init(AParent,nil,fName,id_No,pixx,pixy,pixw,pixh,w100,h100,x100,y100,dlen,dat,xyvalid,draw,prop,embd,prntflg,lckflg,poa)) then fail;
 		if (dat<>nil) and (dlen>0) then Decode;
 		if poa=nil then
 			begin
 				oabuf.fcolor:=Black;
-				proportional:=false;
+				ClearPropFlag;
 				skalieren:=true;
 			end
 		else
@@ -24631,6 +27026,7 @@ function TEmbeddedIMG.Decode: boolean;
 		imgheader:=Data;
 		if imgheader^.version<>1 then exit;
 		if imgheader^.headlen<8 then exit;
+		{ Farbbilder !!! }
 		if imgheader^.planes<>1 then exit;
 		srcMFDB.fd_w:=imgheader^.sl_width;
 		srcMFDB.fd_h:=imgheader^.sl_height;
@@ -24805,7 +27201,7 @@ procedure TEmbeddedIMG.DoMenu(mX,mY: integer);
 				if (Application^.OLGAManager<0) or (not(Exist(GetFile)) and ((DataLen<=0) or (Data=nil))) then p^.Disable(6);
 				ArrowMouse;
 				if IsEmbedded then p^.Check(11);
-				if proportional then p^.Check(12);
+				if CanPrint then p^.Check(12);
 				if TexelApp.ScaleIMG then
 					begin
 						if skalieren then p^.Check(13)
@@ -24821,11 +27217,11 @@ procedure TEmbeddedIMG.DoMenu(mX,mY: integer);
 								new(objattr,Init(Parent,@self,TEXELWINDPREFIX+TITLE_IMGOBJ,STG_IMGOBJ,ICNTITLE_IMGOBJ,RTIMGOBJATTR,RTIOASET));
 								if objattr<>nil then
 									begin
-										new(PGroupBox,Init(objattr,RTIOABACKGROUND,GROUP_OBJECT_BACKGR,'')); { ... }
-										new(PGroupBox,Init(objattr,RTIOAIMG,GROUP_OBJECT_IMAGE,'')); { ... }
+										new(PGroupBox,Init(objattr,RTIOABACKGROUND,GROUP_OBJECT_BACKGR,BUBBLE_IMGOBJ_BACKGR));
+										new(PGroupBox,Init(objattr,RTIOAIMG,GROUP_OBJECT_IMAGE,BUBBLE_IMGOBJ_IMAGE));
 										new(objattr^.pbg,Init(objattr,RTIOACOLOR,RTIOACOLCYC,RTIOACOLTITLE,RTPOPUPS2,RTP2COLOR,RTP2COLSTART,false,false,BUBBLE_IMGOBJ_BGCOL));
-										new(PObjAttrBox,Init(objattr,RTIOATRANS,true,'')); { ... }
-										new(PCheckBox,Init(objattr,RTIOABORDER,true,'')); { ... }
+										new(PObjAttrBox,Init(objattr,RTIOATRANS,true,BUBBLE_IMGOBJ_TRANS));
+										new(PCheckBox,Init(objattr,RTIOABORDER,true,BUBBLE_IMGOBJ_BORDER));
 										new(PColorBox,Init(objattr,RTIOAICOLOR,RTIOAICOLCYC,RTIOAICOLTITLE,RTPOPUPS2,RTP2COLOR,RTP2COLSTART,false,false,BUBBLE_IMGOBJ_IMGCOL));
 										new(pb,Init(objattr,RTIOAHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 										if pb<>nil then
@@ -24852,10 +27248,10 @@ procedure TEmbeddedIMG.DoMenu(mX,mY: integer);
 	end;
 
 
-constructor TEmbeddedText.Init(AParent: PCalcWindow; fName: string; pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,umbr: boolean; poa: PEmbedBuf);
+constructor TEmbeddedText.Init(AParent: PCalcWindow; fName: string; pixx,pixy,pixw,pixh: integer; w100,h100,x100,y100,dlen: longint; dat: pointer; xyvalid,draw,prop,embd,umbr,prntflg,lckflg: boolean; poa: PEmbedBuf);
 
 	begin
-		if not(inherited Init(AParent,nil,fName,id_No,pixx,pixy,pixw,pixh,w100,h100,x100,y100,dlen,dat,xyvalid,draw,prop,embd,poa)) then fail;
+		if not(inherited Init(AParent,nil,fName,id_No,pixx,pixy,pixw,pixh,w100,h100,x100,y100,dlen,dat,xyvalid,draw,prop,embd,prntflg,lckflg,poa)) then fail;
 		if poa=nil then
 			begin
 				with oabuf do
@@ -24864,7 +27260,7 @@ constructor TEmbeddedText.Init(AParent: PCalcWindow; fName: string; pixx,pixy,pi
 						fid:=Parent^.FontID2Index(Parent^.GetFontIndex);
 						fcolor:=Black
 					end;
-				proportional:=false;
+				ClearPropFlag;
 				umbruch:=true
 			end
 		else
@@ -25012,7 +27408,7 @@ procedure TEmbeddedText.UserPaint(handle: integer; clip: GRECT; screen: boolean)
 						if length(sout)>0 then
 							begin
 								_nochmal:
-								if Parent^.Speedo then vqt_f_extent(handle,sout,ext)
+								if Parent^.Speedo then vqt_my_extent(handle,sout,ext)
 								else
 									vqt_extent(handle,sout,ext);
 								if abs(ext[2]-ext[0])>breite then
@@ -25091,7 +27487,7 @@ procedure TEmbeddedText.DoMenu(mX,mY: integer);
 				if (Application^.OLGAManager<0) or ((length(GetFile)=0) and ((Data=nil) or (DataLen<=0))) then p^.Disable(6);
 				ArrowMouse;
 				if IsEmbedded then p^.Check(11);
-				if proportional then p^.Check(12);
+				if CanPrint then p^.Check(12);
 				if umbruch then p^.Check(13);
 				ret:=Application^.Popup(p,mX,mY,POP_CENTER);
 				if ret=13 then
@@ -25109,18 +27505,18 @@ procedure TEmbeddedText.DoMenu(mX,mY: integer);
 									new(objattr,Init(Parent,@self,TEXELWINDPREFIX+TITLE_TXTOBJ,STG_TXTOBJ,ICNTITLE_TXTOBJ,RTTEXTOBJATTR,RTTOASET));
 									if objattr<>nil then
 										begin
-											new(PGroupBox,Init(objattr,RTTOABACKGROUND,GROUP_OBJECT_BACKGR,'')); { ... }
-											new(PGroupBox,Init(objattr,RTTOATEXT,GROUP_OBJECT_TEXT,'')); { ... }
+											new(PGroupBox,Init(objattr,RTTOABACKGROUND,GROUP_OBJECT_BACKGR,BUBBLE_TXTOBJ_BACKGR));
+											new(PGroupBox,Init(objattr,RTTOATEXT,GROUP_OBJECT_TEXT,BUBBLE_TXTOBJ_TEXT));
 											new(objattr^.pbg,Init(objattr,RTTOACOLOR,RTTOACOLCYC,RTTOACOLTITLE,RTPOPUPS2,RTP2COLOR,RTP2COLSTART,false,false,BUBBLE_TXTOBJ_BGCOL));
-											new(PObjAttrBox,Init(objattr,RTTOATRANS,true,'')); { ... }
-											new(PCheckBox,Init(objattr,RTTOABORDER,true,'')); { ... }
+											new(PObjAttrBox,Init(objattr,RTTOATRANS,true,BUBBLE_TXTOBJ_TRANS));
+											new(PCheckBox,Init(objattr,RTTOABORDER,true,BUBBLE_TXTOBJ_BORDER));
 											new(PColorBox,Init(objattr,RTTOATCOLOR,RTTOATCOLCYC,RTTOATCOLTITLE,RTPOPUPS2,RTP2COLOR,RTP2COLSTART,false,false,BUBBLE_TXTOBJ_TXTCOL));
-											new(pfb,InitCollection(objattr,RTTOAFONTPOP,RTTOAFONTCYC,RTTOAFONTTITLE,26,Parent^.Fonts,false,false,false,'')); { ... }
+											new(pfb,InitCollection(objattr,RTTOAFONTPOP,RTTOAFONTCYC,RTTOAFONTTITLE,26,Parent^.Fonts,false,false,false,BUBBLE_TXTOBJ_FONTID));
 											if pfb<>nil then
 												begin
 													pfb^.newsize:=-1;
 													new(fsizes,Init(130,20));
-													new(pfsb,InitCollection(objattr,RTTOASIZEPOP,RTTOASIZECYC,RTTOASIZETITLE,6,fsizes,true,false,false,'')); { ... }
+													new(pfsb,InitCollection(objattr,RTTOASIZEPOP,RTTOASIZECYC,RTTOASIZETITLE,6,fsizes,true,false,false,BUBBLE_TXTOBJ_FONTSIZE));
 													pfsb^.setsize:=true;
 													pfb^.fsizebox:=pfsb;
 													pfb^.Work
@@ -25191,7 +27587,7 @@ procedure TOLEDialog.Embed;
 		ext:='';
 		if trnsbuf>=0 then ext:=POLEType(TexelApp.OLETypes^.At(trnsbuf))^.Ext;
 		if length(ext)=0 then ext:='.*';
-		if XFileSelect(p,FSELTITLE_OBJECTINSERT,'*'+ext,TexelApp.LastPath[17],TexelApp.LastFile[17],0,FSEL_EMBED,true,false) then p^.EmbedNewObject(TexelApp.LastPath[17]+TexelApp.LastFile[17],0,0,0,0,0,nil,nil,nil,false,false,false,true,false)
+		if XFileSelect(p,FSELTITLE_OBJECTINSERT,'*'+ext,TexelApp.LastPath[17],TexelApp.LastFile[17],0,FSEL_EMBED,true,false) then p^.EmbedNewObject(TexelApp.LastPath[17]+TexelApp.LastFile[17],0,0,0,0,0,nil,nil,nil,false,false,false,true,false,true,false)
 	end;
 
 
@@ -25208,15 +27604,15 @@ procedure TOLEObject.Work;
 				ADialog:=new(POLEDialog,Init(p,TEXELWINDPREFIX+TITLE_INSOBJ,STG_INSOBJ,ICNTITLE_INSOBJ,RTOBJECT));
 				if ADialog<>nil then
 					begin
-						new(POLEDialog(ADialog)^.plb,Init(ADialog,RTOBLIST,RTOBSLID,RTOBUP,RTOBDOWN,TexelApp.OLETypes,false,'')); { ... }
+						new(POLEDialog(ADialog)^.plb,Init(ADialog,RTOBLIST,RTOBSLID,RTOBUP,RTOBDOWN,TexelApp.OLETypes,false,BUBBLE_INSOBJ_LIST));
 						new(pb,Init(ADialog,RTOBSERVER,id_No,true,BUBBLE_INSOBJ_SERVER));
 						if pb<>nil then pb^.Disable; { !!! }
-						new(pb,Init(ADialog,RTOBHELP,id_Help,false,'')); { ... }
+						new(pb,Init(ADialog,RTOBHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(ADialog,RTOBABBRUCH,id_Cancel,true,'')); { ... }
-						new(PButton,Init(ADialog,RTOBEINFUEGEN,id_No,true,'')); { ... }
-						new(PButton,Init(ADialog,RTOBOK,id_OK,true,'')); { ... }
+						new(PButton,Init(ADialog,RTOBABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
+						new(PButton,Init(ADialog,RTOBEINFUEGEN,id_No,true,BUBBLE_INSOBJ_INSERT));
+						new(PButton,Init(ADialog,RTOBOK,id_OK,true,BUBBLE_INSOBJ_OK));
 						POLEDialog(ADialog)^.trnsbuf:=0;
 						ADialog^.TransferBuffer:=@POLEDialog(ADialog)^.trnsbuf
 					end;
@@ -25329,10 +27725,14 @@ procedure TLink.AddObject(pe: PEmbedded);
 		if length(edsc)>25 then edsc:=StrPLeft(edsc,22)+'...';
 		pld^.ObjRef:=pe;
 		pld^.Descr:=NewStr('  '+edsc+StrPSpace(27-length(edsc))+CompressPath(pe^.GetFile,40)+#0);
-		if pld^.Descr=nil then dispose(pld)
+		if pld^.Descr=nil then
+			begin
+				dispose(pld);
+				pld:=nil
+			end
 		else
 			linklist^.Insert(pld);
-		UpdateList
+		UpdateList(pld^.ObjRef)
 	end;
 
 
@@ -25348,7 +27748,7 @@ procedure TLink.RemoveObject(pe: PEmbedded);
 						linklist^.AtFree(q);
 						break
 					end;
-		UpdateList;
+		UpdateList(nil);
 		if linklist^.Count=0 then
 			begin
 				PCalcWindow(Parent)^.links:=nil;
@@ -25357,13 +27757,24 @@ procedure TLink.RemoveObject(pe: PEmbedded);
 	end;
 
 
-procedure TLink.UpdateList;
+procedure TLink.UpdateList(pe: PEmbedded);
+	var sel,q: integer;
 
 	begin
 		if linklist<>nil then
 			begin
+				sel:=plb^.GetSelection;
 				plb^.SetCollection(linklist);
-				{ Cursor !!! }
+				if pe<>nil then
+					if linklist^.Count>0 then
+						for q:=0 to linklist^.Count-1 do
+							if PLinkData(linklist^.At(q))^.ObjRef=pe then
+								begin
+									sel:=q;
+									break
+								end;
+				plb^.SetSelection(sel);
+				plb^.ScrollBar^.SetPosition(sel)
 			end;
 		plb^.Work
 	end;
@@ -25402,6 +27813,8 @@ procedure TUmbruch.Work;
 	var p    : PCalcWindow;
 	    rbis,
 	    cbis,
+	    cmin,
+	    cmax,
 	    dummy,
 	    r,c  : integer;
 
@@ -25410,10 +27823,14 @@ procedure TUmbruch.Work;
 		with p^ do
 			begin
 				GetBlock(dblock^.GetText,false,r,c,rbis,cbis,dummy,dummy);
+				cmin:=cbis;
+				cmax:=cmin;
+				RowsClearOverflow(0,Parms.Rows,cmin,cmax);
 				PRowFlags^[rbis]:=PRowFlags^[rbis] or CRF_UMBRUCH;
 				PColFlags^[cbis]:=PColFlags^[cbis] or CRF_UMBRUCH;
+				RowsCheckOverflow(0,Parms.Rows,cmin,cmax);
+				DrawCells(0,cmin,Parms.Rows,cmax);
 				DrawCells(rbis,0,rbis,Parms.Columns);
-				DrawCells(0,cbis,Parms.Rows,cbis);
 				SetDirty
 			end
 	end;
@@ -25456,7 +27873,7 @@ procedure TTextObj.Load(fname: string);
 				ymin:=r.Y+(r.H shr 2);
 				yh:=r.H shr 1
 			end;
-		new(pe,Init(p,fname,xmin,ymin,xw,yh,0,0,0,0,0,nil,false,true,false,false,false,nil));
+		new(pe,Init(p,fname,xmin,ymin,xw,yh,0,0,0,0,0,nil,false,true,false,false,false,true,false,nil));
 		if pe<>nil then p^.SetDirty
 	end;
 
@@ -25473,33 +27890,48 @@ procedure TGrafik.Load(fname: string);
 	    p        : PCalcWindow;
 	    r        : GRECT;
 	    xmin,ymin,
-	    xw,yh    : integer;
+	    xw,yh,hdl: integer;
+	    imgh     : TIMGHeader;
+	    res      : longint;
+	    notbw    : boolean;
 
 	begin
 		p:=PCalcWindow(Parent);
-		p^.GetSheetRect(r);
-		if (r.W<40) then
+		notbw:=true;
+		res:=fopen(fname,FO_READ);
+		if res>=0 then
 			begin
-				xmin:=r.X;
-				xw:=50
-			end
+				hdl:=integer(res);
+				if fread(hdl,sizeof(TIMGHeader),@imgh)=sizeof(TIMGHeader) then notbw:=(imgh.version<>1) or (imgh.headlen<8) or (imgh.planes<>1);
+				fclose(hdl)
+			end;
+		if notbw then p^.EmbedNewObject(fname,0,0,0,0,0,nil,nil,nil,false,false,false,true,false,true,false)
 		else
 			begin
-				xmin:=r.X+(r.W shr 2);
-				xw:=r.W shr 1
-			end;
-		if (r.H<40) then
-			begin
-				ymin:=r.Y;
-				yh:=50
+				p^.GetSheetRect(r);
+				if (r.W<40) then
+					begin
+						xmin:=r.X;
+						xw:=50
+					end
+				else
+					begin
+						xmin:=r.X+(r.W shr 2);
+						xw:=r.W shr 1
+					end;
+				if (r.H<40) then
+					begin
+						ymin:=r.Y;
+						yh:=50
+					end
+				else
+					begin
+						ymin:=r.Y+(r.H shr 2);
+						yh:=r.H shr 1
+					end;
+				new(pe,Init(p,fname,xmin,ymin,xw,yh,0,0,0,0,0,nil,false,true,false,false,false,true,false,nil));
+				if pe<>nil then p^.SetDirty
 			end
-		else
-			begin
-				ymin:=r.Y+(r.H shr 2);
-				yh:=r.H shr 1
-			end;
-		new(pe,Init(p,fname,xmin,ymin,xw,yh,0,0,0,0,0,nil,false,true,false,false,false,nil));
-		if pe<>nil then p^.SetDirty
 	end;
 
 
@@ -25547,13 +27979,13 @@ procedure TOpenUrl.Work;
 				ADialog:=new(PURLDialog,Init(nil,TEXELWINDPREFIX+TITLE_URL,STG_URL,ICNTITLE_URL,RTURL));
 				if ADialog<>nil then
 					begin
-						new(PEdit,Init(ADialog,RTUURL,68,'')); { ... }
-						new(pb,Init(ADialog,RTUHELP,id_Help,false,'')); { ... }
+						new(PEdit,Init(ADialog,RTUURL,68,BUBBLE_URL_EDIT));
+						new(pb,Init(ADialog,RTUHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(ADialog,RTUABBRUCH,id_Cancel,true,'')); { ... }
-						new(pb1,Init(ADialog,RTUOPEN,id_No,true,'')); { ... }
-						new(pb2,Init(ADialog,RTUOK,id_OK,true,'')); { ... }
+						new(PButton,Init(ADialog,RTUABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
+						new(pb1,Init(ADialog,RTUOPEN,id_No,true,BUBBLE_URL_OPEN));
+						new(pb2,Init(ADialog,RTUOK,id_OK,true,BUBBLE_URL_OK));
 						PURLDialog(ADialog)^.urlbuf:='';
 						ADialog^.TransferBuffer:=@PURLDialog(ADialog)^.urlbuf
 					end;
@@ -25578,7 +28010,7 @@ procedure TOpen.Load(fname: string);
 	    parms     : TTexelParms;
 	    tdbuf     : TDialogBuffer;
 	    tsbuf     : TSheetBuffer;
-	    taebuf    : TAscBuf;
+	    taebuf    : TExportAscBuf;
 	    diabuf    : TDiagrammBuf;
 	    texbuf    : TExportBuf;
 	    tzwbuf    : TZielBuf;
@@ -25590,6 +28022,8 @@ procedure TOpen.Load(fname: string);
 	    buf       : PByteArray;
 			l         : byte;
 			pdb       : PDiagrammBuf;
+			prntflg,
+			lckflg,
 			skal,umbr,
 			prop,embd,
 			npredef,
@@ -25606,6 +28040,7 @@ procedure TOpen.Load(fname: string);
 	    dat       : pointer;
 	    objtyp,
 	    passmask,
+	    prnrange,
 	    hdl,i     : integer;
 	    npval     : TNumber;
 	    bhist     : PStringCollection;
@@ -25888,7 +28323,7 @@ procedure TOpen.Load(fname: string);
 	begin
 		if length(fname)=0 then exit;
 		BusyMouse;
-		if TexelApp.abruf<>nil then TexelApp.abruf^.Add(fname);
+		if TexelApp.abruf<>nil then TexelApp.abruf^.Add(fname,true);
 		pg:=nil;
 		bhist:=nil;
 		pprnset:=nil;
@@ -25896,12 +28331,12 @@ procedure TOpen.Load(fname: string);
 		buf:=GetMemBuffer(16384,128,bufsize);
 		if buf=nil then
 			begin
-				Application^.Alert(nil,1,STOP,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden (Speichermangel)','  &OK  ');
+				Application^.Alert(nil,1,STOP,MESSAGE_OPEN_MEMORY1+CompressPath(fname,78)+MESSAGE_OPEN_MEMORY2,BUTTON_OK);
 				goto _raus
 			end;
 		if not(Exist(fname)) then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" nicht gefunden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_OPEN_EXIST1+CompressPath(fname,78)+MESSAGE_OPEN_EXIST2,BUTTON_OK);
 				goto _raus
 			end;
 		pw:=Application^.MainWindow;
@@ -25909,7 +28344,7 @@ procedure TOpen.Load(fname: string);
 			begin
 				if pw^.GetClassName=TEXELWINDCLASS then
 					if PCalcWindow(pw)^.GetWindowFilename=fname then
-						if Application^.Alert(nil,1,WAIT,'Die Datei "'+CompressPath(fname,78)+'" befindet sich bereits im Speicher. Nochmal laden?','   &Ja   |  &Nein  ')<>1 then goto _raus;
+						if Application^.Alert(nil,1,WAIT,MESSAGE_OPEN_LOADED1+CompressPath(fname,78)+MESSAGE_OPEN_LOADED2,BUTTON_YESNO)<>1 then goto _raus;
 				pw:=pw^.Next
 			end;
 		rerror:=false;
@@ -25919,33 +28354,41 @@ procedure TOpen.Load(fname: string);
 		res:=bufsize;
 		bufpos:=res;
 		passmask:=0;
-		if fread(hdl,sizeof(TTexelHeader),@header)<>sizeof(TTexelHeader) then goto _error;
+		if fread(hdl,sizeof(TTexelHeader),@header)<>sizeof(TTexelHeader) then
+			begin
+				rerror:=true;
+				goto _error
+			end;
 		with header do
 			begin
 				if Magic<>TEXELMAGIC then
 					begin
-						Application^.Alert(nil,1,NOTE,'"'+CompressPath(fname,78)+'" ist keine Texel-Datei.','  &OK  ');
+						Application^.Alert(nil,1,NOTE,MESSAGE_OPEN_FORMAT1+CompressPath(fname,78)+MESSAGE_OPEN_FORMAT2,BUTTON_OK);
 						fclose(hdl);
 						goto _raus
 					end
 				else
 					if (Compatible<17) or (Compatible>TEXELCOMPAT) then
 						begin
-							Application^.Alert(nil,1,NOTE,'"'+CompressPath(fname,78)+'" (Dateiversion #'+ltoa(Compatible)+', gespeichert mit Texel '+VtoS(Version)+') ist nicht zu dieser Texel-Version kompatibel.','  &OK  ');
+							Application^.Alert(nil,1,NOTE,MESSAGE_OPEN_VERSION1+CompressPath(fname,78)+MESSAGE_OPEN_VERSION2+ltoa(Compatible)+MESSAGE_OPEN_VERSION3+VtoS(Version)+MESSAGE_OPEN_VERSION4,BUTTON_OK);
 							fclose(hdl);
 							goto _raus
 						end
 					else
 						if (PackAlgo<>PA_HORIZONTAL) and (PackAlgo<>PA_VERTICAL) then
 							begin
-								if PackAlgo=PA_BLOCK then Application^.Alert(nil,1,NOTE,'Cut/Copy/Paste-Blîcke kînnen nicht direkt geladen werden. Bitte verwenden Sie "Bearbeiten - EinfÅgen" (Control+V).','  &OK  ')
+								if PackAlgo=PA_BLOCK then Application^.Alert(nil,1,NOTE,MESSAGE_OPEN_CCP,BUTTON_OK)
 								else
-									Application^.Alert(nil,1,NOTE,'"'+CompressPath(fname,78)+'": Unbekanntes Texel-Packverfahren (#'+ltoa(PackAlgo)+').','  &OK  ');
+									Application^.Alert(nil,1,NOTE,MESSAGE_OPEN_ALGO1+CompressPath(fname,78)+MESSAGE_OPEN_ALGO2+' (#'+ltoa(PackAlgo)+').',BUTTON_OK);
 								fclose(hdl);
 								goto _raus
 							end
 			end;
-		if fread(hdl,sizeof(TTexelHead2),@head2)<>sizeof(TTexelHead2) then goto _error;
+		if fread(hdl,sizeof(TTexelHead2),@head2)<>sizeof(TTexelHead2) then
+			begin
+				rerror:=true;
+				goto _error
+			end;
 		apwd.Flag:=head2.PassFlag;
 		apwd.Code:=head2.PassCode;
 		apwd.Mask:=0;
@@ -25956,18 +28399,18 @@ procedure TOpen.Load(fname: string);
 				new(pwd,Init(nil,'',RTPASS));
 				if pwd<>nil then
 					begin
-						new(ps,Init(pwd,RTPWFILE,30,true,'')); { ... }
+						new(ps,Init(pwd,RTPWFILE,30,true,BUBBLE_PASS_FILE));
 						if ps<>nil then ps^.SetText(CompressPath(fname,29));
-						new(PEdit,Init(pwd,RTPWPASS,21,'')); { ... }
-						new(PButton,Init(pwd,RTPWABBRUCH,id_Cancel,true,'')); { ... }
-						new(PButton,Init(pwd,RTPWOK,id_OK,true,'')); { ... }
+						new(PEdit,Init(pwd,RTPWPASS,21,BUBBLE_PASS_EDIT));
+						new(PButton,Init(pwd,RTPWABBRUCH,id_Cancel,true,BUBBLE_PASS_CANCEL));
+						new(PButton,Init(pwd,RTPWOK,id_OK,true,BUBBLE_PASS_OK));
 						tb:='';
 						pwd^.TransferBuffer:=@tb;
 						if Application^.ExecDialog(pwd)=RTPWOK then
 							begin
 								if length(tb)<6 then
 									begin
-										Application^.Alert(nil,1,NOTE,'Das Paûwort muû mind. 6 Zeichen lang sein.','  &OK  ');
+										Application^.Alert(nil,1,NOTE,MESSAGE_OPEN_PASSLEN,BUTTON_OK);
 										goto _pagain
 									end;
 								if CheckPassWord(tb,head2.PassCode,pmask) then
@@ -25978,7 +28421,7 @@ procedure TOpen.Load(fname: string);
 										goto _pweiter
 									end
 								else
-									Application^.Alert(nil,1,STOP,'Falsches Paûwort!','&Abbruch')
+									Application^.Alert(nil,1,STOP,MESSAGE_OPEN_PASSWRONG,BUTTON_CANCEL)
 							end;
 						TexelApp.DeactivateExtResource;
 						fclose(hdl);
@@ -26009,7 +28452,11 @@ procedure TOpen.Load(fname: string);
 							else
 								begin
 									getmem(dat,dlen);
-									if dat=nil then goto _error;
+									if dat=nil then
+										begin
+											rerror:=true;
+											goto _error
+										end;
 									if bfread(dat^,dlen) then goto _error
 								end;
 							if bfread(oabuf,sizeof(TEmbedBuf)) then goto _error;
@@ -26019,6 +28466,13 @@ procedure TOpen.Load(fname: string);
 							if bfread(h100,4) then goto _error;
 							if bfread(prop,sizeof(boolean)) then goto _error;
 							if bfread(embd,sizeof(boolean)) then goto _error;
+							prntflg:=true;
+							lckflg:=false;
+							if header.Compatible>34 then
+								begin
+									if bfread(prntflg,sizeof(boolean)) then goto _error;
+									if bfread(lckflg,sizeof(boolean)) then goto _error
+								end;
 							skal:=false;
 							umbr:=false;
 							pdb:=nil;
@@ -26036,17 +28490,21 @@ procedure TOpen.Load(fname: string);
 									if dbv then
 										begin
 											new(pdb);
-											if pdb=nil then goto _error;
+											if pdb=nil then
+												begin
+													rerror:=true;
+													goto _error
+												end;
 											if bfread(pdb^,sizeof(TDiagrammBuf)) then goto _error
 										end
 								end
 							end;
-							if pre=nil then new(pre,Init(objtyp,ttxt,dat,dlen,x100,y100,w100,h100,oabuf,pdb,prop,embd,skal,umbr))
+							if pre=nil then new(pre,Init(objtyp,ttxt,dat,dlen,x100,y100,w100,h100,oabuf,pdb,prop,embd,skal,umbr,prntflg,lckflg))
 							else
 								begin
 									pred:=pre;
 									while pred^.Next<>nil do pred:=pred^.Next;
-									new(pred^.Next,Init(objtyp,ttxt,dat,dlen,x100,y100,w100,h100,oabuf,pdb,prop,embd,skal,umbr))
+									new(pred^.Next,Init(objtyp,ttxt,dat,dlen,x100,y100,w100,h100,oabuf,pdb,prop,embd,skal,umbr,prntflg,lckflg))
 								end
 						end
 			end;
@@ -26059,7 +28517,8 @@ procedure TOpen.Load(fname: string);
 		with parms do
 			begin
 				if Rows<1 then Rows:=1;
-				if Columns<1 then Columns:=1
+				if Columns<1 then Columns:=1;
+				if header.Compatible<37 then Toolbar:=TexelApp.setupbuffer.toolbar
 			end;
 		ScanConst(ppc);
 		new(ufrm,Init(50,25));
@@ -26078,7 +28537,7 @@ procedure TOpen.Load(fname: string);
 				if pcolflags<>nil then freemem(pcolflags,parms.Columns+1);
 				if pcolnames<>nil then freemem(pcolnames,(parms.Columns+1) shl 2);
 				if sheet<>nil then freemem(sheet,dummy);
-				Application^.Alert(nil,1,STOP,'Texel:|Nicht genÅgend Speicher fÅr neues Fenster frei!','  &OK  ');
+				TexelApp.ErrorWindowMemory(nil);
 				fclose(hdl);
 				goto _raus
 			end;
@@ -26087,18 +28546,7 @@ procedure TOpen.Load(fname: string);
 		fillchar(pcolflags^,parms.Columns+1,0);
 		fillchar(prowflags^,parms.Rows+1,0);
 		fillchar(sheet^,dummy,0);
-		cell:=sheet;
-		for q:=0 to parms.Rows do
-			for w:=0 to parms.Columns do
-				begin
-					with cell^ do
-						begin
-							Color:=Black;
-							Style:=8;
-							TxtVal.Color:=Black
-						end;
-					inc(longint(cell),CELLSIZE)
-				end;
+		TexelApp.InitCells(sheet,parms.Rows+1,parms.Columns+1);
 		if header.Compatible<27 then
 			begin
 				if bread(tdold,sizeof(tdold)) then goto _error;
@@ -26192,7 +28640,7 @@ procedure TOpen.Load(fname: string);
 			if bread(diabuf,sizeof(TDiagrammBuf)) then goto _error;
 		if header.Compatible<23 then
 			begin
-				if bread(texbuf.ascii,sizeof(TAscBuf)) then goto _error;
+				if bread(texbuf.ascii,sizeof(TExportAscBuf)) then goto _error;
 				with texbuf do
 					begin
 						exporttype:=0;
@@ -26210,37 +28658,44 @@ procedure TOpen.Load(fname: string);
 						difformat:=bf_Checked;
 						csvformat:=bf_Checked;
 						asciiformat:=bf_Checked;
-						htmlembed:=bf_Unchecked
+						htmlembed:=bf_Unchecked;
+						filter:=0
 					end
 			end
 		else
 			if header.Compatible<28 then
 				begin
-					if bread(texbuf,sizeof(TExportBuf)-8) then goto _error;
+					if bread(texbuf,sizeof(TExportBuf)-10) then goto _error;
 					texbuf.difformat:=bf_Checked;
 					texbuf.csvformat:=bf_Checked;
 					texbuf.asciiformat:=bf_Checked;
 					texbuf.htmlembed:=bf_Unchecked;
 					texbuf.htmldoctype:=0;
-					texbuf.htmlsavedt:=bf_Checked
+					texbuf.htmlsavedt:=bf_Checked;
+					texbuf.filter:=0
 				end
 			else
 				if header.Compatible<31 then
 					begin
-						if bread(texbuf,sizeof(TExportBuf)-2) then goto _error;
+						if bread(texbuf,sizeof(TExportBuf)-4) then goto _error;
 						texbuf.htmlembed:=bf_Unchecked;
 						texbuf.htmldoctype:=0;
-						texbuf.htmlsavedt:=bf_Checked
+						texbuf.htmlsavedt:=bf_Checked;
+						texbuf.filter:=0
 					end
 				else
-					begin
+					if header.Compatible<34 then
+						begin
+							if bread(texbuf,sizeof(TExportBuf)-2) then goto _error;
+							texbuf.filter:=0;
+							if header.Compatible<32 then
+								begin
+									texbuf.htmldoctype:=0;
+									texbuf.htmlsavedt:=bf_Checked
+								end
+						end
+					else
 						if bread(texbuf,sizeof(TExportBuf)) then goto _error;
-						if header.Compatible<32 then
-							begin
-								texbuf.htmldoctype:=0;
-								texbuf.htmlsavedt:=bf_Checked
-							end
-					end;
 		if header.Compatible<22 then
 			begin
 				if bread(srtbuf,sizeof(TSortBuf)-2) then goto _error;
@@ -26468,6 +28923,9 @@ procedure TOpen.Load(fname: string);
 						pprnset:=@prnset
 					end
 			end;
+		prnrange:=-1;
+		if header.Compatible>35 then
+			if bread(prnrange,2) then goto _error;
 {		if bread(coffs,2) then goto _error;
 		if coffs>0 then
 			for q:=0 to coffs-1 do
@@ -26485,19 +28943,21 @@ procedure TOpen.Load(fname: string);
 		_errmsg:
 		if rerror or (res<0) then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_OPEN_ERROR1+CompressPath(fname,78)+MESSAGE_OPEN_ERROR2,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done)
 			end
 		else
 			begin
 				if pg<>nil then pg^.Progress(parms.Rows shr 2);
+				tsbuf.protect:=bf_Unchecked; { ... }
 				TexelApp.FontID2Index(tdbuf.font);
 				TexelApp.FontSize2Index(tdbuf.font,tdbuf.size);
 				TexelApp.FontID2Index(tsbuf.font);
 				TexelApp.FontSize2Index(tsbuf.font,tsbuf.size);
 				new(PCalcWindow,InitFile(fname,pg,parms,tdbuf,tsbuf,findbuf,repbuf,
 				    fillbuf,tzwbuf,texbuf,srtbuf,infbuf,diabuf,sheet,prow,pcol,pcolnames,ppc,ufrm,pre,
-				    apwd,bhist,pcolflags,prowflags,pprnset,header.Compatible<TEXELCOMPAT))
+				    apwd,bhist,pcolflags,prowflags,pprnset,prnrange,header.Compatible<TEXELCOMPAT,
+				    header.Compatible<38))
 			end;
 		_raus:
 		if buf<>nil then freemem(buf,bufsize);
@@ -26521,7 +28981,7 @@ procedure TSave.Work;
 		else
 			if p^.sheetbuffer.vorlage=bf_Unchecked then Save(fname)
 			else
-				if Application^.Alert(p,2,WAIT,'Das Blatt ist eine Vorlage. Speichern als Vorlage oder als neues Dokument?','&Vorlage|&Dokument')=1 then Save(fname)
+				if Application^.Alert(p,2,WAIT,MESSAGE_SAVE_FORMDOC,BUTTON_FORMDOC)=1 then Save(fname)
 				else
 					if XFileSelect(p,FSELTITLE_SAVEFORMASDOC,'*.'+TEXELEXTENSION,TexelApp.LastPath[0],TexelApp.LastFile[0],1,FSEL_SAVE2,false,p^.closing) then p^.saveas^.SaveAs(TexelApp.LastPath[0]+TexelApp.LastFile[0],1)
 	end;
@@ -26549,6 +29009,7 @@ function TSave.Save(fname: string): boolean;
       l        : byte;
       embdirty,
       werror,
+      prp,
       test     : boolean;
       oldtb    : pointer;
       newtb    : TDialogBuffer;
@@ -26951,19 +29412,21 @@ function TSave.Save(fname: string): boolean;
 				pe:=pe^.Next
 			end;
 		if embdirty then
-			if Application^.Alert(p,1,WAIT,'Ein eingebettetes Objekt wurde in seinem ID4-Server noch nicht gespeichert. Trotz evtl. alter Objektdaten speichern?','&Speichern|&Abbruch')<>1 then goto _raus;
+			if Application^.Alert(p,1,WAIT,MESSAGE_SAVE_EMBEDDED,BUTTON_SAVECANCEL)<>1 then goto _raus;
 		BusyMouse;
 		buf:=GetMemBuffer(131072,512,bufsize);
 		if buf=nil then
 			begin
-				Application^.Alert(p,1,STOP,'Das Blatt konnte nicht gespeichert werden (Speichermangel)','  &OK  ');
+				Application^.Alert(p,1,STOP,MESSAGE_SAVE_MEMORY,BUTTON_OK);
 				goto _raus
 			end;
 		werror:=false;
 		if TexelApp.setupbuffer.bak=bf_Checked then
 			if Exist(fname) then
 				begin
-					fn2:=GetPath(fname)+GetFilename(fname,false)+'.bak';
+					if TexelApp.IsLongFileName(fname) then fn2:=fname+'.bak'
+					else
+						fn2:=GetPath(fname)+GetFilename(fname,false)+'.bak';
 					if Exist(fn2) then fdelete(fn2);
 					frename(fname,fn2);
 					TexelApp.UpdateFile(fn2,0)
@@ -26971,7 +29434,7 @@ function TSave.Save(fname: string): boolean;
 		res:=fcreate(fname,0);
 		if res<0 then
 			begin
-				Application^.Alert(p,1,STOP,'Das Blatt konnte nicht gespeichert werden (DatentrÑger schreibgeschÅtzt?)','  &OK  ');
+				Application^.Alert(p,1,STOP,MESSAGE_SAVE_WPROT,BUTTON_OK);
 				goto _raus
 			end;
 		hdl:=integer(res);
@@ -27048,8 +29511,13 @@ function TSave.Save(fname: string): boolean;
 						if bfwrite(pe^.YPos_mm100,4) then goto _unreg;
 						if bfwrite(pe^.Width_mm100,4) then goto _unreg;
 						if bfwrite(pe^.Height_mm100,4) then goto _unreg;
-						if bfwrite(pe^.proportional,sizeof(boolean)) then goto _unreg;
+						prp:=pe^.IsProportional;
+						if bfwrite(prp,sizeof(boolean)) then goto _unreg;
 						if bfwrite(pe^.embedflag,sizeof(boolean)) then goto _unreg;
+						prp:=pe^.CanPrint;
+						if bfwrite(prp,sizeof(boolean)) then goto _unreg;
+						prp:=pe^.IsLocked;
+						if bfwrite(prp,sizeof(boolean)) then goto _unreg;
 						case objtyp of
 						1:
 							if bfwrite(PEmbeddedIMG(pe)^.skalieren,sizeof(boolean)) then goto _unreg;
@@ -27078,6 +29546,9 @@ function TSave.Save(fname: string): boolean;
 		p^.Parms.CurrSize:=p^.Curr;
 		p^.Parms.ScrlXPos:=p^.Scroller^.XPos;
 		p^.Parms.ScrlYPos:=p^.Scroller^.YPos;
+		if p^.Class.ToolbarTree<>nil then p^.Parms.Toolbar:=bf_Checked
+		else
+			p^.Parms.Toolbar:=bf_Unchecked;
 		newtb.border:=0; { ... }
 		newtb.resvd1:=0;
 		newtb.resvd2:=0;
@@ -27190,6 +29661,7 @@ function TSave.Save(fname: string): boolean;
 		if bwrite(dummy,4) then goto _unreg;
 		if dummy>0 then
 			if bwrite(p^.wnd_prnt_set^,dummy) then goto _unreg;
+		if bwrite(p^.prnRangeFlag,2) then goto _unreg;
 		coffs:=p^.pfbox^.List^.Count;
 		if bwrite(coffs,2) then goto _unreg;
 		l:=0;
@@ -27222,7 +29694,7 @@ function TSave.Save(fname: string): boolean;
 		if werror then
 			begin
 				fdelete(fname);
-				Application^.Alert(p,1,STOP,'Das Blatt konnte nicht gespeichert werden (DatentrÑger voll?)','  &OK  ')
+				Application^.Alert(p,1,STOP,MESSAGE_SAVE_DISKFULL,BUTTON_OK)
 			end
 		else
 			begin
@@ -27258,15 +29730,22 @@ procedure TAbruf.HandleMenu(Indx: integer);
 	end;
 
 
-procedure TAbruf.Add(fname: string);
-	var ps    : PString;
-	    q,w,ml: integer;
+procedure TAbruf.Add(fname: string; dodhst: boolean);
+	label _dhst;
+	
+	var ps      : PString;
+	    q,w,ml  : integer;
+	    dhstid  : longint;
+	    pipe    : Pipearray;
+	    dhstinfo: PDHSTInfo;
+	    oldfname: string;
 
 	begin
 		if length(fname)=0 then exit;
 		CorrectPath(fname);
+		oldfname:=fname;
 		ps:=NewStr(fname);
-		if ps=nil then exit;
+		if ps=nil then goto _dhst;
 		Dirty:=true;
 		if Count>0 then
 			begin
@@ -27314,7 +29793,37 @@ procedure TAbruf.Add(fname: string);
 							w:=PopTree^[w].ob_next
 						end
 			end;
-		Enable
+		Enable;
+		_dhst:
+		if dodhst and (Application^.apPath<>nil) then
+			if GetCookie('DHST',dhstid) then
+				begin
+					dhstid:=dhstid and $0000ffff;
+					if dhstid>=0 then
+						begin
+							GlobalAlloc(pointer(dhstinfo),1024+sizeof(TDHSTInfo));
+							if dhstinfo<>nil then
+								begin
+									dhstinfo^.AppName:=PChar(longint(dhstinfo)+sizeof(TDHSTInfo));
+									dhstinfo^.AppPath:=PChar(longint(dhstinfo)+sizeof(TDHSTInfo)+256);
+									dhstinfo^.DocName:=PChar(longint(dhstinfo)+sizeof(TDHSTInfo)+512);
+									dhstinfo^.DocPath:=PChar(longint(dhstinfo)+sizeof(TDHSTInfo)+768);
+									strpcopy(dhstinfo^.AppName,TEXELNAME);
+									strpcopy(dhstinfo^.AppPath,Application^.apPath^+TEXELAPPNAME);
+									strpcopy(dhstinfo^.DocName,GetFilename(oldfname,true));
+									strpcopy(dhstinfo^.DocPath,oldfname);
+									pipe[0]:=DHST_ADD;
+									pipe[1]:=Application^.apID;
+									pipe[2]:=0;
+									pipe[3]:=integer(HiWord(dhstinfo));
+									pipe[4]:=integer(LoWord(dhstinfo));
+									pipe[5]:=0;
+									pipe[6]:=0;
+									pipe[7]:=0;
+									appl_write(dhstid,16,@pipe)
+								end
+						end
+				end
 	end;
 
 
@@ -27333,7 +29842,7 @@ procedure TImport.HandleMenu(Indx: integer);
 		5:
 			if XFileSelect(nil,FSELTITLE_IMPORTASCII,'*.txt',TexelApp.LastPath[6],TexelApp.LastFile[6],1,FSEL_LOADASCII,true,false) then LoadASCII(TexelApp.LastPath[6]+TexelApp.LastFile[6]);
 		6:
-			if XFileSelect(nil,FSELTITLE_IMPORTDBASE,'*.dbf',TexelApp.LastPath[12],TexelApp.LastFile[12],0,FSEL_LOADDBF,true,false) then LoadDBF(TexelApp.LastPath[12]+TexelApp.LastFile[12]);
+			if XFileSelect(nil,FSELTITLE_IMPORTDBASE,'*.dbf',TexelApp.LastPath[12],TexelApp.LastFile[12],0,FSEL_LOADDBF,true,false) then LoadGDBC(TexelApp.LastPath[12]+TexelApp.LastFile[12]);
 		8:
 			if XFileSelect(nil,FSELTITLE_IMPORTEXCEL,'*.xls',TexelApp.LastPath[7],TexelApp.LastFile[7],0,FSEL_LOADXLS,true,false) then LoadXLS(TexelApp.LastPath[7]+TexelApp.LastFile[7]);
 		9:
@@ -27402,25 +29911,22 @@ procedure TImportTextBox.SetValue(Sel: integer);
 
 
 procedure TImportButton.Changed(AnIndx: integer; DblClick: boolean);
-	var oaddr: PObj;
+	var txt: string;
 
 	begin
 		if Parent^.Parent=nil then
 			begin
-				oaddr:=@Parent^.DlgTree^[RTAIRCTITLE];
 				if AnIndx=RTAIHOR then txt:=STRING_ROWDIV+':'#0
 				else
 					txt:=STRING_COLDIV+':'#0
 			end
 		else
 			begin
-				oaddr:=@Parent^.DlgTree^[RTEXASCIIRCTITLE];
 				if AnIndx=RTEXASCIIHOR then txt:=STRING_ROWDIV+':'#0
 				else
 					txt:=STRING_COLDIV+':'#0
 			end;
-		oaddr^.ob_spec.user_blk^.ub_parm:=longint(@txt[1]);
-		pircb^.Paint
+		pircb^.SetTitle(txt)
 	end;
 
 
@@ -27435,7 +29941,7 @@ function TASCIIImportDialog.OK: boolean;
 				with TexelApp do
 					begin
 						s:=StrPTrimF(pcb^.GetText);
-						import^.ImportASCII(import^.filename,TexelApp.num2str(ascbuf.rcTxt),TexelApp.num2str(ascbuf.cellTxt),TexelApp.num2str(ascbuf.textTxt),s[1],ascbuf.hor=bf_Checked,ascbuf.quote=bf_Checked)
+						import^.ImportASCII(import^.filename,TexelApp.num2str(ascbuf.rcTxt),TexelApp.num2str(ascbuf.cellTxt),TexelApp.num2str(ascbuf.textTxt),s[1],ascbuf.hor=bf_Checked,ascbuf.quote=bf_Checked,ascbuf.filter)
 					end;
 		OK:=valid
 	end;
@@ -27447,6 +29953,8 @@ procedure TImport.LoadASCII(fname: string);
 	    pv  : PValidator;
 	    picb: PImportCellBox;
 	    pb  : PButton;
+	    i   : integer;
+	    flt : PStringCollection;
 
 	begin
 		filename:=fname;
@@ -27479,6 +29987,16 @@ procedure TImport.LoadASCII(fname: string);
 						new(PImportTextBox,Init(ascii,RTAITEXT,RTAITCYC,RTAITTITLE,RTPOPUPS,RTPAITEXT,id_No,false,true,BUBBLE_IMPASC_QUOTECHAR));
 						new(PCheckBox,Init(ascii,RTAIQUOTE,true,BUBBLE_IMPASC_QUOTING));
 						new(ascii^.pcb,Init(ascii,RTAINUMBER,RTAINCYC,RTAINTITLE,RTPOPUPS,RTPAINUMBERS,id_No,true,false,BUBBLE_IMPASC_FPOINT));
+						new(flt,Init(10,5));
+						if flt<>nil then
+							begin
+								flt^.Sort:=false;
+								if InitKeyTab then
+									for i:=0 to pkt^.GetImportCount do flt^.Insert(NewStr('  '+StrPPas(pkt^.GetImportName(nil,nil,0,0,0,i))+' '#0))
+								else
+									flt^.Insert(NewStr('  Atari '#0))
+							end;
+						new(PComboBox,InitCollection(ascii,RTAIFILTER,RTAIFCYC,RTAIFTITLE,20,flt,true,true,false,BUBBLE_IMPASC_FILTER));
 						new(pb,Init(ascii,RTAIHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
@@ -27498,7 +30016,169 @@ procedure TImport.LoadASCII(fname: string);
 	end;
 
 
-procedure TImport.LoadDBF(fname: string);
+function TGDBCDialog.OK: boolean;
+	var valid: boolean;
+
+	begin
+		valid:=inherited OK;
+		if valid then import^.ImportDBF(import^.quelle,lb2^.List);
+		OK:=valid
+	end;
+
+
+function TGDBCDialog.ExitDlg(AnIndx: integer): boolean;
+	var sel: integer;
+
+	begin
+		ExitDlg:=false;
+		case AnIndx of
+		RTGDIMPORT:
+			begin
+				sel:=lb1^.GetSelection;
+				if sel<0 then exit;
+				lb2^.List^.Insert(lb1^.List^.At(sel));
+				lb1^.List^.AtDelete(sel);
+				lb1^.SetCollection(lb1^.List);
+				lb2^.SetCollection(lb2^.List);
+				lb1^.SetSelection(sel);
+				lb2^.SetSelection(lb2^.List^.Count-1);
+				CheckButtons
+			end;
+		RTGDIGNORE:
+			begin
+				sel:=lb2^.GetSelection;
+				if sel<0 then exit;
+				lb1^.List^.Insert(lb2^.List^.At(sel));
+				lb2^.List^.AtDelete(sel);
+				lb1^.SetCollection(lb1^.List);
+				lb2^.SetCollection(lb2^.List);
+				lb1^.SetSelection(lb1^.List^.Count-1);
+				lb2^.SetSelection(sel);
+				CheckButtons
+			end;
+		RTGDALL:
+			begin
+				while lb1^.List^.Count>0 do
+					begin
+						lb2^.List^.Insert(lb1^.List^.At(0));
+						lb1^.List^.AtDelete(0)
+					end;
+				lb1^.SetCollection(lb1^.List);
+				lb2^.SetCollection(lb2^.List);
+				lb2^.SetSelection(lb2^.List^.Count-1);
+				CheckButtons
+			end;
+		RTGDNONE:
+			LoadFields(lb1)
+		end
+	end;
+
+
+procedure TGDBCDialog.CheckButtons;
+
+	begin
+		if lb1^.List^.Count=0 then
+			begin
+				pb1^.Disable;
+				pb3^.Disable
+			end
+		else
+			begin
+				pb1^.Enable;
+				pb3^.Enable
+			end;
+		if lb2^.List^.Count=0 then
+			begin
+				pb2^.Disable;
+				pb4^.Disable;
+				pb0^.Disable
+			end
+		else
+			begin
+				pb2^.Enable;
+				pb4^.Enable;
+				pb0^.Enable
+			end
+	end;
+
+
+procedure TGDBCDialog.LoadFields(lb: PListBox);
+	var txt : string;
+	    pxb : PXBase;
+	    pxbf: PXBField;
+	    anz : longint;
+
+	begin
+		lb1^.List^.FreeAll;
+		lb1^.List^.Sort:=false;
+		lb2^.List^.FreeAll;
+		lb2^.List^.Sort:=false;
+		anz:=0;
+		BusyMouse;
+		new(pxb,InitFile(import^.quelle));
+		if pxb<>nil then
+			begin
+				anz:=pxb^.GetMaxRecords;
+				pxbf:=pxb^.Fields;
+				while pxbf<>nil do
+					begin
+						lb^.List^.Insert(NewStr('  '+StrPLeft(pxbf^.GetName,18)+#0));
+						pxbf:=pxbf^.Next
+					end;
+				dispose(pxb,Done)
+			end;
+		ArrowMouse;
+		if length(import^.quelle)=0 then
+			begin
+				if st<>nil then st^.SetText(STRING_DB_SOURCE+': ['+STRING_DB_EMPTY+']')
+			end
+		else
+			begin
+				txt:='" ('+ltoa(anz)+' '+STRING_DB_RECORDS+')';
+				if st<>nil then st^.SetText(STRING_DB_SOURCE+': "'+CompressPath(import^.quelle,52-length(txt))+txt)
+			end;
+		lb1^.SetCollection(lb1^.List);
+		lb2^.SetCollection(lb2^.List);
+		CheckButtons
+	end;
+
+
+procedure TImport.LoadGDBC(fname: string);
+	var pb: PButton;
+
+	begin
+		quelle:=fname;
+		if gdbc=nil then
+			begin
+				TexelApp.ActivateExtResource;
+				new(gdbc,Init(nil,TEXELWINDPREFIX+TITLE_IMPORTGDBC,STG_IMPORTGDBC,ICNTITLE_IMPORTGDBC,RTGDBC));
+				if gdbc<>nil then
+					begin
+						gdbc^.import:=@self;
+						new(gdbc^.st,Init(gdbc,RTGDSOURCE,63,true,BUBBLE_IMPDB_SOURCE));
+						new(gdbc^.pb1,Init(gdbc,RTGDIMPORT,id_No,true,BUBBLE_IMPDB_IMPORT));
+						new(gdbc^.pb2,Init(gdbc,RTGDIGNORE,id_No,true,BUBBLE_IMPDB_IGNORE));
+						new(gdbc^.pb3,Init(gdbc,RTGDALL,id_No,true,BUBBLE_IMPDB_ALL));
+						new(gdbc^.pb4,Init(gdbc,RTGDNONE,id_No,true,BUBBLE_IMPDB_NONE));
+						new(gdbc^.lb1,Init(gdbc,RTGDIGNORELIST,RTGDIGNSLID,RTGDIGNDEC,RTGDIGNINC,new(PStringCollection,Init(20,10)),true,BUBBLE_IMPDB_IGNORELIST));
+						new(gdbc^.lb2,Init(gdbc,RTGDIMPORTLIST,RTGDIMPSLID,RTGDIMPDEC,RTGDIMPINC,new(PStringCollection,Init(20,10)),true,BUBBLE_IMPDB_IMPORTLIST));
+						new(pb,Init(gdbc,RTGDHELP,id_Help,false,BUBBLE_GENERAL_HELP));
+						if pb<>nil then
+							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
+						new(PButton,Init(gdbc,RTGDABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
+						new(gdbc^.pb0,Init(gdbc,RTGDOK,id_OK,true,BUBBLE_IMPDB_OK))
+					end;
+				TexelApp.DeactivateExtResource
+			end;
+		if gdbc<>nil then
+			begin
+				gdbc^.LoadFields(gdbc^.lb2);
+				gdbc^.MakeWindow
+			end
+	end;
+
+
+procedure TImport.ImportDBF(fname: string; fields: PStringCollection);
 	label _raus,_error;
 
 	var pxb      : PXBase;
@@ -27507,13 +30187,15 @@ procedure TImport.LoadDBF(fname: string);
 	    dummy,
 	    cmax,
 	    rmax,
+	    loffs,
 	    sze,q    : longint;
 	    w,ww,sf,
-	    sg       : integer;
+	    fldmax,sg: integer;
 	    sheet,
 	    cell     : PCell;
 			prow,
 			pcol     : PWordArray;
+			pfldindx : PIntegerArray;
 			pcolnames: PItemList;
 			ttxt     : string;
 			error    : boolean;
@@ -27526,22 +30208,49 @@ procedure TImport.LoadDBF(fname: string);
 		if pxb=nil then
 			begin
 				ArrowMouse;
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_LOAD1+CompressPath(fname,78)+MESSAGE_IMPORT_LOAD2,BUTTON_OK);
 				exit
 			end;
 		new(pg,Init(0,TITLE_IMPORT,fname));
+		pfldindx:=nil;
+		fldmax:=pxb^.GetMaxFields;
 		rmax:=Max(pxb^.GetMaxRecords,2);
-		cmax:=Max(pxb^.GetMaxFields,2);
 		if rmax>16384 then
 			begin
-				Application^.Alert(nil,1,NOTE,'Die Datenbank ist zu groû. Texel kann z.Z. maximal 16384 DatensÑtze importieren.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_DBSIZE,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done);
 				goto _raus
 			end;
+		if fields<>nil then
+			if fields^.Count>0 then fldmax:=fields^.Count;
+		getmem(pfldindx,fldmax shl 1);
+		if pfldindx=nil then
+			begin
+				if pg<>nil then dispose(pg,Done);
+				TexelApp.ErrorWindowMemory(nil);
+				goto _raus
+			end;
+		for w:=0 to fldmax-1 do pfldindx^[w]:=w;
+		if fields<>nil then
+			if fields^.Count>0 then
+				for w:=0 to fldmax-1 do
+					begin
+						q:=0;
+						pxbf:=pxb^.Fields;
+						while pxbf<>nil do
+							begin
+								if pxbf^.GetName=StrPTrimF(PString(fields^.At(w))^) then break;
+								inc(q);
+								pxbf:=pxbf^.Next
+							end;
+						pfldindx^[w]:=q
+					end;
+		cmax:=Max(fldmax,2);
 		getmem(prow,rmax shl 1);
 		getmem(pcol,cmax shl 1);
 		getmem(pcolnames,cmax shl 2);
-		dummy:=rmax*cmax*CELLSIZE;
+		loffs:=cmax*CELLSIZE;
+		dummy:=rmax*loffs;
 		getmem(sheet,dummy);
 		if (prow=nil) or (pcol=nil) or (sheet=nil) or (pcolnames=nil) then
 			begin
@@ -27550,7 +30259,7 @@ procedure TImport.LoadDBF(fname: string);
 				if pcolnames<>nil then freemem(pcolnames,cmax shl 2);
 				if sheet<>nil then freemem(sheet,dummy);
 				if pg<>nil then dispose(pg,Done);
-				Application^.Alert(nil,1,STOP,'Texel:|Nicht genÅgend Speicher fÅr neues Fenster frei!','  &OK  ');
+				TexelApp.ErrorWindowMemory(nil);
 				goto _raus
 			end;
 		if pg<>nil then pg^.SetMax(pxb^.GetMaxRecords shl 1);
@@ -27567,117 +30276,110 @@ procedure TImport.LoadDBF(fname: string);
 			end;
 		sze:=Max(Min(round(longint(ww)*atol(TexelApp.setupbuffer.stdcolwidth)*longint(Application^.Attr.PixW)/10.0),65535),0);
 		for q:=0 to cmax-1 do pcol^[q]:=sze;
-		cell:=sheet;
-		for q:=0 to rmax-1 do
-			for w:=0 to cmax-1 do
-				begin
-					with cell^ do
-						begin
-							Color:=Black;
-							Style:=8;
-							TxtVal.Color:=Black
-						end;
-					inc(longint(cell),CELLSIZE)
-				end;
-		pxbf:=pxb^.Fields;
-		w:=0;
-		while pxbf<>nil do
+		TexelApp.InitCells(sheet,rmax,cmax);
+		for w:=0 to fldmax-1 do
 			begin
-				pcolnames^[w]:=NewStr(pxbf^.GetName);
-				pcol^[w]:=Max(Min(round(longint(ww)*longint(pxbf^.GetLength)*longint(Application^.Attr.PixW)/10.0),65535),0);
-				inc(w);
-				pxbf:=pxbf^.Next
+				pxbf:=pxb^.GetFieldByNumber(pfldindx^[w]);
+				if pxbf<>nil then
+					begin
+						pcolnames^[w]:=NewStr(pxbf^.GetName);
+						pcol^[w]:=Max(Min(round(longint(ww)*longint(pxbf^.GetLength)*longint(Application^.Attr.PixW)/10.0),65535),0)
+					end
 			end;
 		sf:=TexelApp.GetStdFontIndex;
 		sg:=TexelApp.GetStdFontSize;
 		fp:=atol(TexelApp.setupbuffer.floatpoint);
 		error:=false;
-		cell:=sheet;
 		for q:=1 to pxb^.GetMaxRecords do
 			begin
+				cell:=PCell(longint(sheet)+q*loffs-loffs);
 				if not(pxb^.GetRecord) then
 					begin
-						error:=true;
+						error:=(q=1);
 						goto _error
 					end;
 				if pg<>nil then pg^.Progress(1);
-				pxbf:=pxb^.Fields;
-				while pxbf<>nil do
+				for w:=0 to fldmax-1 do
 					begin
-						case pxbf^.GetType of
-						'C':
-							begin
-								ttxt:=pxbf^.GetString;
-								if length(ttxt)>1 then
-									begin
-										cell^.Typ:=CTYPE_TEXT;
-										cell^.Data.Txt:=NewStr(ttxt);
-										cell^.TxtVal.Font:=sf;
-										cell^.TxtVal.Size:=sg
-									end
+						pxbf:=pxb^.GetFieldByNumber(pfldindx^[w]);
+						if pxbf<>nil then
+							case pxbf^.GetType of
+							'C':
+								begin
+									ttxt:=pxbf^.GetString;
+									if length(ttxt)>0 then
+										begin
+											cell^.Data.Txt:=NewStr(ttxt);
+											if cell^.Data.Txt<>nil then
+												begin
+													cell^.Typ:=CTYPE_TEXT;
+													cell^.TxtVal.Font:=sf;
+													cell^.TxtVal.Size:=sg
+												end
+										end
+								end;
+							'N','F':
+								begin
+									new(cell^.Data.Konst);
+									if cell^.Data.Konst<>nil then
+										begin
+											cell^.Typ:=CTYPE_CONST;
+											cell^.TxtVal.Font:=sf;
+											cell^.TxtVal.Size:=sg;
+											cell^.TxtVal.Align:=TA_RIGHT;
+											with cell^.Data.Konst^ do
+												begin
+													Txt:=NewStr(pxbf^.GetString);
+													Value:=pxbf^.GetNumber;
+													FPts:=pxbf^.GetFloatpt
+												end
+										end
+								end;
+							'L':
+								begin
+									if pxbf^.GetLogical=xb_True then ttxt:='='+STRING_TRUE
+									else
+										ttxt:='='+STRING_FALSE;
+									new(cell^.Data.Formula);
+									if cell^.Data.Formula<>nil then
+										begin
+											cell^.Typ:=CTYPE_FORMULA;
+											with cell^.Data.Formula^ do
+												begin
+													Value:=0.0;
+													FPts:=0;
+													Error:=FE_OK;
+													VarDef:=NewStr(ttxt);
+													Func:=nil;
+													cell^.TxtVal.Font:=sf;
+													cell^.TxtVal.Size:=sg;
+													cell^.TxtVal.Align:=TA_RIGHT
+												end
+										end
+								end;
+							'D':
+								begin
+									cell^.Typ:=CTYPE_TEXT;
+									cell^.Data.Txt:=NewStr(pxbf^.GetDate);
+									{ ... }
+									cell^.TxtVal.Font:=sf;
+									cell^.TxtVal.Size:=sg
+								end
 							end;
-						'N':
-							begin
-								new(cell^.Data.Konst);
-								if cell^.Data.Konst<>nil then
-									begin
-										cell^.Typ:=CTYPE_CONST;
-										cell^.TxtVal.Font:=sf;
-										cell^.TxtVal.Size:=sg;
-										cell^.TxtVal.Align:=TA_RIGHT;
-										with cell^.Data.Konst^ do
-											begin
-												Txt:=NewStr(pxbf^.GetString);
-												Value:=pxbf^.GetNumber;
-												FPts:=pxbf^.GetFloatpt
-											end
-									end
-							end;
-						'L':
-							begin
-								if pxbf^.GetLogical=xb_True then ttxt:='='+STRING_TRUE
-								else
-									ttxt:='='+STRING_FALSE;
-								new(cell^.Data.Formula);
-								if cell^.Data.Formula<>nil then
-									begin
-										cell^.Typ:=CTYPE_FORMULA;
-										with cell^.Data.Formula^ do
-											begin
-												Value:=0.0;
-												FPts:=0;
-												Error:=FE_OK;
-												VarDef:=NewStr(ttxt);
-												Func:=nil;
-												cell^.TxtVal.Font:=sf;
-												cell^.TxtVal.Size:=sg;
-												cell^.TxtVal.Align:=TA_RIGHT
-											end
-									end
-							end;
-						'D':
-							begin
-								cell^.Typ:=CTYPE_TEXT;
-								cell^.Data.Txt:=NewStr(pxbf^.GetDate);
-								{ ... }
-								cell^.TxtVal.Font:=sf;
-								cell^.TxtVal.Size:=sg
-							end
-						end;
-						inc(longint(cell),CELLSIZE);
-						pxbf:=pxbf^.Next
+						inc(longint(cell),CELLSIZE)
 					end
 			end;
 		_error:
 		if error then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_LOAD1+CompressPath(fname,78)+MESSAGE_IMPORT_LOAD2,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done)
 			end
 		else
 			new(PCalcWindow,InitImport(pg,rmax-1,cmax-1,fname,sheet,prow,pcol,pcolnames,false));
 		_raus:
 		pxb^.Free;
+		if pfldindx<>nil then freemem(pfldindx,fldmax shl 1);
 		ArrowMouse
 	end;
 
@@ -27763,34 +30465,6 @@ procedure TImport.Load123(fname: string);
 	
 		begin
 			getcell:=PCell(longint(sheet)+(r*cmax+c)*CELLSIZE)
-		end;
-
-	function dosmask(s: string): string;
-		var i: integer;
-	
-		procedure replace(alt,neu: char);
-		
-			begin
-				i:=pos(alt,s);
-				while i>0 do
-					begin
-						s[i]:=neu;
-						i:=pos(alt,s)
-					end
-			end;
-		
-		begin
-			replace(#228,'Ñ');
-			replace(#246,'î');
-			replace(#252,'Å');
-			replace(#223,'û');
-			replace(#196,'é');
-			replace(#214,'ô');
-			replace(#220,'ö');
-			replace(#178,#253);
-			replace(#179,#254);
-			replace(#181,#230);
-			dosmask:=s
 		end;
 
 	function GetColumnIndex(hsb,lsb: byte): string;
@@ -27911,7 +30585,7 @@ procedure TImport.Load123(fname: string);
 									txt:=txt+chr(buf^[foffs]);
 									inc(foffs)
 								end;
-							push(dosmask(txt));
+							push(TexelApp.dosmask(txt));
 							inc(foffs)
 						end;
 					$08:
@@ -28090,13 +30764,13 @@ procedure TImport.Load123(fname: string);
 						end;
 					$52:
 						begin
-							if buf^[foffs+1]<>1 then fehler:=true; { !!! }
+							if buf^[foffs+1]<>1 then fehler:=true; { ... }
 							inc(foffs,2);
 							push(#27+ltoa(NT_ANZAHL2)+#27'('+pop+')')
 						end;
 					$57:
 						begin
-							if buf^[foffs+1]<>2 then fehler:=true; { !!! }
+							if buf^[foffs+1]<>2 then fehler:=true; { ... }
 							inc(foffs,2);
 							txt:=pop;
 							push(#27+ltoa(NT_VARIANZ)+#27'('+pop+':'+txt+')')
@@ -28117,13 +30791,13 @@ procedure TImport.Load123(fname: string);
 		new(stack,Init(100,50));
 		if (buf=nil) or (stack=nil) then
 			begin
-				Application^.Alert(nil,1,STOP,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden (Speichermangel)','  &OK  ');
+				Application^.Alert(nil,1,STOP,MESSAGE_IMPORT_MEMORY1+CompressPath(fname,78)+MESSAGE_IMPORT_MEMORY2,BUTTON_OK);
 				goto _raus
 			end;
 		stack^.Sort:=false;
 		if not(Exist(fname)) then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" nicht gefunden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_EXIST1+CompressPath(fname,78)+MESSAGE_IMPORT_EXIST2,BUTTON_OK);
 				goto _raus
 			end;
 		new(pg,Init(0,TITLE_IMPORT,fname));
@@ -28133,7 +30807,7 @@ procedure TImport.Load123(fname: string);
 		if readrecord then goto _error;
 		if (rec.opcode<>WK_BOF) or (rec.len<>2) then
 			begin
-				Application^.Alert(nil,1,NOTE,'"'+CompressPath(fname,78)+'" ist keine Lotus-1-2-3-Datei.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_LOTUS1+CompressPath(fname,78)+MESSAGE_IMPORT_LOTUS2,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done);
 				fclose(hdl);
 				goto _raus
@@ -28141,7 +30815,7 @@ procedure TImport.Load123(fname: string);
 		w:=swap(PWord(buf)^);
 		if (w<$0404) or (w>$0406) then
 			begin
-				Application^.Alert(nil,1,NOTE,'"'+CompressPath(fname,78)+'" ist keine WKS/WK1-Datei.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_WKS1+CompressPath(fname,78)+MESSAGE_IMPORT_WKS2,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done);
 				fclose(hdl);
 				goto _raus
@@ -28167,7 +30841,7 @@ procedure TImport.Load123(fname: string);
 					stdcol:=getint(6);
 				WK_WKS_PASSWORD:
 					begin
-						Application^.Alert(nil,1,NOTE,'"'+CompressPath(fname,78)+'" ist verschlÅsselt und kann deshalb nicht importiert werden.','  &OK  ');
+						Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_WKPASS1+CompressPath(fname,78)+MESSAGE_IMPORT_WKPASS2,BUTTON_OK);
 						if pg<>nil then dispose(pg,Done);
 						fclose(hdl);
 						goto _raus
@@ -28175,7 +30849,7 @@ procedure TImport.Load123(fname: string);
 				WK_SAVE_RANGE:
 					if swap(PInteger(buf)^)=-1 then
 						begin
-							Application^.Alert(nil,1,NOTE,'"'+CompressPath(fname,78)+'" enthÑlt keine Daten.','  &OK  ');
+							Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_WKEMPTY1+CompressPath(fname,78)+MESSAGE_IMPORT_WKEMPTY2,BUTTON_OK);
 							if pg<>nil then dispose(pg,Done);
 							fclose(hdl);
 							goto _raus
@@ -28200,7 +30874,7 @@ procedure TImport.Load123(fname: string);
 				if pcolnames<>nil then freemem(pcolnames,cmax shl 2);
 				if sheet<>nil then freemem(sheet,dummy);
 				if pg<>nil then dispose(pg,Done);
-				Application^.Alert(nil,1,STOP,'Texel:|Nicht genÅgend Speicher fÅr neues Fenster frei!','  &OK  ');
+				TexelApp.ErrorWindowMemory(nil);
 				fclose(hdl);
 				goto _raus
 			end;
@@ -28218,18 +30892,7 @@ procedure TImport.Load123(fname: string);
 			end;
 		sze:=Max(Min(round(longint(ww)*stdcol*longint(Application^.Attr.PixW)/10.0),65535),0);
 		for q:=0 to cmax-1 do pcol^[q]:=sze;
-		cell:=sheet;
-		for q:=0 to rmax-1 do
-			for w:=0 to cmax-1 do
-				begin
-					with cell^ do
-						begin
-							Color:=Black;
-							Style:=8;
-							TxtVal.Color:=Black
-						end;
-					inc(longint(cell),CELLSIZE)
-				end;
+		TexelApp.InitCells(sheet,rmax,cmax);
 		if fseek(spos,hdl,0)<0 then
 			begin
 				res:=-1;
@@ -28258,7 +30921,7 @@ procedure TImport.Load123(fname: string);
 								else
 									cell^.TxtVal.Align:=TA_LEFT
 								end;
-								cell^.Data.Txt:=NewStr(dosmask(StrPRight(ttxt,length(ttxt)-1)));
+								cell^.Data.Txt:=NewStr(TexelApp.dosmask(StrPRight(ttxt,length(ttxt)-1)));
 								cell^.TxtVal.Font:=sf;
 								cell^.TxtVal.Size:=sg
 							end
@@ -28349,7 +31012,7 @@ procedure TImport.Load123(fname: string);
 		_errmsg:
 		if res<0 then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_LOAD1+CompressPath(fname,78)+MESSAGE_IMPORT_LOAD2,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done)
 			end
 		else
@@ -28384,10 +31047,19 @@ procedure TImport.LoadXLS(fname: string);
 	      BIFF3_NUMBER       = $203;
 	      BIFF2_LABEL        =  $04;
 	      BIFF3_LABEL        = $204;
-	      BIFF_1904          =  $11;
+	      BIFF_1904          =  $22;
 	      BIFF2_XF           =  $43;
 	      BIFF3_XF           = $243;
 	      BIFF4_XF           = $443;
+	      BIFF_CODEPAGE      =  $42;
+	      BIFF2_FORMULA      =  $06;
+	      BIFF3_FORMULA      = $206;
+	      BIFF4_FORMULA      = $406;
+	      BIFF2_ARRAY        =  $21;
+	      BIFF3_ARRAY        = $221;
+	      BIFF2_BOOLERR      =  $05;
+	      BIFF3_BOOLERR      = $205;
+	      BIFF_HORPAGEBREAKS =  $1b;
 
 	var buf,xfbuf : PByteArray;
 	    bufsize,q,
@@ -28403,6 +31075,7 @@ procedure TImport.LoadXLS(fname: string);
 	    www,
 	    von,bis,
 	    tlast,
+	    cpage,
 	    typ,len   : word;
 	    stdfpts,
 	    xlsver    : byte;
@@ -28414,6 +31087,7 @@ procedure TImport.LoadXLS(fname: string);
 			pcolnames : PItemList;
 			ppc       : PParameterCollection;
 			ufrm      : PFormatCollection;
+			stack     : PStringCollection;
 	    parms     : TTexelParms;
 	    tsbuf     : TSheetBuffer;
 	    tdbuf     : TDialogBuffer;
@@ -28426,8 +31100,10 @@ procedure TImport.LoadXLS(fname: string);
 	    repbuf    : TReplaceBuf;
 	    fillbuf   : TFillBuffer;
 	    apwd      : TPassWord;
-	    dbl       : double;
 	    pg        : PProgressWindow;
+	    biff2,
+	    biff3,
+	    biff4     : boolean;
 
 	function bread(count: longint): boolean;
 
@@ -28470,6 +31146,34 @@ procedure TImport.LoadXLS(fname: string);
 		begin
 			cell:=PCell(longint(sheet)+(longint(r)*longint(cmax)+longint(c))*CELLSIZE)
 		end;
+	
+	function GetFloat(offs: longint): double;
+		var dbl: double;
+	
+		begin
+			if GetWord(offs+6)=$ffff then
+				begin
+					case buf^[offs] of
+					0,2:
+						begin
+							GetFloat:=0.0;
+							exit
+						end;
+					1:
+						begin
+							if buf^[offs+2]<>0 then GetFloat:=1.0
+							else
+								GetFloat:=0.0;
+							exit
+						end
+					end
+				end;
+			PWord(@dbl)^:=GetWord(offs+6);
+			PWord(longint(@dbl)+2)^:=GetWord(offs+4);
+			PWord(longint(@dbl)+4)^:=GetWord(offs+2);
+			PWord(longint(@dbl)+6)^:=GetWord(offs);
+			GetFloat:=dbl
+		end;
 
 	procedure CellText(r,c: word; t: string);
 
@@ -28477,7 +31181,9 @@ procedure TImport.LoadXLS(fname: string);
 			if (r>=rmax) or (c>=cmax) or (length(t)=0) then exit;
 			GetCell(r,c);
 			cell^.Typ:=CTYPE_TEXT;
-			cell^.Data.Txt:=NewStr(t);
+			if cpage=$8000 then cell^.Data.Txt:=NewStr(TexelApp.macmask(t))
+			else
+				cell^.Data.Txt:=NewStr(TexelApp.dosmask(t));
 			with cell^.TxtVal do
 				begin
 					Font:=TexelApp.GetStdFontIndex;
@@ -28506,6 +31212,348 @@ procedure TImport.LoadXLS(fname: string);
 					cell^.Data.Konst:=pc;
 					cell^.Typ:=CTYPE_CONST
 				end
+		end;
+
+	procedure CellFormula(r,c: word; num: real; fpts: byte; esctxt: string);
+		var pf: PFormula;
+
+		begin
+			esctxt:=TexelApp.EscText2Formula(esctxt);
+			if (r>=rmax) or (c>=cmax) or (length(esctxt)=0) then exit;
+			GetCell(r,c);
+			new(pf);
+			if pf<>nil then
+				begin
+					pf^.Value:=num;
+					pf^.FPts:=fpts;
+					pf^.Error:=FE_OK;
+					pf^.VarDef:=NewStr(esctxt);
+					pf^.Func:=nil;
+					with cell^.TxtVal do
+						begin
+							Font:=TexelApp.GetStdFontIndex;
+							Size:=TexelApp.GetStdFontSize;
+							Align:=(Align and $f0) or TA_RIGHT
+						end;
+					cell^.Data.Formula:=pf;
+					cell^.Typ:=CTYPE_FORMULA
+				end
+		end;
+
+	function GetFormula(offs,lmax: longint): string;
+		var fehler: boolean;
+		    bend  : longint;
+		    txt   : string;
+		    i,anz : integer;
+
+		function GetCellRef(rbits: word; cref: integer): string;
+			var rref: integer;
+			    refs: string[5];
+
+			begin
+				rref:=rbits and $3fff;
+				rbits:=rbits and $c000;
+				if cref<0 then refs:='?'
+				else
+					if cref<26 then refs:=chr(65+cref)
+					else
+						refs:=chr(64+(cref div 26))+chr(65+(cref mod 26));
+				if not(bTst(rbits,$4000)) then refs:='$'+refs;
+				if not(bTst(rbits,$8000)) then refs:=refs+'$';
+				GetCellRef:=refs+ltoa(rref+1)
+			end;
+
+		procedure push(s: string);
+		
+			begin
+				stack^.AtInsert(0,NewStr(s))
+			end;
+		
+		function pop: string;
+		
+			begin
+				if stack^.Count>0 then
+					begin
+						pop:=PString(stack^.At(0))^;
+						stack^.AtFree(0)
+					end
+				else
+					begin
+						pop:='';
+						fehler:=true
+					end
+			end;
+	
+		begin
+			fehler:=false;
+			stack^.FreeAll;
+			bend:=offs+lmax;
+			while (offs<bend) and not(fehler) do
+				case buf^[offs] of
+				$03:
+					begin
+						txt:=pop;
+						push(pop+'+'+txt);
+						inc(offs)
+					end;
+				$04:
+					begin
+						txt:=pop;
+						push(pop+'-'+txt);
+						inc(offs)
+					end;
+				$05:
+					begin
+						txt:=pop;
+						push(pop+'*'+txt);
+						inc(offs)
+					end;
+				$06:
+					begin
+						txt:=pop;
+						push(pop+'/'+txt);
+						inc(offs)
+					end;
+				$07:
+					begin
+						txt:=pop;
+						push(pop+'^'+txt);
+						inc(offs)
+					end;
+				$09:
+					begin
+						txt:=pop;
+						push('('+pop+')<('+txt+')');
+						inc(offs)
+					end;
+				$0a:
+					begin
+						txt:=pop;
+						push('('+pop+')<=('+txt+')');
+						inc(offs)
+					end;
+				$0b:
+					begin
+						txt:=pop;
+						push('('+pop+')=('+txt+')');
+						inc(offs)
+					end;
+				$0c:
+					begin
+						txt:=pop;
+						push('('+pop+')>=('+txt+')');
+						inc(offs)
+					end;
+				$0d:
+					begin
+						txt:=pop;
+						push('('+pop+')>('+txt+')');
+						inc(offs)
+					end;
+				$0e:
+					begin
+						txt:=pop;
+						push('('+pop+')<>('+txt+')');
+						inc(offs)
+					end;
+				$11:
+					begin
+						txt:=pop;
+						push(pop+':'+txt);
+						inc(offs)
+					end;
+				$12:
+					begin
+						push('+('+pop+')');
+						inc(offs)
+					end;
+				$13:
+					begin
+						push('-('+pop+')');
+						inc(offs)
+					end;
+				$14:
+					begin
+						push('('+pop+')%');
+						inc(offs)
+					end;
+				$15:
+					begin
+						push('('+pop+')');
+						inc(offs)
+					end;
+				$16:
+					begin
+						push('');
+						inc(offs)
+					end;
+				$17:
+					begin
+						anz:=buf^[offs+1];
+						txt[0]:=chr(anz);
+						if anz>0 then
+							for i:=1 to anz do txt[i]:=chr(buf^[offs+i+1]);
+						push('"'+txt+'"');
+						inc(offs,2+anz)
+					end;
+				$19:
+					begin
+						if buf^[offs+1]=$10 then push(#27+ltoa(NT_SUMME)+#27'('+pop+')')
+						else
+							if buf^[offs+1]<>$01 then
+								begin
+{									writeln('spez: ',ltoh(buf^[offs+1],2));  !!! }
+									fehler:=true
+								end;
+						if biff2 then inc(offs,3)
+						else
+							begin
+								if biff4 then
+									if bTst(buf^[offs+1],$40) then inc(offs);
+								inc(offs,4)
+							end
+					end;
+				$1c:
+					begin
+						push(#27+ltoa(NT_FEHLER)+#27);
+						inc(offs,2)
+					end;
+				$1d:
+					begin
+						if buf^[offs+1]<>0 then push(STRING_TRUE)
+						else
+							push(STRING_FALSE);
+						inc(offs,2)
+		 			end;
+				$1e:
+					begin
+						push(ltoa(GetWord(offs+1)));
+						inc(offs,3)
+					end;
+				$1f:
+					begin
+						push(ftoa(GetFloat(offs+1)));
+						inc(offs,9)
+					end;
+				$24,
+				$44:
+					begin
+						push(GetCellRef(GetWord(offs+1),buf^[offs+3]));
+						inc(offs,4)
+					end;
+				$25,
+				$2d:
+					begin
+						push(GetCellRef(GetWord(offs+1),buf^[offs+5])+':'+GetCellRef(GetWord(offs+3),buf^[offs+6]));
+						inc(offs,7)
+					end;
+				$41:
+					begin
+						{ Formeln mit fester Anzahl Parameter }
+						case buf^[offs+1] of
+						$0f:
+							push(#27+ltoa(NT_SIN)+#27'('+pop+')');
+						$10:
+							push(#27+ltoa(NT_COS)+#27'('+pop+')');
+						$11:
+							push(#27+ltoa(NT_TAN)+#27'('+pop+')');
+						$12:
+							push(#27+ltoa(NT_ARCTAN)+#27'('+pop+')');
+						$13:
+							push('Pi');
+						$14:
+							push(#27+ltoa(NT_SQRT)+#27'('+pop+')');
+						$15:
+							push(#27+ltoa(NT_EXP)+#27'('+pop+')');
+						$16:
+							push(#27+ltoa(NT_LN)+#27'('+pop+')');
+						$17:
+							push(#27+ltoa(NT_LOG10)+#27'('+pop+')');
+						$18:
+							push(#27+ltoa(NT_ABS)+#27'('+pop+')');
+						$19:
+							push(#27+ltoa(NT_INT)+#27'('+pop+')');
+						$1a:
+							push(#27+ltoa(NT_SGN)+#27'('+pop+')');
+						$27:
+							begin
+								txt:=pop;
+								push(#27+ltoa(NT_MOD)+#27'('+pop+','+txt+')')
+							end;
+						$b8:
+							push(#27+ltoa(NT_FAK)+#27'('+pop+')');
+						$3f:
+							push(#27+ltoa(NT_RND)+#27);
+						$61:
+							begin
+								txt:=pop;
+								push(#27+ltoa(NT_ARCTAN2)+#27'('+pop+','+txt+')')
+							end;
+						$62:
+							push(#27+ltoa(NT_ARCSIN)+#27'('+pop+')');
+						$63:
+							push(#27+ltoa(NT_ARCCOS)+#27'('+pop+')');
+						$e5:
+							push(#27+ltoa(NT_SINH)+#27'('+pop+')');
+						$e6:
+							push(#27+ltoa(NT_COSH)+#27'('+pop+')');
+						$e7:
+							push(#27+ltoa(NT_TANH)+#27'('+pop+')');
+						$e8:
+							push(#27+ltoa(NT_ARSINH)+#27'('+pop+')');
+						$e9:
+							push(#27+ltoa(NT_ARCOSH)+#27'('+pop+')');
+						$ea:
+							push(#27+ltoa(NT_ARTANH)+#27'('+pop+')');
+						else
+							begin
+{								writeln('fest: ',ltoh(buf^[offs+1],2));  !!! }
+								fehler:=true
+							end
+						end;
+						inc(offs,2)
+					end;
+				$22,
+				$42:
+					begin
+						{ Formeln mit variabler Anzahl Parameter }
+						anz:=buf^[offs+1] and $7f;
+						if anz<1 then fehler:=true
+						else
+							begin
+								while anz>1 do
+									begin
+										txt:=pop;
+										push(pop+','+txt);
+										dec(anz)
+									end;
+								case (buf^[offs+2] and $7f) of
+								$01:
+									push(#27+ltoa(NT_WENN)+#27'('+pop+')');
+								$04:
+									push(#27+ltoa(NT_SUMME)+#27'('+pop+')');
+								else
+									begin
+{										writeln('var.: ',ltoh(buf^[offs+1],2));  !!! }
+										fehler:=true
+									end
+								end
+							end;
+						inc(offs,3)
+					end;
+				else
+					begin
+{						while (offs<bend) do
+							begin
+								write(ltoh(buf^[offs],2),' ');
+								inc(offs)
+							end;
+						writeln;  !!! }
+						fehler:=true
+					end
+				end;
+			GetFormula:='='+pop;
+			if fehler then GetFormula:='='#27+ltoa(NT_FEHLER)+#27
 		end;
 
 	function Long2Real(l: longint): real;
@@ -28660,16 +31708,18 @@ procedure TImport.LoadXLS(fname: string);
 		if length(fname)=0 then exit;
 		BusyMouse;
 		pg:=nil;
-		buf:=GetMemBuffer(16384,4096,bufsize);
 		xfbuf:=nil;
-		if buf=nil then
+		buf:=GetMemBuffer(16384,4096,bufsize);
+		new(stack,Init(100,50));
+		if (buf=nil) or (stack=nil) then
 			begin
-				Application^.Alert(nil,1,STOP,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden (Speichermangel)','  &OK  ');
+				Application^.Alert(nil,1,STOP,MESSAGE_IMPORT_MEMORY1+CompressPath(fname,78)+MESSAGE_IMPORT_MEMORY2,BUTTON_OK);
 				goto _raus
 			end;
+		stack^.Sort:=false;
 		if not(Exist(fname)) then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" nicht gefunden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_EXIST1+CompressPath(fname,78)+MESSAGE_IMPORT_EXIST2,BUTTON_OK);
 				goto _raus
 			end;
 		new(pg,Init(0,TITLE_IMPORT,fname));
@@ -28685,14 +31735,17 @@ procedure TImport.LoadXLS(fname: string);
 		len:=GetWord(2);
 		if (buf^[0]<>BIFF_BOF) or ((xlsver<>$00) and (xlsver<>$02) and (xlsver<>$04)) or (len<4) then
 			begin
-				Application^.Alert(nil,1,NOTE,'"'+CompressPath(fname,78)+'"|ist keine MS-Excel-2.0/3.0/4.0-Datei.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_EXCEL1+CompressPath(fname,78)+MESSAGE_IMPORT_EXCEL2,BUTTON_OK);
 				fclose(hdl);
 				if pg<>nil then dispose(pg,Done);
 				goto _raus
 			end;
+		biff2:=(xlsver=$00);
+		biff3:=(xlsver=$02);
+		biff4:=(xlsver=$04);
 		if GetWord(6)<>$10 then
 			begin
-				Application^.Alert(nil,1,NOTE,'"'+CompressPath(fname,78)+'" ist kein XLS-Kalkulationsblatt.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_XLS1+CompressPath(fname,78)+MESSAGE_IMPORT_XLS2,BUTTON_OK);
 				fclose(hdl);
 				if pg<>nil then dispose(pg,Done);
 				goto _raus
@@ -28707,12 +31760,13 @@ procedure TImport.LoadXLS(fname: string);
 		if xlsver=0 then xfsize:=5
 		else
 			xfsize:=12;
-		rmax:=2;
-		cmax:=2;
+		rmax:=Max(2,atol(TexelApp.setupbuffer.stdrows));
+		cmax:=Max(2,atol(TexelApp.setupbuffer.stdcolumns));
 		cdef:=0;
+		cpage:=0;
 		dcw:=atol(TexelApp.setupbuffer.stdcolwidth)*longint(256);
 		drh:=255;
-		anzxf:=0;
+		anzxf:=1;
 		repeat
 			if ReadRecord then
 				begin
@@ -28722,7 +31776,7 @@ procedure TImport.LoadXLS(fname: string);
 			case typ of
 			BIFF_FILEPASS:
 				begin
-					Application^.Alert(nil,1,NOTE,'"'+CompressPath(fname,78)+'" ist passwortgeschÅtzt und kann daher nicht geladen werden.','  &OK  ');
+					Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_XLPASS1+CompressPath(fname,78)+MESSAGE_IMPORT_XLPASS2,BUTTON_OK);
 					fclose(hdl);
 					if pg<>nil then dispose(pg,Done);
 					goto _raus
@@ -28746,7 +31800,7 @@ procedure TImport.LoadXLS(fname: string);
 				if GetWord(4)>=cdef then cdef:=GetWord(4)+1;
 			BIFF_1904:
 				if GetWord(0)=1 then
-					if Application^.Alert(nil,1,NOTE,'Achtung:|"'+CompressPath(fname,78)+'" enthÑlt Datumsangaben im 1904-Format, das Texel noch nicht unterstÅtzt.','  &OK  |&Abbruch')=2 then
+					if Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_XLDATE1+CompressPath(fname,78)+MESSAGE_IMPORT_XLDATE2,BUTTON_OKCANCEL)=2 then
 						begin
 							fclose(hdl);
 							if pg<>nil then dispose(pg,Done);
@@ -28754,6 +31808,8 @@ procedure TImport.LoadXLS(fname: string);
 						end;
 			BIFF2_XF,BIFF3_XF,BIFF4_XF:
 				inc(anzxf);
+			BIFF_CODEPAGE:
+				cpage:=GetWord(0);
 			{ ... }
 			end
 		until typ=BIFF_EOF;
@@ -28767,7 +31823,7 @@ procedure TImport.LoadXLS(fname: string);
 		ScanConst(ppc);
 		new(ufrm,Init(50,25));
 		if ufrm<>nil then ufrm^.Sort:=false;
-		cmax:=cdef;
+		if cdef>1 then cmax:=Max(cdef,atol(TexelApp.setupbuffer.stdcolumns));
 		getmem(prow,rmax shl 1);
 		getmem(pcol,cmax shl 1);
 		getmem(pcolnames,cmax shl 2);
@@ -28787,7 +31843,7 @@ procedure TImport.LoadXLS(fname: string);
 				if sheet<>nil then freemem(sheet,dummy);
 				if xfbuf<>nil then freemem(xfbuf,q);
 				if pg<>nil then dispose(pg,Done);
-				Application^.Alert(nil,1,STOP,'Texel:|Nicht genÅgend Speicher fÅr neues Fenster frei!','  &OK  ');
+				TexelApp.ErrorWindowMemory(nil);
 				fclose(hdl);
 				goto _raus
 			end;
@@ -28810,244 +31866,16 @@ procedure TImport.LoadXLS(fname: string);
 		for q:=0 to rmax-1 do prow^[q]:=sze;
 		sze:=Max(Min(round(longint(ww)*dcw*longint(Application^.Attr.PixW)/2560.0),65535),0);
 		for q:=0 to cmax-1 do pcol^[q]:=sze;
-		cell:=sheet;
-		for q:=0 to rmax-1 do
-			for w:=0 to cmax-1 do
-				begin
-					with cell^ do
-						begin
-							Color:=Black;
-							Style:=8;
-							TxtVal.Color:=Black
-						end;
-					inc(longint(cell),CELLSIZE)
-				end;
+		TexelApp.InitCells(sheet,rmax,cmax);
 		with parms do
 			begin
 				Rows:=rmax-1;
 				Columns:=cmax-1;
-				Percent:=100;
 				ScrlXPos:=0;
 				ScrlYPos:=0;
-				CurrSize:=SysInfo.Desktop;
-				psbuffer:=TexelApp.stdpsbuffer;
-				Resvd:=0;
-				with Cursor do
-					begin
-						Block:=false;
-						OldRow:=0;
-						OldCol:=0;
-						Row:=0;
-						Col:=0
-					end
+				CurrSize:=SysInfo.Desktop
 			end;
-		with tsbuf do
-			begin
-				size:=TexelApp.setupbuffer.stdfsize;
-				font:=TexelApp.setupbuffer.stdfont;
-				gitter:=bf_Checked;
-				autocalc:=TexelApp.setupbuffer.autocalc;
-				vorlage:=bf_Unchecked;
-				lhor:=bf_Unchecked;
-				lvert:=bf_Unchecked;
-				lmouse:=bf_Checked;
-				llayout:=bf_Checked;
-				images:=bf_Checked;
-				protect:=bf_Checked;
-				umbruch:=bf_Checked
-			end;
-		with tdbuf do
-			begin
-				font:=TexelApp.setupbuffer.stdfont;
-				size:=TexelApp.setupbuffer.stdfsize;
-				percent:=3;
-				color:=Black;
-				pattern:=7;
-				direction:=CRS_DOWN;
-				input:='';
-				txtcolor:=Black;
-				border:=0;
-				resvd1:=0;
-				resvd2:=0;
-				resvd3:=0;
-				resvd4:=0
-			end;
-		with tzwbuf do
-			begin
-				zzelle:='';
-				vzelle:='';
-				wert:='0';
-				iterationen:='100'
-			end;
-		with diabuf do
-			begin
-				rb1:=bf_Checked;
-				rb2:=bf_Unchecked;
-				rb3:=bf_Unchecked;
-				rb4:=bf_Unchecked;
-				rb5:=bf_Unchecked;
-				typLinie:=bf_Checked;
-				typBalken:=bf_Unchecked;
-				typKreis:=bf_Unchecked;
-				Farbe:=bf_Checked;
-				Absolut:=bf_Checked;
-				xyLinear:=bf_Checked;
-				xyFirst:=bf_Unchecked;
-				xyAlternate:=bf_Unchecked;
-				xyLine:=bf_Unchecked;
-				xyPt:=bf_Unchecked;
-				xyLinept:=bf_Checked;
-				Stapeln:=bf_Unchecked;
-				DreiD:=bf_Unchecked;
-				Neben:=bf_Checked;
-				stilLinie:=0;
-				stilPunkt:=5;
-				Titel:='';
-				Legende:=bf_Checked;
-				Border:=bf_Checked;
-				nRow:=bf_Unchecked;
-				nColumn:=bf_Unchecked;
-				Size:=TexelApp.setupbuffer.stdfsize;
-				Font:=TexelApp.setupbuffer.stdfont;
-				dRows:=bf_Checked;
-				dColumns:=bf_Unchecked;
-				Ticks:=bf_Checked;
-				numTicks:='4';
-				alName:='Y';
-				alTicks:=bf_Checked;
-				alNum:='3';
-				alMin:='';
-				alMax:='';
-				auName:='X';
-				auTicks:=bf_Checked;
-				auNum:='3';
-				auMin:='';
-				auMax:='';
-				szWidth:='50.0';
-				szHeight:='50.0';
-				objFilename:=''
-			end;
-		with texbuf do
-			begin
-				exporttype:=0;
-				clipboard:=bf_Unchecked;
-				bereich:=bf_Unchecked;
-				htmldoctype:=0;
-				htmlsavedt:=bf_Checked;
-				htmlcolor:=bf_Checked;
-				csvformula:=bf_Unchecked;
-				csvvalue:=bf_Checked;
-				difformula:=bf_Unchecked;
-				difvalue:=bf_Checked;
-				difstandard:=bf_Checked;
-				difexcel:=bf_Unchecked;
-				with ascii do
-					begin
-						hor:=bf_Checked;
-						vert:=bf_Unchecked;
-						rctxt:='13,10';
-						rcval:=0;
-						celltxt:='9';
-						cellval:=0;
-						texttxt:='34';
-						textval:=0;
-						quote:=bf_Checked;
-						numbers:=0;
-						formula:=bf_Unchecked;
-						value:=bf_Checked
-					end;
-				difformat:=bf_Checked;
-				csvformat:=bf_Checked;
-				asciiformat:=bf_Checked;
-				htmlembed:=bf_Unchecked
-			end;
-		with srtbuf do
-			begin
-				Pop1:=0;
-				Up1:=bf_Checked;
-				Down1:=bf_Unchecked;
-				Pop2:=0;
-				Up2:=bf_Checked;
-				Down2:=bf_Unchecked;
-				Pop3:=0;
-				Up3:=bf_Checked;
-				Down3:=bf_Unchecked;
-				Columns:=bf_Checked;
-				Rows:=bf_Unchecked;
-				Ins:=bf_Checked;
-				Pre:=bf_Unchecked;
-				Post:=bf_Unchecked;
-				Chars:=bf_Unchecked;
-				EmptyPre:=bf_Unchecked;
-				EmptyPost:=bf_Checked;
-				Lexikal:=bf_Checked;
-				Absolut:=bf_Unchecked;
-				Attribute:=bf_Unchecked
-			end;
-		with infbuf do
-			begin
-				Autor:='';
-				Stichwort:='';
-				Rem1:='';
-				Rem2:='';
-				Rem3:='';
-				Rem4:='';
-				Resvd:=0;
-				Created:=gettime;
-				Last:=gettime;
-				Resvd0:=0;
-				Used:=1;
-				Printed:=0;
-				Version:=0;
-				Release:=0
-			end;
-		with findbuf do
-			begin
-				search:='';
-				rows:=bf_Checked;
-				columns:=bf_Unchecked;
-				cse:=bf_Unchecked;
-				complete:=bf_Unchecked;
-				formula:=bf_Checked;
-				value:=bf_Checked;
-				txt:=bf_Checked;
-				iform:=bf_Unchecked;
-				ival:=bf_Checked;
-				vor:=bf_Checked;
-				zurueck:=bf_Unchecked;
-				resvd:=0
-			end;
-		with repbuf do
-			begin
-				search:='';
-				replace:='';
-				rows:=bf_Checked;
-				columns:=bf_Unchecked;
-				cse:=bf_Unchecked;
-				complete:=bf_Unchecked;
-				formula:=bf_Checked;
-				value:=bf_Checked;
-				txt:=bf_Checked;
-				vor:=bf_Checked;
-				zurueck:=bf_Unchecked;
-				resvd:=0
-			end;
-		with fillbuf do
-			begin
-				rows:=bf_Checked;
-				columns:=bf_Unchecked;
-				arithm:=bf_Checked;
-				geom:=bf_Unchecked;
-				date:=bf_Unchecked;
-				cpy:=bf_Unchecked;
-				trend:=bf_Unchecked;
-				day:=bf_Checked;
-				wday:=bf_Unchecked;
-				month:=bf_Unchecked;
-				year:=bf_Unchecked;
-				stepval:='1';
-				endval:=''
-			end;
+		TexelApp.InitSheetStructs(parms,tsbuf,tdbuf,tzwbuf,diabuf,texbuf,srtbuf,infbuf,findbuf,repbuf,fillbuf);
 		stdfpts:=atol(TexelApp.setupbuffer.floatpoint);
 		tlast:=0;
 		xfcnt:=0;
@@ -29094,20 +31922,10 @@ procedure TImport.LoadXLS(fname: string);
 			BIFF_INTEGER:
 				CellConst(GetWord(0),GetWord(2),GetWord(7),0);
 			BIFF2_NUMBER:
-				begin
-					PWord(@dbl)^:=GetWord(13);
-					PWord(longint(@dbl)+2)^:=GetWord(11);
-					PWord(longint(@dbl)+4)^:=GetWord(9);
-					PWord(longint(@dbl)+6)^:=GetWord(7);
-					CellConst(GetWord(0),GetWord(2),dbl,stdfpts)
-				end;
+				CellConst(GetWord(0),GetWord(2),GetFloat(7),stdfpts);
 			BIFF3_NUMBER:
 				begin
-					PWord(@dbl)^:=GetWord(12);
-					PWord(longint(@dbl)+2)^:=GetWord(10);
-					PWord(longint(@dbl)+4)^:=GetWord(8);
-					PWord(longint(@dbl)+6)^:=GetWord(6);
-					CellConst(GetWord(0),GetWord(2),dbl,stdfpts);
+					CellConst(GetWord(0),GetWord(2),GetFloat(6),stdfpts);
 					SetXF(GetWord(4))
 				end;
 			BIFF_RK:
@@ -29125,6 +31943,18 @@ procedure TImport.LoadXLS(fname: string);
 					end;
 					SetXF(GetWord(4))
 				end;
+			BIFF2_FORMULA:
+				CellFormula(GetWord(0),GetWord(2),GetFloat(7),stdfpts,GetFormula(17,buf^[16]));
+			BIFF3_FORMULA,
+			BIFF4_FORMULA:
+				begin
+					CellFormula(GetWord(0),GetWord(2),GetFloat(6),stdfpts,GetFormula(18,GetWord(16)));
+					SetXF(GetWord(4))
+				end;
+			BIFF2_ARRAY:
+{				writeln('BIFF2 Array')  !!! };
+			BIFF3_ARRAY:
+{				writeln('BIFF3 Array')  !!! };
 			BIFF2_LABEL:
 				CellText(GetWord(0),GetWord(2),StrLPas(@buf^[8],GetByte(7)));
 			BIFF3_LABEL:
@@ -29142,6 +31972,24 @@ procedure TImport.LoadXLS(fname: string);
 					system.move(buf^[0],xfbuf^[xfcnt],12);
 					inc(xfcnt,12)
 				end;
+			BIFF2_BOOLERR:
+				CellFormula(GetWord(0),GetWord(2),0.0,stdfpts,'='#27+ltoa(NT_FEHLER)+#27);
+			BIFF3_BOOLERR:
+				begin
+					CellFormula(GetWord(0),GetWord(2),0.0,stdfpts,'='#27+ltoa(NT_FEHLER)+#27);
+					SetXF(GetWord(4))
+				end;
+			BIFF_HORPAGEBREAKS:
+				begin
+					bis:=GetWord(0) shl 1;
+					q:=2;
+					while q<=bis do
+						begin
+							von:=GetWord(q);
+							if von<rmax then prowflags^[von]:=prowflags^[von] or CRF_UMBRUCH;
+							inc(q,2)
+						end
+				end;
 			{ ... }
 			end;
 			tlast:=typ
@@ -29151,7 +31999,7 @@ procedure TImport.LoadXLS(fname: string);
 		_errmsg:
 		if res<0 then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_LOAD1+CompressPath(fname,78)+MESSAGE_IMPORT_LOAD2,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done)
 			end
 		else
@@ -29166,11 +32014,15 @@ procedure TImport.LoadXLS(fname: string);
 						Code:=0;
 						Mask:=0
 					end;
-				new(PCalcWindow,InitFile(fname,pg,parms,tdbuf,tsbuf,findbuf,repbuf,fillbuf,tzwbuf,texbuf,srtbuf,infbuf,diabuf,sheet,prow,pcol,pcolnames,ppc,ufrm,nil,apwd,nil,pcolflags,prowflags,nil,false))
+{				evnt_timer(3000,0);  !!! }
+				new(PCalcWindow,InitFile(fname,pg,parms,tdbuf,tsbuf,findbuf,repbuf,fillbuf,tzwbuf,
+				                         texbuf,srtbuf,infbuf,diabuf,sheet,prow,pcol,pcolnames,ppc,
+				                         ufrm,nil,apwd,nil,pcolflags,prowflags,nil,-1,false,true))
 			end;
 		_raus:
 		if buf<>nil then freemem(buf,bufsize);
 		if xfbuf<>nil then freemem(xfbuf,anzxf*xfsize);
+		if stack<>nil then dispose(stack,Done);
 		ArrowMouse
 	end;
 
@@ -29211,6 +32063,41 @@ procedure TImport.LoadLDW(fname: string);
 		end;
 
 	procedure insertcell;
+		var formorconst: boolean;
+	
+		function klammeraffeweg(s: string): string;
+			var i: integer;
+		
+			begin
+				i:=pos('@',s);
+				while i>0 do
+					begin
+						s:=StrPLeft(s,i-1)+StrPRight(s,length(s)-i);
+						i:=pos('@',s)
+					end;
+				klammeraffeweg:=s
+			end;
+
+		procedure insertformula(cutl: integer);
+
+			begin
+				new(cell^.Data.Formula);
+				if cell^.Data.Formula<>nil then
+					begin
+						cell^.Typ:=CTYPE_FORMULA;
+						with cell^.Data.Formula^ do
+							begin
+								Value:=0.0;
+								FPts:=fp;
+								Error:=FE_OK;
+								VarDef:=NewStr('='+klammeraffeweg(StrPRight(ttxt,length(ttxt)-cutl)));
+								Func:=nil;
+								cell^.TxtVal.Font:=sf;
+								cell^.TxtVal.Size:=sg;
+								cell^.TxtVal.Align:=TA_RIGHT
+							end
+					end
+			end;
 
 		begin
 			StrPTrim(ttxt);
@@ -29218,6 +32105,7 @@ procedure TImport.LoadLDW(fname: string);
 			w:=pos(':',ttxt);
 			if w>0 then
 				begin
+					formorconst:=false;
 					ttxt2rc(StrPUpper(StrPLeft(ttxt,w-1)),dr,dc);
 					if dr<>lstr then
 						begin
@@ -29228,8 +32116,17 @@ procedure TImport.LoadLDW(fname: string);
 					ttxt:=StrPTrimF(StrPRight(ttxt,length(ttxt)-w));
 					if StrPLeft(ttxt,1)='(' then
 						begin
+							formorconst:=true;
 							e:=pos(')',ttxt);
 							{ Format... }
+							ttxt:=StrPTrimF(StrPRight(ttxt,length(ttxt)-e))
+						end;
+					if StrPLeft(ttxt,1)='{' then
+						begin
+							e:=pos('}',ttxt);
+							if e=3 then
+								if ttxt[2]='F' then cell^.TxtVal.Effects:=cell^.TxtVal.Effects or TF_THICKENED;
+							{ Attribute... }
 							ttxt:=StrPTrimF(StrPRight(ttxt,length(ttxt)-e))
 						end;
 					if StrPLeft(ttxt,1)='[' then
@@ -29274,25 +32171,8 @@ procedure TImport.LoadLDW(fname: string);
 								cell^.TxtVal.Size:=sg;
 								cell^.TxtVal.Align:=TA_CENTER
 							end;
-						'+','=':
-							begin
-								new(cell^.Data.Formula);
-								if cell^.Data.Formula<>nil then
-									begin
-										cell^.Typ:=CTYPE_FORMULA;
-										with cell^.Data.Formula^ do
-											begin
-												Value:=0.0;
-												FPts:=fp;
-												Error:=FE_OK;
-												VarDef:=NewStr('='+StrPRight(ttxt,length(ttxt)-1));
-												Func:=nil;
-												cell^.TxtVal.Font:=sf;
-												cell^.TxtVal.Size:=sg;
-												cell^.TxtVal.Align:=TA_RIGHT
-											end
-									end
-							end
+						'+','=','@':
+							insertformula(1);
 						else
 							if TexelApp.IsNumber(ttxt,number,otxt,true,',') then
 								begin
@@ -29312,12 +32192,14 @@ procedure TImport.LoadLDW(fname: string);
 										end
 								end
 							else
-								begin
-									cell^.Typ:=CTYPE_TEXT;
-									cell^.Data.Txt:=NewStr(ttxt);
-									cell^.TxtVal.Font:=sf;
-									cell^.TxtVal.Size:=sg
-								end
+								if formorconst then insertformula(0)
+								else
+									begin
+										cell^.Typ:=CTYPE_TEXT;
+										cell^.Data.Txt:=NewStr(ttxt);
+										cell^.TxtVal.Font:=sf;
+										cell^.TxtVal.Size:=sg
+									end
 						end
 				end;
 			ttxt:=''
@@ -29330,12 +32212,12 @@ procedure TImport.LoadLDW(fname: string);
 		buf:=GetMemBuffer(16384,128,bufsize);
 		if buf=nil then
 			begin
-				Application^.Alert(nil,1,STOP,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden (Speichermangel)','  &OK  ');
+				Application^.Alert(nil,1,STOP,MESSAGE_IMPORT_MEMORY1+CompressPath(fname,78)+MESSAGE_IMPORT_MEMORY2,BUTTON_OK);
 				goto _raus
 			end;
 		if not(Exist(fname)) then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" nicht gefunden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_EXIST1+CompressPath(fname,78)+MESSAGE_IMPORT_EXIST2,BUTTON_OK);
 				goto _raus
 			end;
 		new(pg,Init(0,TITLE_IMPORT,fname));
@@ -29402,7 +32284,7 @@ procedure TImport.LoadLDW(fname: string);
 				if pcolnames<>nil then freemem(pcolnames,cmax shl 2);
 				if sheet<>nil then freemem(sheet,dummy);
 				if pg<>nil then dispose(pg,Done);
-				Application^.Alert(nil,1,STOP,'Texel:|Nicht genÅgend Speicher fÅr neues Fenster frei!','  &OK  ');
+				TexelApp.ErrorWindowMemory(nil);
 				fclose(hdl);
 				goto _raus
 			end;
@@ -29424,18 +32306,7 @@ procedure TImport.LoadLDW(fname: string);
 			end;
 		sze:=Max(Min(round(longint(ww)*atol(TexelApp.setupbuffer.stdcolwidth)*longint(Application^.Attr.PixW)/10.0),65535),0);
 		for q:=0 to cmax-1 do pcol^[q]:=sze;
-		cell:=sheet;
-		for q:=0 to rmax-1 do
-			for w:=0 to cmax-1 do
-				begin
-					with cell^ do
-						begin
-							Color:=Black;
-							Style:=8;
-							TxtVal.Color:=Black
-						end;
-					inc(longint(cell),CELLSIZE)
-				end;
+		TexelApp.InitCells(sheet,rmax,cmax);
 		ttxt:='';
 		sf:=TexelApp.GetStdFontIndex;
 		sg:=TexelApp.GetStdFontSize;
@@ -29457,7 +32328,7 @@ procedure TImport.LoadLDW(fname: string);
 		_errmsg:
 		if res<0 then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_LOAD1+CompressPath(fname,78)+MESSAGE_IMPORT_LOAD2,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done)
 			end
 		else
@@ -29563,12 +32434,12 @@ procedure TImport.LoadCSV(fname: string);
 		buf:=GetMemBuffer(16384,128,bufsize);
 		if buf=nil then
 			begin
-				Application^.Alert(nil,1,STOP,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden (Speichermangel)','  &OK  ');
+				Application^.Alert(nil,1,STOP,MESSAGE_IMPORT_MEMORY1+CompressPath(fname,78)+MESSAGE_IMPORT_MEMORY2,BUTTON_OK);
 				goto _raus
 			end;
 		if not(Exist(fname)) then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" nicht gefunden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_EXIST1+CompressPath(fname,78)+MESSAGE_IMPORT_EXIST2,BUTTON_OK);
 				goto _raus
 			end;
 		new(pg,Init(0,TITLE_IMPORT,fname));
@@ -29638,7 +32509,7 @@ procedure TImport.LoadCSV(fname: string);
 				if pcolnames<>nil then freemem(pcolnames,cmax shl 2);
 				if sheet<>nil then freemem(sheet,dummy);
 				if pg<>nil then dispose(pg,Done);
-				Application^.Alert(nil,1,STOP,'Texel:|Nicht genÅgend Speicher fÅr neues Fenster frei!','  &OK  ');
+				TexelApp.ErrorWindowMemory(nil);
 				fclose(hdl);
 				goto _raus
 			end;
@@ -29649,18 +32520,7 @@ procedure TImport.LoadCSV(fname: string);
 			end;
 		fillchar(pcolnames^,cmax shl 2,0);
 		fillchar(sheet^,dummy,0);
-		cell:=sheet;
-		for q:=0 to rmax-1 do
-			for w:=0 to cmax-1 do
-				begin
-					with cell^ do
-						begin
-							Color:=Black;
-							Style:=8;
-							TxtVal.Color:=Black
-						end;
-					inc(longint(cell),CELLSIZE)
-				end;
+		TexelApp.InitCells(sheet,rmax,cmax);
 		tflag:=false;
 		sf:=TexelApp.GetStdFontIndex;
 		sg:=TexelApp.GetStdFontSize;
@@ -29719,7 +32579,7 @@ procedure TImport.LoadCSV(fname: string);
 		_errmsg:
 		if res<0 then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_LOAD1+CompressPath(fname,78)+MESSAGE_IMPORT_LOAD2,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done)
 			end
 		else
@@ -29730,7 +32590,7 @@ procedure TImport.LoadCSV(fname: string);
 	end;
 
 
-procedure TImport.ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: char; hor,quote: boolean);
+procedure TImport.ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: char; hor,quote: boolean; flt: integer);
 	label _raus,_error,_errmsg;
 
 	var res,q,w,dc,
@@ -29749,6 +32609,7 @@ procedure TImport.ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: 
 	    textvalid,
 	    spacevalid,
 	    space,
+	    usepkt,
 	    tflag     : boolean;
 	    sheet,cell: PCell;
 			prow,
@@ -29844,12 +32705,12 @@ procedure TImport.ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: 
 		buf:=GetMemBuffer(16384,128,bufsize);
 		if buf=nil then
 			begin
-				Application^.Alert(nil,1,STOP,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden (Speichermangel)','  &OK  ');
+				Application^.Alert(nil,1,STOP,MESSAGE_IMPORT_MEMORY1+CompressPath(fname,78)+MESSAGE_IMPORT_MEMORY2,BUTTON_OK);
 				goto _raus
 			end;
 		if not(Exist(fname)) then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" nicht gefunden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_EXIST1+CompressPath(fname,78)+MESSAGE_IMPORT_EXIST2,BUTTON_OK);
 				goto _raus
 			end;
 		new(pg,Init(0,TITLE_IMPORT,fname));
@@ -29868,11 +32729,13 @@ procedure TImport.ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: 
 		textvalid:=(lq>0);
 		spacevalid:=(celltrenn=' ');
 		space:=false;
+		usepkt:=InitKeyTab and (flt>=0);
 		repeat
 			res:=fread(hdl,bufsize,buf);
 			if res>0 then
 				for q:=0 to res-1 do
 					begin
+						if usepkt then buf^[q]:=ord(pkt^.ImportChar(nil,nil,0,0,0,flt,chr(buf^[q])));
 						if space then
 							begin
 								if buf^[q]=32 then continue
@@ -29958,7 +32821,7 @@ procedure TImport.ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: 
 				if pcolnames<>nil then freemem(pcolnames,cmax shl 2);
 				if sheet<>nil then freemem(sheet,dummy);
 				if pg<>nil then dispose(pg,Done);
-				Application^.Alert(nil,1,STOP,'Texel:|Nicht genÅgend Speicher fÅr neues Fenster frei!','  &OK  ');
+				TexelApp.ErrorWindowMemory(nil);
 				fclose(hdl);
 				goto _raus
 			end;
@@ -29971,18 +32834,7 @@ procedure TImport.ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: 
 			end;
 		fillchar(pcolnames^,cmax shl 2,0);
 		fillchar(sheet^,dummy,0);
-		cell:=sheet;
-		for q:=0 to rmax-1 do
-			for w:=0 to cmax-1 do
-				begin
-					with cell^ do
-						begin
-							Color:=Black;
-							Style:=8;
-							TxtVal.Color:=Black
-						end;
-					inc(longint(cell),CELLSIZE)
-				end;
+		TexelApp.InitCells(sheet,rmax,cmax);
 		tflag:=false;
 		sf:=TexelApp.GetStdFontIndex;
 		sg:=TexelApp.GetStdFontSize;
@@ -30009,6 +32861,7 @@ procedure TImport.ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: 
 			if res>0 then
 				for q:=0 to res-1 do
 					begin
+						if usepkt then buf^[q]:=ord(pkt^.ImportChar(nil,nil,0,0,0,flt,chr(buf^[q])));
 						if space then
 							begin
 								if buf^[q]=32 then continue
@@ -30097,7 +32950,7 @@ procedure TImport.ImportASCII(fname,rctrenn,celltrenn,tquote: string; numtrenn: 
 		_errmsg:
 		if res<0 then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_LOAD1+CompressPath(fname,78)+MESSAGE_IMPORT_LOAD2,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done)
 			end
 		else
@@ -30173,12 +33026,12 @@ procedure TImport.LoadDIF(fname: string);
 		buf:=GetMemBuffer(16384,128,bufsize);
 		if buf=nil then
 			begin
-				Application^.Alert(nil,1,STOP,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden (Speichermangel)','  &OK  ');
+				Application^.Alert(nil,1,STOP,MESSAGE_IMPORT_MEMORY1+CompressPath(fname,78)+MESSAGE_IMPORT_MEMORY2,BUTTON_OK);
 				goto _raus
 			end;
 		if not(Exist(fname)) then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" nicht gefunden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_EXIST1+CompressPath(fname,78)+MESSAGE_IMPORT_EXIST2,BUTTON_OK);
 				goto _raus
 			end;
 		new(pg,Init(0,TITLE_IMPORT,fname));
@@ -30253,23 +33106,12 @@ procedure TImport.LoadDIF(fname: string);
 																				if pcol<>nil then freemem(pcol,cmax shl 1);
 																				if pcolnames<>nil then freemem(pcolnames,cmax shl 2);
 																				if sheet<>nil then freemem(sheet,dummy);
-																				Application^.Alert(nil,1,STOP,'Texel:|Nicht genÅgend Speicher fÅr neues Fenster frei!','  &OK  ');
+																				TexelApp.ErrorWindowMemory(nil);
 																				fclose(hdl);
 																				goto _raus
 																			end;
 																		fillchar(sheet^,dummy,0);
-																		cell:=sheet;
-																		for e:=0 to rmax-1 do
-																			for w:=0 to cmax-1 do
-																				begin
-																					with cell^ do
-																						begin
-																							Color:=Black;
-																							Style:=8;
-																							TxtVal.Color:=Black
-																						end;
-																					inc(longint(cell),CELLSIZE)
-																				end;
+																		TexelApp.InitCells(sheet,rmax,cmax);
 																		sf:=TexelApp.GetStdFontIndex;
 																		sg:=TexelApp.GetStdFontSize;
 																		fp:=atol(TexelApp.setupbuffer.floatpoint);
@@ -30390,7 +33232,7 @@ procedure TImport.LoadDIF(fname: string);
 		_errmsg:
 		if res<0 then
 			begin
-				Application^.Alert(nil,1,NOTE,'Datei "'+CompressPath(fname,78)+'" konnte nicht geladen werden.','  &OK  ');
+				Application^.Alert(nil,1,NOTE,MESSAGE_IMPORT_LOAD1+CompressPath(fname,78)+MESSAGE_IMPORT_LOAD2,BUTTON_OK);
 				if pg<>nil then dispose(pg,Done)
 			end
 		else
@@ -30418,9 +33260,9 @@ procedure TImport.ImportFromClipboard;
 						else
 							if ext='xls' then LoadXLS(GetClipboardFilename+'xls')
 							else
-								if ext='dbf' then LoadDBF(GetClipboardFilename+'dbf')
+								if ext='dbf' then ImportDBF(GetClipboardFilename+'dbf',nil)
 								else
-									Application^.Alert(nil,1,NOTE,'Keine passende Datei im Klemmbrett vorhanden.','  &OK  ');
+									Application^.Alert(nil,1,NOTE,MESSAGE_CLIP_IMPORT,BUTTON_OK);
 				{ andere Formate... }
 				CloseClipboard
 			end
@@ -30542,8 +33384,6 @@ procedure TExportDialog.CheckButtons;
 					s:=s+'.html';
 				9:
 					s:=s+'.ui';
-				10:
-					s:=s+'.cwg';
 				else
 					s:=p^.export^.filename
 				end;
@@ -30570,14 +33410,107 @@ function TExportDialog.OK: boolean;
 
 
 function TExportDialog.ExitDlg(AnIndx: integer): boolean;
-	var p    : PCalcWindow;
-	    sfile: string;
+	var p   : PCalcWindow;
+	    mask: string;
+
+	begin
+		ExitDlg:=false;
+		p:=PCalcWindow(Parent);
+		case AnIndx of
+		RTEXBEDIT:
+			WMKeyDown(K_CTRL,Ctrl_B);
+		RTEXFILE:
+			if p^.export<>nil then
+				begin
+					if pcb=nil then
+						begin
+							mask:='*.*';
+							TexelApp.LastFile[15]:=''
+						end
+					else
+						begin
+							mask:='*.';
+							TexelApp.LastFile[15]:=GetFilename(p^.GetWindowFilename,false);
+							case pcb^.GetSelection of
+							0:
+								begin
+									mask:=mask+'wk?';
+									if length(TexelApp.LastFile[15])>0 then TexelApp.LastFile[15]:=TexelApp.LastFile[15]+'.wk1'
+								end;
+							1:
+								begin
+									mask:=mask+'xls';
+									if length(TexelApp.LastFile[15])>0 then TexelApp.LastFile[15]:=TexelApp.LastFile[15]+'.xls'
+								end;
+							2:
+								begin
+									mask:=mask+'slk';
+									if length(TexelApp.LastFile[15])>0 then TexelApp.LastFile[15]:=TexelApp.LastFile[15]+'.slk'
+								end;
+							3:
+								begin
+									mask:=mask+'dif';
+									if length(TexelApp.LastFile[15])>0 then TexelApp.LastFile[15]:=TexelApp.LastFile[15]+'.dif'
+								end;
+							4:
+								begin
+									mask:=mask+'csv';
+									if length(TexelApp.LastFile[15])>0 then TexelApp.LastFile[15]:=TexelApp.LastFile[15]+'.csv'
+								end;
+							5:
+								begin
+									mask:=mask+'*';
+									if length(TexelApp.LastFile[15])>0 then TexelApp.LastFile[15]:=TexelApp.LastFile[15]+'.txt'
+								end;
+							6:
+								begin
+									mask:=mask+'txt';
+									if length(TexelApp.LastFile[15])>0 then TexelApp.LastFile[15]:=TexelApp.LastFile[15]+'.txt'
+								end;
+							7:
+								begin
+									mask:=mask+'tex';
+									if length(TexelApp.LastFile[15])>0 then TexelApp.LastFile[15]:=TexelApp.LastFile[15]+'.tex'
+								end;
+							8:
+								begin
+									mask:=mask+'html';
+									if length(TexelApp.LastFile[15])>0 then TexelApp.LastFile[15]:=TexelApp.LastFile[15]+'.html'
+								end;
+							9:
+								begin
+									mask:=mask+'ui';
+									if length(TexelApp.LastFile[15])>0 then TexelApp.LastFile[15]:=TexelApp.LastFile[15]+'.ui'
+								end;
+							else
+								begin
+									mask:=mask+'*';
+									TexelApp.LastFile[15]:=''
+								end
+							end
+						end;
+					if XFileSelect(p,FSELTITLE_EXPORTFILE,mask,TexelApp.LastPath[15],TexelApp.LastFile[15],1,FSEL_EXPORT,false,false) then p^.export^.SetFile(TexelApp.LastPath[15]+TexelApp.LastFile[15])
+				end;
+		RTEXEXPORT:
+			begin
+				if p^.export<>nil then
+					begin
+						TransferData(tf_GetData);
+						p^.export^.Export(p^.exportbuf,p^.export^.filename)
+					end
+			end
+		end
+	end;
+
+
+function TExport.Export(const texbuf: TExportBuf; const fname: string): boolean;
+	var sfile: string;
 
 	function getxfname(const extn: string): string;
 		var ret: string;
 
 		begin
-			ret:=p^.export^.filename;
+			ret:=fname;
 			if length(ret)>0 then
 				begin
 					TexelApp.LastPath[15]:=GetPath(ret);
@@ -30594,78 +33527,65 @@ function TExportDialog.ExitDlg(AnIndx: integer): boolean;
 		end;
 
 	begin
-		ExitDlg:=false;
-		p:=PCalcWindow(Parent);
-		case AnIndx of
-		RTEXBEDIT:
-			WMKeyDown(K_CTRL,Ctrl_B);
-		RTEXFILE:
-			if p^.export<>nil then
-				if XFileSelect(p,FSELTITLE_EXPORTFILE,'*.*',TexelApp.LastPath[15],TexelApp.LastFile[15],1,FSEL_EXPORT,false,false) then p^.export^.SetFile(TexelApp.LastPath[15]+TexelApp.LastFile[15]);
-		RTEXEXPORT:
+		if not(Between(texbuf.exporttype,0,9)) then
 			begin
-				if p^.export=nil then exit;
-				TransferData(tf_GetData);
-				if p^.exportbuf.clipboard=bf_Checked then
-					begin
-						if p^.Clipboard=nil then exit;
-						if not(p^.Clipboard^.OpenClipboard(false)) then exit;
-						sfile:=p^.Clipboard^.GetClipboardFilename;
-						p^.Clipboard^.CloseClipboard;
-						case p^.exportbuf.exporttype of
-						0:
-							p^.export^.Save123(sfile+'wk1');
-						1:
-							p^.export^.SaveXLS(sfile+'xls');
-						2:
-							p^.export^.SaveSYLK(sfile+'slk');
-						3:
-							p^.export^.SaveDIF(sfile+'dif');
-						4:
-							p^.export^.SaveCSV(sfile+'csv');
-						5:
-							p^.export^.SaveASCII(sfile+'txt');
-						6:
-							p^.export^.SaveText(sfile+'txt');
-						7:
-							p^.export^.SaveLATEX(sfile+'tex');
-						8:
-							p^.export^.SaveHTML(sfile+'html');
-						9:
-							p^.export^.SaveUDO(sfile+'ui');
-						10:
-							p^.export^.SaveArtWorks(sfile+'cwg')
-						end
-					end
-				else
-					begin
-						case p^.exportbuf.exporttype of
-						0:
-							p^.export^.Save123(getxfname('wk1'));
-						1:
-							p^.export^.SaveXLS(getxfname('xls'));
-						2:
-							p^.export^.SaveSYLK(getxfname('slk'));
-						3:
-							p^.export^.SaveDIF(getxfname('dif'));
-						4:
-							p^.export^.SaveCSV(getxfname('csv'));
-						5:
-							p^.export^.SaveASCII(getxfname('txt'));
-						6:
-							p^.export^.SaveText(getxfname('txt'));
-						7:
-							p^.export^.SaveLATEX(getxfname('tex'));
-						8:
-							p^.export^.SaveHTML(getxfname('html'));
-						9:
-							p^.export^.SaveUDO(getxfname('ui'));
-						10:
-							p^.export^.SaveArtWorks(getxfname('cwg'))
-						end
-					end
+				Export:=false;
+				exit
+			end;
+		Export:=true;
+		p:=PCalcWindow(Parent);
+		if texbuf.clipboard=bf_Checked then
+			begin
+				if p^.Clipboard=nil then exit;
+				if not(p^.Clipboard^.OpenClipboard(false)) then exit;
+				sfile:=p^.Clipboard^.GetClipboardFilename;
+				p^.Clipboard^.CloseClipboard;
+				case texbuf.exporttype of
+				0:
+					Save123(sfile+'wk1',texbuf);
+				1:
+					SaveXLS(sfile+'xls',texbuf);
+				2:
+					SaveSYLK(sfile+'slk',texbuf);
+				3:
+					SaveDIF(sfile+'dif',texbuf);
+				4:
+					SaveCSV(sfile+'csv',texbuf);
+				5:
+					SaveASCII(sfile+'txt',texbuf);
+				6:
+					SaveText(sfile+'txt',texbuf);
+				7:
+					SaveLATEX(sfile+'tex',texbuf);
+				8:
+					SaveHTML(sfile+'html',texbuf);
+				9:
+					SaveUDO(sfile+'ui',texbuf)
+				end
 			end
-		end
+		else
+			case texbuf.exporttype of
+			0:
+				Save123(getxfname('wk1'),texbuf);
+			1:
+				SaveXLS(getxfname('xls'),texbuf);
+			2:
+				SaveSYLK(getxfname('slk'),texbuf);
+			3:
+				SaveDIF(getxfname('dif'),texbuf);
+			4:
+				SaveCSV(getxfname('csv'),texbuf);
+			5:
+				SaveASCII(getxfname('txt'),texbuf);
+			6:
+				SaveText(getxfname('txt'),texbuf);
+			7:
+				SaveLATEX(getxfname('tex'),texbuf);
+			8:
+				SaveHTML(getxfname('html'),texbuf);
+			9:
+				SaveUDO(getxfname('ui'),texbuf)
+			end
 	end;
 
 
@@ -30677,7 +33597,7 @@ procedure TExport.SetFile(fname: string);
 		if ADialog<>nil then
 			with PExportDialog(ADialog)^ do
 				begin
-					if st<>nil then st^.SetText(CompressPath(filename,33));
+					if st<>nil then st^.SetText(CompressPath(filename,19));
 					if (length(filename)>0) or (p^.exportbuf.clipboard=bf_Checked) then
 						begin
 							pb1^.Enable;
@@ -30699,53 +33619,55 @@ procedure TExport.Work;
 	    picb: PImportCellBox;
 	    pib1,
 	    pib2: PImportButton;
+	    flt : PStringCollection;
+	    i   : integer;
 
 	begin
 		p:=PCalcWindow(Parent);
 		if ADialog=nil then
 			begin
 				TexelApp.ActivateExtResource;
-				ADialog:=new(PExportDialog,Init(p,TEXELWINDPREFIX+'Export','Export-Dialog','EXPORT',RTEXPORT));
+				ADialog:=new(PExportDialog,Init(p,TEXELWINDPREFIX+TITLE_EXPORT,STG_EXPORT,ICNTITLE_EXPORT,RTEXPORT));
 				if ADialog<>nil then
 					begin
-						new(PExportDialog(ADialog)^.pg0,Init(ADialog,RTEXEMPTY,'','')); { ... }
-						new(PExportDialog(ADialog)^.pg1,Init(ADialog,RTEXHTML,'','')); { ... }
-						new(PExportDialog(ADialog)^.pg2,Init(ADialog,RTEXDIF,'','')); { ... }
-						new(PExportDialog(ADialog)^.pg3,Init(ADialog,RTEXCSV,'','')); { ... }
-						new(PExportDialog(ADialog)^.pg4,Init(ADialog,RTEXASCII,'','')); { ... }
-						new(PGroupBox,Init(ADialog,RTEXBEREICH,'','')); { ... }
-						new(PExportDialog(ADialog)^.bedt,Init(ADialog,RTEXBEDIT,16,false,'')); { ... }
-						new(PExportDialog(ADialog)^.pcb,Init(ADialog,RTEXFORMPOP,RTEXFORMCYC,RTEXFORMAT,RTPOPUPS2,RTP2EXPORT,id_No,true,false,'')); { ... }
-						new(PExportDialog(ADialog)^.pecb,Init(ADialog,RTEXCLIPBOARD,true,'')); { ... }
-						new(pc,Init(ADialog,RTEXBTITLE,true,'')); { ... }
+						new(PExportDialog(ADialog)^.pg0,Init(ADialog,RTEXEMPTY,'',BUBBLE_EXPORT_EMPTY));
+						new(PExportDialog(ADialog)^.pg1,Init(ADialog,RTEXHTML,'',BUBBLE_EXPORT_HTML));
+						new(PExportDialog(ADialog)^.pg2,Init(ADialog,RTEXDIF,'',BUBBLE_EXPORT_DIF));
+						new(PExportDialog(ADialog)^.pg3,Init(ADialog,RTEXCSV,'',BUBBLE_EXPORT_CSV));
+						new(PExportDialog(ADialog)^.pg4,Init(ADialog,RTEXASCII,'',BUBBLE_EXPORT_ASCII));
+						new(PGroupBox,Init(ADialog,RTEXBEREICH,'',BUBBLE_GENERAL_RANGE));
+						new(PExportDialog(ADialog)^.bedt,Init(ADialog,RTEXBEDIT,16,false,BUBBLE_GENERAL_RANGE));
+						new(PExportDialog(ADialog)^.pcb,Init(ADialog,RTEXFORMPOP,RTEXFORMCYC,RTEXFORMAT,RTPOPUPS2,RTP2EXPORT,id_No,true,false,BUBBLE_EXPORT_FORMATS));
+						new(PExportDialog(ADialog)^.pecb,Init(ADialog,RTEXCLIPBOARD,true,BUBBLE_EXPORT_CLIPBOARD));
+						new(pc,Init(ADialog,RTEXBTITLE,true,BUBBLE_EXPORT_RTITLE));
 						if pc<>nil then pc^.Disable; { !!! }
-						new(PExportDialog(ADialog)^.pb3,Init(ADialog,RTEXFILE,id_No,true,'')); { ... }
-						new(PExportDialog(ADialog)^.st,Init(ADialog,RTEXFILENAME,34,false,'')); { ... }
-						new(pb,Init(ADialog,RTEXHELP,id_Help,false,'')); { ... }
+						new(PExportDialog(ADialog)^.pb3,Init(ADialog,RTEXFILE,id_No,true,BUBBLE_EXPORT_FILE));
+						new(PExportDialog(ADialog)^.st,Init(ADialog,RTEXFILENAME,20,false,BUBBLE_EXPORT_FILENAME));
+						new(pb,Init(ADialog,RTEXHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(ADialog,RTEXABBRUCH,id_Cancel,true,'')); { ... }
-						new(PExportDialog(ADialog)^.pb1,Init(ADialog,RTEXEXPORT,id_No,true,'')); { ... }
-						new(PExportDialog(ADialog)^.pb2,Init(ADialog,RTEXOK,id_OK,true,'')); { ... }
-						new(PGroupBox,Init(ADialog,RTEXHTMLDTYPE,GROUP_EXPORT_DOCTYPE,'')); { ... }
-						new(PGroupBox,Init(ADialog,RTEXHTMLEXPWITH,GROUP_EXPORT_SAVEWITH,'')); { ... }
-						new(PComboBox,Init(ADialog,RTEXHTMLDOCTYPE,RTEXHTMLDTCYC,RTEXHTMLDTTITLE,RTPOPUPS2,RTP2HTML,id_No,false,false,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTEXHTMLSAVEDT,true,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTEXHTMLCOLORS,true,'')); { ... }
-						new(PGroupBox,Init(ADialog,RTEXCSVINHALT,GROUP_EXPORT_SAVEWITH,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTEXCSVFORMELN,true,'Bei Formeln wird die Klartextformel als String gespeichert, bei Konstanten die Zahl ohne Zahlenformat'));
-						new(PRadioButton,Init(ADialog,RTEXCSVWERTE,true,'Bei Formeln und Konstanten wird die Zahl im verwendeten Zahlenformat gespeichert'));
-						new(PGroupBox,Init(ADialog,RTEXDIFINHALT,GROUP_EXPORT_SAVEWITH,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTEXDIFFORMELN,true,'Bei Formeln wird die Klartextformel als String gespeichert, bei Konstanten die Zahl ohne Zahlenformat'));
-						new(PRadioButton,Init(ADialog,RTEXDIFWERTE,true,'Bei Formeln und Konstanten wird die Zahl im verwendeten Zahlenformat gespeichert'));
-						new(PGroupBox,Init(ADialog,RTEXDIFTYPE,GROUP_EXPORT_TYPE,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTEXDIFSTANDARD,true,'')); { ... }
-						new(PRadioButton,Init(ADialog,RTEXDIFEXCEL,true,'')); { ... }
-						new(PGroupBox,Init(ADialog,RTEXASCIIROWS,GROUP_GENERAL_ROWS,'')); { ... }
-						new(pib1,Init(ADialog,RTEXASCIIHOR,true,'Zeilen werden in der Datei horizontal (als Zeilen) gespeichert. Dies ist der Normalfall.'));
-						new(pib2,Init(ADialog,RTEXASCIIVER,true,'Zeilen werden in der Datei vertikal gespeichert, d.h. Blatt-Spalten werden zu Datei-Zeilen'));
-						new(PGroupBox,Init(ADialog,RTEXASCIIINHALT,GROUP_EXPORT_SAVEWITH,'')); { ... }
-						new(pib1^.pircb,Init(ADialog,RTEXASCIIROWCOL,RTEXASCIIRCCYC,RTEXASCIIRCTITLE,RTPOPUPS2,RTP2EXROWCOL,id_No,false,true,'Gibt an, welche Zeichen am Ende einer Datei-Zeile stehen sollen (normalerweise CR+LF)'));
+						new(PButton,Init(ADialog,RTEXABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
+						new(PExportDialog(ADialog)^.pb1,Init(ADialog,RTEXEXPORT,id_No,true,BUBBLE_EXPORT_EXPORT));
+						new(PExportDialog(ADialog)^.pb2,Init(ADialog,RTEXOK,id_OK,true,BUBBLE_EXPORT_OK));
+						new(PGroupBox,Init(ADialog,RTEXHTMLDTYPE,GROUP_EXPORT_DOCTYPE,BUBBLE_EXPORT_DOCTYPE));
+						new(PGroupBox,Init(ADialog,RTEXHTMLEXPWITH,GROUP_EXPORT_SAVEWITH,BUBBLE_EXPORT_SAVEWITH));
+						new(PComboBox,Init(ADialog,RTEXHTMLDOCTYPE,RTEXHTMLDTCYC,RTEXHTMLDTTITLE,RTPOPUPS2,RTP2HTML,id_No,false,false,BUBBLE_EXPORT_DTPOPUP));
+						new(PCheckBox,Init(ADialog,RTEXHTMLSAVEDT,true,BUBBLE_EXPORT_SAVEDT));
+						new(PCheckBox,Init(ADialog,RTEXHTMLCOLORS,true,BUBBLE_EXPORT_COLORS));
+						new(PGroupBox,Init(ADialog,RTEXCSVINHALT,GROUP_EXPORT_SAVEWITH,BUBBLE_EXPORT_SAVEWITH));
+						new(PRadioButton,Init(ADialog,RTEXCSVFORMELN,true,BUBBLE_EXPORT_FORMULA));
+						new(PRadioButton,Init(ADialog,RTEXCSVWERTE,true,BUBBLE_EXPORT_VALUE));
+						new(PGroupBox,Init(ADialog,RTEXDIFINHALT,GROUP_EXPORT_SAVEWITH,BUBBLE_EXPORT_SAVEWITH));
+						new(PRadioButton,Init(ADialog,RTEXDIFFORMELN,true,BUBBLE_EXPORT_FORMULA));
+						new(PRadioButton,Init(ADialog,RTEXDIFWERTE,true,BUBBLE_EXPORT_VALUE));
+						new(PGroupBox,Init(ADialog,RTEXDIFTYPE,GROUP_EXPORT_TYPE,BUBBLE_EXPORT_DIFTYPE));
+						new(PRadioButton,Init(ADialog,RTEXDIFSTANDARD,true,BUBBLE_EXPORT_DIFSTAND));
+						new(PRadioButton,Init(ADialog,RTEXDIFEXCEL,true,BUBBLE_EXPORT_DIFMS));
+						new(PGroupBox,Init(ADialog,RTEXASCIIROWS,GROUP_GENERAL_ROWS,BUBBLE_EXPORT_ROWS));
+						new(pib1,Init(ADialog,RTEXASCIIHOR,true,BUBBLE_EXPORT_LINEHOR));
+						new(pib2,Init(ADialog,RTEXASCIIVER,true,BUBBLE_EXPORT_LINEVERT));
+						new(PGroupBox,Init(ADialog,RTEXASCIIINHALT,GROUP_EXPORT_SAVEWITH,BUBBLE_EXPORT_SAVEWITH));
+						new(pib1^.pircb,Init(ADialog,RTEXASCIIROWCOL,RTEXASCIIRCCYC,RTEXASCIIRCTITLE,RTPOPUPS2,RTP2EXROWCOL,id_No,false,true,BUBBLE_EXPORT_LINEEND));
 						pib2^.pircb:=pib1^.pircb;
 						if pib1^.pircb<>nil then
 							if pib1^.pircb^.Edit<>nil then
@@ -30754,7 +33676,7 @@ procedure TExport.Work;
 									if pv<>nil then pv^.Options:=voNotEmpty;
 									pib1^.pircb^.Edit^.SetValidator(pv)
 								end;
-						new(picb,Init(ADialog,RTEXASCIICELLS,RTEXASCIICCYC,RTEXASCIICTITLE,RTPOPUPS2,RTP2EXCELLS,id_No,false,true,'Gibt an, durch welche(s) Zeichen die einzelnen Zellen getrennt werden (Åblich sind Tab, Komma oder Semikolon)'));
+						new(picb,Init(ADialog,RTEXASCIICELLS,RTEXASCIICCYC,RTEXASCIICTITLE,RTPOPUPS2,RTP2EXCELLS,id_No,false,true,BUBBLE_EXPORT_CELLDIV));
 						if picb<>nil then
 							if picb^.Edit<>nil then
 								begin
@@ -30762,15 +33684,25 @@ procedure TExport.Work;
 									if pv<>nil then pv^.Options:=voNotEmpty;
 									picb^.Edit^.SetValidator(pv)
 								end;
-						new(PImportTextBox,Init(ADialog,RTEXASCIITEXT,RTEXASCIITCYC,RTEXASCIITTITLE,RTPOPUPS2,RTP2EXTEXT,id_No,false,true,'Gibt an, ob bzw. welches Zeichen am Anfang und Ende von normalem Klartext steht soll'));
-						new(PCheckBox,Init(ADialog,RTEXASCIIQUOTE,true,'Bestimmt, ob AnfÅhrungszeichen (Textquote) innerhalb von Texten verdoppelt werden (dies ist fast immer der Fall)'));
-						new(PComboBox,Init(ADialog,RTEXASCIINUMBER,RTEXASCIINCYC,RTEXASCIINTITLE,RTPOPUPS2,RTP2EXNUMBERS,id_No,true,false,'Gibt an, welches Zeichen in der Datei bei Zahlen Vor- und Nachkommastellen trennen soll'));
-						new(PRadioButton,Init(ADialog,RTEXASCIIFORMELN,true,'Bei Formeln wird die Klartextformel als String gespeichert, bei Konstanten die Zahl ohne Zahlenformat'));
-						new(PRadioButton,Init(ADialog,RTEXASCIIWERTE,true,'Bei Formeln und Konstanten wird die Zahl im verwendeten Zahlenformat gespeichert'));
-						new(PCheckBox,Init(ADialog,RTEXDIFFORMAT,true,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTEXCSVFORMAT,true,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTEXASCIIFORMAT,true,'')); { ... }
-						new(PCheckBox,Init(ADialog,RTEXHTMLEMBED,true,'')); { ... }
+						new(PImportTextBox,Init(ADialog,RTEXASCIITEXT,RTEXASCIITCYC,RTEXASCIITTITLE,RTPOPUPS2,RTP2EXTEXT,id_No,false,true,BUBBLE_EXPORT_QUOTECHAR));
+						new(PCheckBox,Init(ADialog,RTEXASCIIQUOTE,true,BUBBLE_EXPORT_QUOTING));
+						new(PComboBox,Init(ADialog,RTEXASCIINUMBER,RTEXASCIINCYC,RTEXASCIINTITLE,RTPOPUPS2,RTP2EXNUMBERS,id_No,true,false,BUBBLE_EXPORT_FPOINT));
+						new(PRadioButton,Init(ADialog,RTEXASCIIFORMELN,true,BUBBLE_EXPORT_FORMULA));
+						new(PRadioButton,Init(ADialog,RTEXASCIIWERTE,true,BUBBLE_EXPORT_VALUE));
+						new(PCheckBox,Init(ADialog,RTEXDIFFORMAT,true,BUBBLE_EXPORT_DIFFORM));
+						new(PCheckBox,Init(ADialog,RTEXCSVFORMAT,true,BUBBLE_EXPORT_CSVFORM));
+						new(PCheckBox,Init(ADialog,RTEXASCIIFORMAT,true,BUBBLE_EXPORT_ASCIIFORM));
+						new(PCheckBox,Init(ADialog,RTEXHTMLEMBED,true,BUBBLE_EXPORT_EMBED));
+						new(flt,Init(10,5));
+						if flt<>nil then
+							begin
+								flt^.Sort:=false;
+								if InitKeyTab then
+									for i:=0 to pkt^.GetExportCount do flt^.Insert(NewStr('  '+StrPPas(pkt^.GetExportName(nil,nil,0,0,0,i))+' '#0))
+								else
+									flt^.Insert(NewStr('  Atari '#0))
+							end;
+						new(PComboBox,InitCollection(ADialog,RTEXFILTER,RTEXFCYC,RTEXFTITLE,12,flt,true,true,false,BUBBLE_EXPORT_FILTER));
 						ADialog^.TransferBuffer:=@p^.exportbuf;
 						if p^.exportbuf.ascii.hor=bf_Checked then pib1^.Changed(RTEXASCIIHOR,false)
 						else
@@ -30788,7 +33720,7 @@ procedure TExport.Work;
 	end;
 
 
-function TExport.InitFile(var fname: string): boolean;
+function TExport.InitFile(var fname: string; const texbuf: TExportBuf): boolean;
 	var cell: PCell;
 	    fn2 : string;
 	    q,w : integer;
@@ -30802,7 +33734,7 @@ function TExport.InitFile(var fname: string): boolean;
 				DemoAlert(p);
 				exit
 			end;
-		if p^.exportbuf.clipboard=bf_Checked then
+		if texbuf.clipboard=bf_Checked then
 			begin
 				if p^.Clipboard=nil then exit;
 				if not(p^.Clipboard^.OpenClipboard(true)) then exit;
@@ -30811,7 +33743,7 @@ function TExport.InitFile(var fname: string): boolean;
 			end
 		else
 			if Exist(fname) then
-				if Application^.Alert(p,1,WAIT,'Die Datei "'+CompressPath(fname,78)+'" existiert bereits. öberschreiben?','  &Ja  | &Nein ')<>1 then exit;
+				if Application^.Alert(p,1,WAIT,MESSAGE_EXPORT_EXIST1+CompressPath(fname,78)+MESSAGE_EXPORT_EXIST2,BUTTON_YESNO)<>1 then exit;
 		buf:=GetMemBuffer(16384,512,bufsize);
 		if buf=nil then exit;
 		BusyMouse;
@@ -30836,7 +33768,9 @@ function TExport.InitFile(var fname: string): boolean;
 		if TexelApp.setupbuffer.bak=bf_Checked then
 			if Exist(fname) then
 				begin
-					fn2:=GetPath(fname)+GetFilename(fname,false)+'.bak';
+					if TexelApp.IsLongFileName(fname) then fn2:=fname+'.bak'
+					else
+						fn2:=GetPath(fname)+GetFilename(fname,false)+'.bak';
 					if Exist(fn2) then fdelete(fn2);
 					frename(fname,fn2);
 					TexelApp.UpdateFile(fn2,0)
@@ -30852,14 +33786,16 @@ function TExport.InitFile(var fname: string): boolean;
 		bufcnt:=0;
 		werror:=false;
 		lend:=#13#10;
+		exflt:=texbuf.filter;
+		usepkt:=InitKeyTab and (exflt>=0);
 		InitFile:=true
 	end;
 
 
-procedure TExport.ExitFile(bits: word; fname: string);
+procedure TExport.ExitFile(bits: word; fname: string; const texbuf: TExportBuf);
 
 	begin
-		if p^.exportbuf.clipboard=bf_Checked then
+		if texbuf.clipboard=bf_Checked then
 			begin
 				p^.Clipboard^.SetClipboardFormat(bits,GetExtension(fname));
 				p^.Clipboard^.CloseClipboard
@@ -30871,6 +33807,13 @@ procedure TExport.ExitFile(bits: word; fname: string);
 
 function TExport.bwrite(var buffer; count: longint): boolean;
 	var rlen: longint;
+
+	procedure exfilter;
+		var i: longint;
+	
+		begin
+			for i:=0 to bufcnt-1 do buf^[i]:=ord(pkt^.ExportChar(nil,nil,0,0,0,exflt,chr(buf^[i])))
+		end;
 
 	begin
 		if count>bufsize then
@@ -30885,6 +33828,7 @@ function TExport.bwrite(var buffer; count: longint): boolean;
 				if count=0 then exit;
 				if bufcnt>0 then
 					begin
+						if usepkt then exfilter;
 						rlen:=fwrite(hdl,bufcnt,buf);
 						if rlen<>bufcnt then
 							begin
@@ -30897,6 +33841,7 @@ function TExport.bwrite(var buffer; count: longint): boolean;
 			end;
 		if bufcnt+count>bufsize then
 			begin
+				if usepkt then exfilter;
 				rlen:=fwrite(hdl,bufcnt,buf);
 				if rlen<>bufcnt then
 					begin
@@ -30936,28 +33881,28 @@ function TExport.writes(s: string): boolean;
 	end;
 
 
-procedure TExport.Save123(fname: string);
+procedure TExport.Save123(fname: string; const texbuf: TExportBuf);
 
 	begin
 		{ ... }
 	end;
 
 
-procedure TExport.SaveXLS(fname: string);
+procedure TExport.SaveXLS(fname: string; const texbuf: TExportBuf);
 
 	begin
 		{ ... }
 	end;
 
 
-procedure TExport.SaveDIF(fname: string);
+procedure TExport.SaveDIF(fname: string; const texbuf: TExportBuf);
 	label _ende;
 
 	var q,w : integer;
 	    cell: PCell;
 
 	begin
-		if not(InitFile(fname)) then exit;
+		if not(InitFile(fname,texbuf)) then exit;
 		if not(KeyCorrect(regname,regkey)) then
 			begin
 				DemoAlert(p);
@@ -30966,7 +33911,7 @@ procedure TExport.SaveDIF(fname: string);
 		{$IFNDEF DEMO}
 		if writeline('TABLE') then goto _ende;
 		if writeline('0,1') then goto _ende;
-		if p^.exportbuf.difstandard=bf_Checked then
+		if texbuf.difstandard=bf_Checked then
 			begin
 				if writeline('"'+GetFileName(p^.GetWindowFilename,true)+'"') then goto _ende;
 				if writeline('VECTORS') then goto _ende;
@@ -31009,7 +33954,7 @@ procedure TExport.SaveDIF(fname: string);
 								if writeline('"'+cell^.Data.Txt^+'"') then goto _ende
 							end;
 						CTYPE_CONST:
-							if (p^.exportbuf.difformula=bf_Checked) or (p^.exportbuf.difformat<>bf_Checked) then
+							if (texbuf.difformula=bf_Checked) or (texbuf.difformat<>bf_Checked) then
 								begin
 									if writeline('0,'+p^.Val2TxtF(cell^.Data.Konst^.Value,15,0,nil)) then goto _ende;
 									if writeline('V') then goto _ende
@@ -31027,13 +33972,13 @@ procedure TExport.SaveDIF(fname: string);
 									end;
 						CTYPE_FORMULA:
 							begin
-								if p^.exportbuf.difformula=bf_Checked then
+								if texbuf.difformula=bf_Checked then
 									begin
 										if writeline('1,0') then goto _ende;
 										if writeline('"'+p^.BuildFunction(cell,true)+'"') then goto _ende
 									end
 								else
-									if (cell^.Format=0) or (p^.exportbuf.difformat<>bf_Checked) then
+									if (cell^.Format=0) or (texbuf.difformat<>bf_Checked) then
 										begin
 											if writeline('0,'+p^.Val2TxtF(cell^.Data.Formula^.Value,cell^.Data.Formula^.FPts,0,nil)) then goto _ende;
 											if writeline('V') then goto _ende
@@ -31061,11 +34006,11 @@ procedure TExport.SaveDIF(fname: string);
 		fclose(hdl);
 		freemem(buf,bufsize);
 		ArrowMouse;
-		ExitFile(SCF_SHEET,fname)
+		ExitFile(SCF_SHEET,fname,texbuf)
 	end;
 
 
-procedure TExport.SaveSYLK(fname: string);
+procedure TExport.SaveSYLK(fname: string; const texbuf: TExportBuf);
 	label _ende;
 
 	var q,w,e,w2: integer;
@@ -31080,7 +34025,7 @@ procedure TExport.SaveSYLK(fname: string);
 		end;
 
 	begin
-		if not(InitFile(fname)) then exit;
+		if not(InitFile(fname,texbuf)) then exit;
 		if not(KeyCorrect(regname,regkey)) then
 			begin
 				DemoAlert(p);
@@ -31147,11 +34092,11 @@ procedure TExport.SaveSYLK(fname: string);
 		fclose(hdl);
 		freemem(buf,bufsize);
 		ArrowMouse;
-		ExitFile(SCF_SHEET,fname)
+		ExitFile(SCF_SHEET,fname,texbuf)
 	end;
 
 
-procedure TExport.SaveCSV(fname: string);
+procedure TExport.SaveCSV(fname: string; const texbuf: TExportBuf);
 	label _ende;
 
 	var q,w,
@@ -31176,7 +34121,7 @@ procedure TExport.SaveCSV(fname: string);
 		end;
 
 	begin
-		if not(InitFile(fname)) then exit;
+		if not(InitFile(fname,texbuf)) then exit;
 		if not(KeyCorrect(regname,regkey)) then
 			begin
 				DemoAlert(p);
@@ -31203,7 +34148,7 @@ procedure TExport.SaveCSV(fname: string);
 								CTYPE_TEXT:
 									if writes('"'+toquote(cell^.Data.Txt^)+'"') then goto _ende;
 								CTYPE_CONST:
-									if (p^.exportbuf.csvformula=bf_Checked) or (p^.exportbuf.csvformat<>bf_Checked) then
+									if (texbuf.csvformula=bf_Checked) or (texbuf.csvformat<>bf_Checked) then
 										begin
 											if writes(p^.Val2TxtF(cell^.Data.Konst^.Value,15,0,nil)) then goto _ende;
 										end
@@ -31216,12 +34161,12 @@ procedure TExport.SaveCSV(fname: string);
 											if writes('"'+toquote(p^.Val2TxtF(cell^.Data.Konst^.Value,cell^.Data.Konst^.FPts,cell^.Format,nil))+'"') then goto _ende;
 								CTYPE_FORMULA:
 									begin
-										if p^.exportbuf.csvformula=bf_Checked then
+										if texbuf.csvformula=bf_Checked then
 											begin
 												if writes('"'+toquote(p^.BuildFunction(cell,true))+'"') then goto _ende
 											end
 										else
-											if (cell^.Format=0) or (p^.exportbuf.csvformat<>bf_Checked) then
+											if (cell^.Format=0) or (texbuf.csvformat<>bf_Checked) then
 												begin
 													if writes(p^.Val2TxtF(cell^.Data.Formula^.Value,cell^.Data.Formula^.FPts,0,nil)) then goto _ende;
 												end
@@ -31240,11 +34185,11 @@ procedure TExport.SaveCSV(fname: string);
 		fclose(hdl);
 		freemem(buf,bufsize);
 		ArrowMouse;
-		ExitFile(SCF_DBASE or SCF_SHEET,fname)
+		ExitFile(SCF_DBASE or SCF_SHEET,fname,texbuf)
 	end;
 
 
-procedure TExport.SaveLATEX(fname: string);
+procedure TExport.SaveLATEX(fname: string; const texbuf: TExportBuf);
 	label _ende;
 
 	var q,w,i: integer;
@@ -31295,7 +34240,7 @@ procedure TExport.SaveLATEX(fname: string);
 		end;
 
 	begin
-		if not(InitFile(fname)) then exit;
+		if not(InitFile(fname,texbuf)) then exit;
 		if not(KeyCorrect(regname,regkey)) then
 			begin
 				DemoAlert(p);
@@ -31329,11 +34274,11 @@ procedure TExport.SaveLATEX(fname: string);
 		fclose(hdl);
 		freemem(buf,bufsize);
 		ArrowMouse;
-		ExitFile(SCF_TEXT,fname)
+		ExitFile(SCF_TEXT,fname,texbuf)
 	end;
 
 
-procedure TExport.SaveASCII(fname: string);
+procedure TExport.SaveASCII(fname: string; const texbuf: TExportBuf);
 	label _ende;
 
 	var q,w,art,lq: integer;
@@ -31391,7 +34336,7 @@ procedure TExport.SaveASCII(fname: string);
 			CTYPE_TEXT:
 				if writes(tquote+toquote(cell^.Data.Txt^)+tquote) then exit;
 			CTYPE_CONST:
-				if formula or (p^.exportbuf.asciiformat<>bf_Checked) then
+				if formula or (texbuf.asciiformat<>bf_Checked) then
 					begin
 						if writes(tonum(p^.Val2TxtF(cell^.Data.Konst^.Value,15,0,nil))) then exit;
 					end
@@ -31409,7 +34354,7 @@ procedure TExport.SaveASCII(fname: string);
 							if writes(tquote+toquote(p^.BuildFunction(cell,true))+tquote) then exit
 						end
 					else
-						if (cell^.Format=0) or (p^.exportbuf.asciiformat<>bf_Checked) then
+						if (cell^.Format=0) or (texbuf.asciiformat<>bf_Checked) then
 							begin
 								if writes(tonum(p^.Val2TxtF(cell^.Data.Formula^.Value,cell^.Data.Formula^.FPts,0,nil))) then exit;
 							end
@@ -31421,22 +34366,22 @@ procedure TExport.SaveASCII(fname: string);
 		end;
 
 	begin
-		if not(InitFile(fname)) then exit;
+		if not(InitFile(fname,texbuf)) then exit;
 		if not(KeyCorrect(regname,regkey)) then
 			begin
 				DemoAlert(p);
 				goto _ende
 			end;
 		{$IFNDEF DEMO}
-		rctrenn:=TexelApp.num2str(p^.exportbuf.ascii.rcTxt);
-		celltrenn:=TexelApp.num2str(p^.exportbuf.ascii.cellTxt);
-		tquote:=TexelApp.num2str(p^.exportbuf.ascii.textTxt);
-		if p^.exportbuf.ascii.numbers=1 then numtrenn:=','
+		rctrenn:=TexelApp.num2str(texbuf.ascii.rcTxt);
+		celltrenn:=TexelApp.num2str(texbuf.ascii.cellTxt);
+		tquote:=TexelApp.num2str(texbuf.ascii.textTxt);
+		if texbuf.ascii.numbers=1 then numtrenn:=','
 		else
 			numtrenn:='.';
-		hor:=(p^.exportbuf.ascii.hor=bf_Checked);
-		quote:=(p^.exportbuf.ascii.quote=bf_Checked);
-		formula:=(p^.exportbuf.ascii.formula=bf_Checked);
+		hor:=(texbuf.ascii.hor=bf_Checked);
+		quote:=(texbuf.ascii.quote=bf_Checked);
+		formula:=(texbuf.ascii.formula=bf_Checked);
 		lq:=length(tquote);
 		if hor then
 			for q:=0 to rmax do
@@ -31469,11 +34414,11 @@ procedure TExport.SaveASCII(fname: string);
 		fclose(hdl);
 		freemem(buf,bufsize);
 		ArrowMouse;
-		ExitFile(SCF_DBASE or SCF_TEXT or SCF_SHEET,fname)
+		ExitFile(SCF_DBASE or SCF_TEXT or SCF_SHEET,fname,texbuf)
 	end;
 
 
-procedure TExport.SaveText(fname: string);
+procedure TExport.SaveText(fname: string; const texbuf: TExportBuf);
 	label _ende,_raus;
 
 	var q,w : integer;
@@ -31506,7 +34451,7 @@ procedure TExport.SaveText(fname: string);
 		end;
 
 	begin
-		if not(InitFile(fname)) then exit;
+		if not(InitFile(fname,texbuf)) then exit;
 		if not(KeyCorrect(regname,regkey)) then
 			begin
 				DemoAlert(p);
@@ -31559,20 +34504,24 @@ procedure TExport.SaveText(fname: string);
 		fclose(hdl);
 		freemem(buf,bufsize);
 		ArrowMouse;
-		ExitFile(SCF_TEXT,fname)
+		ExitFile(SCF_TEXT,fname,texbuf)
 	end;
 
 
-procedure TExport.SaveHTML(fname: string);
+procedure TExport.SaveHTML(fname: string; const texbuf: TExportBuf);
 	label _ende;
 
 	var q,w,vqc,
 	    fsize,
+	    walt,
 	    fstdsize: integer;
+	    cell2,
 	    cell    : PCell;
 	    rgb     : ARRAY_3;
 	    colors,
 	    one,
+	    html40,
+	    html30,
 	    html32  : boolean;
 	    pe      : PEmbedded;
 	    sf,se   : string;
@@ -31685,12 +34634,13 @@ procedure TExport.SaveHTML(fname: string);
 			htmlmask:=false
 		end;
 
-	function rgb2hex: string;
+	function rgb2hex(st: integer): string;
 
-		function int2hex(i: integer): string;
+		function int2hex(i: longint): string;
 
 			begin
-				int2hex:=StrPRight(ltoh((longint(i)*255) div 1000,2),2)
+				if Between(st,1,6) then inc(i,((1000-i)*(7-st)) div 7);
+				int2hex:=StrPRight(ltoh((i*255) div 1000,2),2)
 			end;
 
 		begin
@@ -31698,33 +34648,48 @@ procedure TExport.SaveHTML(fname: string);
 		end;
 
 	begin
-		if not(InitFile(fname)) then exit;
+		if not(InitFile(fname,texbuf)) then exit;
 		if not(KeyCorrect(regname,regkey)) then
 			begin
 				DemoAlert(p);
 				goto _ende
 			end;
 		{$IFNDEF DEMO}
-		colors:=(p^.exportbuf.htmlcolor=bf_Checked);
-		html32:=(p^.exportbuf.htmldoctype=1);
+		colors:=(texbuf.htmlcolor=bf_Checked);
+		html30:=(texbuf.htmldoctype=0);
+		html32:=(texbuf.htmldoctype=1);
+		html40:=(texbuf.htmldoctype=2);
 		fstdsize:=p^.GetStdFontSize;
-		if p^.exportbuf.htmlsavedt=bf_Checked then
+		if texbuf.htmlsavedt=bf_Checked then
 			begin
-				if html32 then
+				if html40 then
+					begin
+						if writeline('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Draft//EN">') then goto _ende;
+					end
+				else if html32 then
 					begin
 						if writeline('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">') then goto _ende;
 					end
 				else
 					if writeline('<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN">') then goto _ende;
 			end;
-		if writeline('<HTML>') then goto _ende;
+		if not(html40) then
+			if writeline('<HTML>') then goto _ende;
 		if writeline('<!-- Created using ASH-TEXEL '+VtoS(TEXELVER)+'r'+ltoa(RELEASE)+' -->') then goto _ende;
-		if not(html32) then
+		if html30 then
 			if writeline('<HEAD>') then goto _ende;
 		if writes('<TITLE>') then goto _ende;
 		if htmlmask(p^.GetWindowFilename) then goto _ende;
 		if writeline('</TITLE>') then goto _ende;
-		if not(html32) then
+{		if html40 then
+			begin
+				if writeline('') then goto _ende;
+				if writeline('<STYLE TYPE=''text/css''>') then goto _ende;
+				if writeline('<!--') then goto _ende;
+				if writeline('-->') then goto _ende;
+				if writeline('</STYLE>') then goto _ende
+			end; !!! }
+		if html30 then
 			begin
 				if writeline('</HEAD>') then goto _ende;
 				if writeline('<BODY>') then goto _ende
@@ -31733,129 +34698,185 @@ procedure TExport.SaveHTML(fname: string);
 		if writes('<TABLE') then goto _ende;
 		if p^.Parms.psbuffer.gitter=bf_Checked then
 			if writes(' BORDER') then goto _ende;
+		if html40 then
+			begin
+				if writes(' COLS="') then goto _ende;
+				if p^.Parms.psbuffer.rows=bf_Checked then
+					begin
+						if writes(ltoa(cmax+2)) then goto _ende
+					end
+				else
+					if writes(ltoa(cmax+1)) then goto _ende;
+				if writes('"') then goto _ende
+			end;
 		if writeline('>') then goto _ende;
 		if p^.Parms.psbuffer.columns=bf_Checked then
 			begin
+				if html40 then
+					if writeline('<THEAD>') then goto _ende;
 				if writeline('  <TR>') then goto _ende;
-				if writes('    ') then goto _ende;
 				if p^.Parms.psbuffer.rows=bf_Checked then
 					begin
-						if writes('<TH>') then goto _ende;
-						if not(html32) then
-							if writes('</TH>') then goto _ende
+						if writes('    <TH>') then goto _ende;
+						if html30 then
+							begin
+								if writeline('</TH>') then goto _ende
+							end
+						else
+							if writeline('') then goto _ende
 					end;
 				for w:=0 to cmax do
 					begin
-						if writes('<TH>') then goto _ende;
+						if writes('    <TH>') then goto _ende;
 						if htmlmask(p^.GetColumnName(w)) then goto _ende;
-						if not(html32) then
-							if writes('</TH>') then goto _ende
+						if html30 then
+							begin
+								if writeline('</TH>') then goto _ende
+							end
+						else
+							if writeline('') then goto _ende
 					end;
-				if writeline('') then goto _ende;
-				if not(html32) then
+				if html30 then
 					if writeline('  </TR>') then goto _ende
 			end;
+		if html40 then
+			if writeline('<TBODY>') then goto _ende;
 		for q:=0 to rmax do
 			begin
 				if writeline('  <TR>') then goto _ende;
 				if writes('    ') then goto _ende;
 				if p^.Parms.psbuffer.rows=bf_Checked then
 					begin
-						if html32 then
+						if html30 then
 							begin
-								if writeline('<TH>'+p^.GetRowIndex(q)) then goto _ende;
+								if writeline('<TH>'+p^.GetRowIndex(q)+'</TH>') then goto _ende
 							end
 						else
-							if writeline('<TH>'+p^.GetRowIndex(q)+'</TH>') then goto _ende;
+							if writeline('<TH>'+p^.GetRowIndex(q)) then goto _ende;
 						if writes('    ') then goto _ende
 					end;
-				cell:=p^.GetCell(q,0);
-				for w:=0 to cmax do
-					begin
-						if writes('<TD') then goto _ende;
-						case (cell^.TxtVal.Align and $0f) of
-						TA_CENTER:
-							if writes(' ALIGN=CENTER') then goto _ende;
-						TA_RIGHT:
-							if writes(' ALIGN=RIGHT') then goto _ende
-						end;
-						case (cell^.TxtVal.Align and $f0) of
-						TA_OBEN:
-							if writes(' VALIGN=TOP') then goto _ende;
-						TA_UNTEN:
-							if writes(' VALIGN=BOTTOM') then goto _ende
-						end;
-						if not(colors) then
+				w:=0;
+				repeat
+					walt:=w;
+					cell:=p^.GetCell(q,w);
+					if cell^.Typ=CTYPE_EMPTY then
+						if bTst(cell^.TxtVal.Flags,TFL_TEXTFROMRIGHT) then
 							begin
-								if writes('>') then goto _ende
+								cell2:=cell;
+								while bTst(cell2^.TxtVal.Flags,TFL_TEXTFROMRIGHT) do
+									begin
+										inc(w);
+										inc(longint(cell2),CELLSIZE)
+									end;
+								cell:=cell2
+							end;
+					if cell^.Typ=CTYPE_TEXT then
+						if bTst(cell^.TxtVal.Flags,TFL_TEXT2RIGHT) then
+							begin
+								cell2:=PCell(longint(cell)+CELLSIZE);
+								while bTst(cell2^.TxtVal.Flags,TFL_TEXTFROMLEFT) do
+									begin
+										inc(w);
+										inc(longint(cell2),CELLSIZE)
+									end
+							end;
+					if writes('<TD') then goto _ende;
+					if cell^.Typ<>CTYPE_EMPTY then
+						begin
+							if w>walt then
+								if writes(' COLSPAN='+ltoa(w+1-walt)) then goto _ende;
+							case (cell^.TxtVal.Align and $0f) of
+							TA_CENTER:
+								if writes(' ALIGN=CENTER') then goto _ende;
+							TA_RIGHT:
+								if writes(' ALIGN=RIGHT') then goto _ende
+							end;
+							case (cell^.TxtVal.Align and $f0) of
+							TA_OBEN:
+								if writes(' VALIGN=TOP') then goto _ende;
+							TA_UNTEN:
+								if writes(' VALIGN=BOTTOM') then goto _ende
+							end
+						end;
+					if not(colors) then
+						begin
+							if writes('>') then goto _ende
+						end
+					else
+						if cell^.Interior=FIS_HOLLOW then
+							begin
+								if writes(' BGCOLOR=#FFFFFF>') then goto _ende
 							end
 						else
-							if cell^.Interior=FIS_HOLLOW then
+							if vq_color(p^.vdiHandle,cell^.Color,0,rgb)=-1 then
 								begin
-									if writes(' BGCOLOR=#FFFFFF>') then goto _ende
+									if writes('>') then goto _ende
 								end
 							else
-								if vq_color(p^.vdiHandle,cell^.Color,0,rgb)=-1 then
+								if cell^.Interior=FIS_SOLID then
 									begin
-										if writes('>') then goto _ende
+										if writes(' BGCOLOR='+rgb2hex(0)+'>') then goto _ende
 									end
 								else
-									if writes(' BGCOLOR='+rgb2hex+'>') then goto _ende;
-						if colors then
-							begin
-								if writes('<FONT') then goto _ende;
-								vqc:=vq_color(p^.vdiHandle,cell^.TxtVal.Color,0,rgb);
-								if vqc<>-1 then
-									if writes(' COLOR='+rgb2hex) then goto _ende;
-								fsize:=((cell^.TxtVal.Size-fstdsize) shr 1);
-								if writes(' SIZE=') then goto _ende;
-								if fsize>=0 then
-									if writes('+') then goto _ende;
-								if writes(ltoa(fsize)) then goto _ende;
-								xfntinfo.size:=sizeof(XFNT_INFO);
-								if vqtXFntInfo(p^.vdiHandle,cell^.TxtVal.Font,@xfntinfo) then
-									if writes(' FACE="'+StrPTrimF(StrPas(xfntinfo.font_name))+'"') then goto _ende;
-								if writes('>') then goto _ende
+									if writes(' BGCOLOR='+rgb2hex(cell^.Style)+'>') then goto _ende;
+					if cell^.Typ<>CTYPE_EMPTY then
+						begin
+							if colors then
+								begin
+									if writes('<FONT') then goto _ende;
+									vqc:=vq_color(p^.vdiHandle,cell^.TxtVal.Color,0,rgb);
+									if vqc<>-1 then
+										if writes(' COLOR='+rgb2hex(0)) then goto _ende;
+									fsize:=((cell^.TxtVal.Size-fstdsize) shr 1);
+									if writes(' SIZE=') then goto _ende;
+									if fsize>=0 then
+										if writes('+') then goto _ende;
+									if writes(ltoa(Min(7,Max(-7,fsize)))) then goto _ende;
+									xfntinfo.size:=sizeof(XFNT_INFO);
+									if vqtXFntInfo(p^.vdiHandle,cell^.TxtVal.Font,@xfntinfo) then
+										if writes(' FACE="'+StrPTrimF(StrPas(xfntinfo.font_name))+'"') then goto _ende;
+									if writes('>') then goto _ende
+								end;
+							if bTst(cell^.TxtVal.Effects,TF_THICKENED) then
+								if writes('<B>') then goto _ende;
+							if bTst(cell^.TxtVal.Effects,TF_SLANTED) then
+								if writes('<I>') then goto _ende;
+							if bTst(cell^.TxtVal.Effects,TF_UNDERLINED) then
+								if writes('<U>') then goto _ende;
+							case cell^.Typ of
+							CTYPE_TEXT:
+								if htmlmask(cell^.Data.Txt^) then goto _ende;
+							CTYPE_CONST:
+								if htmlmask(p^.Val2TxtF(cell^.Data.Konst^.Value,cell^.Data.Konst^.FPts,cell^.Format,nil)) then goto _ende;
+							CTYPE_FORMULA:
+								if htmlmask(p^.Val2TxtF(cell^.Data.Formula^.Value,cell^.Data.Formula^.FPts,cell^.Format,nil)) then goto _ende
 							end;
-						if bTst(cell^.TxtVal.Effects,TF_THICKENED) then
-							if writes('<B>') then goto _ende;
-						if bTst(cell^.TxtVal.Effects,TF_SLANTED) then
-							if writes('<I>') then goto _ende;
-						if bTst(cell^.TxtVal.Effects,TF_UNDERLINED) then
-							if writes('<U>') then goto _ende;
-						case cell^.Typ of
-						CTYPE_TEXT:
-							if htmlmask(cell^.Data.Txt^) then goto _ende;
-						CTYPE_CONST:
-							if htmlmask(p^.Val2TxtF(cell^.Data.Konst^.Value,cell^.Data.Konst^.FPts,cell^.Format,nil)) then goto _ende;
-						CTYPE_FORMULA:
-							if htmlmask(p^.Val2TxtF(cell^.Data.Formula^.Value,cell^.Data.Formula^.FPts,cell^.Format,nil)) then goto _ende
+							if bTst(cell^.TxtVal.Effects,TF_UNDERLINED) then
+								if writes('</U>') then goto _ende;
+							if bTst(cell^.TxtVal.Effects,TF_SLANTED) then
+								if writes('</I>') then goto _ende;
+							if bTst(cell^.TxtVal.Effects,TF_THICKENED) then
+								if writes('</B>') then goto _ende;
+							if colors then
+								if vqc<>-1 then
+									if writes('</FONT>') then goto _ende;
 						end;
-						if bTst(cell^.TxtVal.Effects,TF_UNDERLINED) then
-							if writes('</U>') then goto _ende;
-						if bTst(cell^.TxtVal.Effects,TF_SLANTED) then
-							if writes('</I>') then goto _ende;
-						if bTst(cell^.TxtVal.Effects,TF_THICKENED) then
-							if writes('</B>') then goto _ende;
-						if colors then
-							if vqc<>-1 then
-								if writes('</FONT>') then goto _ende;
-						if html32 then
-							begin
-								if writeline('') then goto _ende
-							end
-						else
-							if writeline('</TD>') then goto _ende;
-						if w<cmax then
-							if writes('    ') then goto _ende;
-						inc(longint(cell),CELLSIZE)
-					end;
-				if not(html32) then
+					if html30 then
+						begin
+							if writeline('</TD>') then goto _ende
+						end
+					else
+						if writeline('') then goto _ende;
+					if w<cmax then
+						if writes('    ') then goto _ende;
+					inc(w)
+				until w>cmax;
+				if html30 then
 					if writeline('  </TR>') then goto _ende
 			end;
 		if writeline('</TABLE>') then goto _ende;
 		if writeline('') then goto _ende;
-		if p^.exportbuf.htmlembed=bf_Checked then
+		if texbuf.htmlembed=bf_Checked then
 			begin
 				pe:=p^.Embedded;
 				one:=false;
@@ -31882,20 +34903,21 @@ procedure TExport.SaveHTML(fname: string);
 				if one then
 					if writeline('') then goto _ende;
 			end;
-		if not(html32) then
+		if html30 then
 			if writeline('</BODY>') then goto _ende;
-		if writeline('</HTML>') then goto _ende;
+		if not(html40) then
+			if writeline('</HTML>') then goto _ende;
 		bwrite(q,-1);
 		{$ENDIF}
 		_ende:
 		fclose(hdl);
 		freemem(buf,bufsize);
 		ArrowMouse;
-		ExitFile(SCF_TEXT,fname)
+		ExitFile(SCF_TEXT,fname,texbuf)
 	end;
 
 
-procedure TExport.SaveUDO(fname: string);
+procedure TExport.SaveUDO(fname: string; const texbuf: TExportBuf);
 	label _ende;
 
 	var q,w : integer;
@@ -31911,7 +34933,7 @@ procedure TExport.SaveUDO(fname: string);
 		end;
 
 	begin
-		if not(InitFile(fname)) then exit;
+		if not(InitFile(fname,texbuf)) then exit;
 		if not(KeyCorrect(regname,regkey)) then
 			begin
 				DemoAlert(p);
@@ -31982,80 +35004,7 @@ procedure TExport.SaveUDO(fname: string);
 		fclose(hdl);
 		freemem(buf,bufsize);
 		ArrowMouse;
-		ExitFile(SCF_TEXT,fname)
-	end;
-
-
-procedure TExport.SaveArtWorks(fname: string);
-	label _ende;
-
-	type LRECT = record
-	       x,y,w,h: longint
-	     end;
-	     CWPHEADER = record
-	       ver_num  : integer;
-	       is_select: longint;
-	       max      : LRECT;
-	       x_size,
-	       y_size   : longint;
-	       flags,
-	       is_raster: integer;
-	       rx,
-	       ry,
-	       rastx,
-	       rasty,
-	       ppm      : longint;
-	       mode,
-	       element  : integer;
-	       first,
-	       page,
-	       undo     : pointer;
-	       res1,
-	       res2     : longint
-	     end;
-
-	var q     : longint;
-	    cell  : PCell;
-	    ttxt  : string;
-	    header: CWPHEADER;
-
-	begin
-		if not(InitFile(fname)) then exit;
-		if not(KeyCorrect(regname,regkey)) then
-			begin
-				DemoAlert(p);
-				goto _ende
-			end;
-		{$IFNDEF DEMO}
-		ttxt:='CWG';
-		if bwrite(ttxt[1],3) then goto _ende;
-		q:=sizeof(CWPHEADER);
-		if bwrite(q,4) then goto _ende;
-		fillchar(header,sizeof(header),0);
-		with header do
-			begin
-				ver_num:=11;
-				{ ... }
-				x_size:=max.w;
-				y_size:=max.h;
-				is_raster:=1;
-				rx:=10000;
-				ry:=10000;
-				rastx:=10000;
-				rasty:=10000;
-				ppm:=350
-			end;
-		if bwrite(header,sizeof(header)) then goto _ende;
-
-		{ ... }
-
-		bwrite(q,-1);
-		{$ENDIF}
-		_ende:
-		fclose(hdl);
-		freemem(buf,bufsize);
-		ArrowMouse;
-		ExitFile(SCF_VECTOR,fname)
+		ExitFile(SCF_TEXT,fname,texbuf)
 	end;
 
 
@@ -32086,7 +35035,18 @@ procedure TDateButton.Changed(AnIndx: integer; DblClick: boolean);
 				q:=p^.rb8^.GetCheck;
 				p^.rb8^.Disable;
 				p^.rb8^.SetCheck(q)
+			end;
+		if AnIndx=RTRCOPY then
+			begin
+				p^.ed1^.Disable;
+				p^.ed2^.Disable
 			end
+		else
+			if p^.ptb^.GetCheck=bf_Unchecked then
+				begin
+					p^.ed1^.Enable;
+					p^.ed2^.Enable
+				end
 	end;
 
 
@@ -32178,7 +35138,7 @@ procedure TFill.HandleMenu(Indx: integer);
 			begin
 				if reihe=nil then
 					begin
-						new(reihe,Init(p,TEXELWINDPREFIX+'Reihe berechnen','Reihe-AusfÅllen-Dialog','AUSFöLLEN',RTREIHE));
+						new(reihe,Init(p,TEXELWINDPREFIX+TITLE_FILL,STG_FILL,ICNTITLE_FILL,RTREIHE));
 						if reihe<>nil then
 							begin
 								new(PGroupBox,Init(reihe,RTRBEREICH,GROUP_GENERAL_RANGE,BUBBLE_GENERAL_RANGE));
@@ -32187,26 +35147,26 @@ procedure TFill.HandleMenu(Indx: integer);
 								new(PGroupBox,Init(reihe,RTRTIME,'Zeiteinheit',''));
 								new(PGroupBox,Init(reihe,RTRSTEP,'',''));
 								new(reihe^.bedt,Init(reihe,RTRBEDIT,16,false,BUBBLE_GENERAL_RANGE));
-								new(PRadioButton,Init(reihe,RTRROWS,true,'')); { ... }
-								new(PRadioButton,Init(reihe,RTRCOLUMNS,true,'')); { ... }
-								new(reihe^.rb1,Init(reihe,RTRARITHM,true,'')); { ... }
-								new(reihe^.rb2,Init(reihe,RTRGEOM,true,'')); { ... }
-								new(reihe^.rb3,Init(reihe,RTRDATE,true,'')); { ... }
-								new(reihe^.rb4,Init(reihe,RTRCOPY,true,'')); { ... }
-								new(reihe^.ptb,Init(reihe,RTRTREND,true,'')); { ... }
-								new(reihe^.rb5,Init(reihe,RTRDAY,true,'')); { ... }
-								new(reihe^.rb6,Init(reihe,RTRWEEKDAY,true,'')); { ... }
-								new(reihe^.rb7,Init(reihe,RTRMONTH,true,'')); { ... }
-								new(reihe^.rb8,Init(reihe,RTRYEAR,true,'')); { ... }
-								new(reihe^.ed1,Init(reihe,RTRSTEPVAL,13,'')); { ... }
-								new(reihe^.ed2,Init(reihe,RTRENDVAL,13,'')); { ... }
+								new(PRadioButton,Init(reihe,RTRROWS,true,BUBBLE_FILL_ROWS));
+								new(PRadioButton,Init(reihe,RTRCOLUMNS,true,BUBBLE_FILL_COLUMNS));
+								new(reihe^.rb1,Init(reihe,RTRARITHM,true,BUBBLE_FILL_ARITHM));
+								new(reihe^.rb2,Init(reihe,RTRGEOM,true,BUBBLE_FILL_GEOM));
+								new(reihe^.rb3,Init(reihe,RTRDATE,true,BUBBLE_FILL_DATE));
+								new(reihe^.rb4,Init(reihe,RTRCOPY,true,BUBBLE_FILL_COPY));
+								new(reihe^.ptb,Init(reihe,RTRTREND,true,BUBBLE_FILL_TREND));
+								new(reihe^.rb5,Init(reihe,RTRDAY,true,BUBBLE_FILL_RDAY));
+								new(reihe^.rb6,Init(reihe,RTRWEEKDAY,true,BUBBLE_FILL_RWEEKDAY));
+								new(reihe^.rb7,Init(reihe,RTRMONTH,true,BUBBLE_FILL_RMONTH));
+								new(reihe^.rb8,Init(reihe,RTRYEAR,true,BUBBLE_FILL_RYEAR));
+								new(reihe^.ed1,Init(reihe,RTRSTEPVAL,13,BUBBLE_FILL_STEPVAL));
+								new(reihe^.ed2,Init(reihe,RTRENDVAL,13,BUBBLE_FILL_ENDVAL));
 								new(pb,Init(reihe,RTRHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 								if pb<>nil then
 									if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
 								new(PButton,Init(reihe,RTRABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
-								new(pb,Init(reihe,RTRCALC,id_No,true,'')); { ... }
+								new(pb,Init(reihe,RTRCALC,id_No,true,BUBBLE_FILL_CALC));
 								if pb<>nil then pb^.Disable; { ... }
-								new(pb,Init(reihe,RTROK,id_OK,true,'')); { ... }
+								new(pb,Init(reihe,RTROK,id_OK,true,BUBBLE_FILL_OK));
 								if pb<>nil then pb^.Disable; { ... }
 								reihe^.TransferBuffer:=@p^.fillbuf
 							end
@@ -32323,21 +35283,65 @@ procedure TObjects.HandleMenu(Indx: integer);
 			end;
 		3:
 			begin
+				pe:=p^.Embedded;
+				while pe<>nil do
+					begin
+						if not(pe^.IsLocked) then
+							begin
+								pe^.Lock;
+								pe^.Redraw
+							end;
+						pe:=pe^.Next
+					end
+			end;
+		4:
+			begin
+				pe:=p^.Embedded;
+				while pe<>nil do
+					begin
+						if pe^.IsLocked then
+							begin
+								pe^.Unlock;
+								pe^.Redraw
+							end;
+						pe:=pe^.Next
+					end
+			end;
+		6:
+			begin
+				pe:=p^.Embedded;
+				while pe<>nil do
+					begin
+						pe^.SetPrintFlag;
+						pe:=pe^.Next
+					end
+			end;
+		7:
+			begin
+				pe:=p^.Embedded;
+				while pe<>nil do
+					begin
+						pe^.ClearPrintFlag;
+						pe:=pe^.Next
+					end
+			end;
+		9:
+			begin
 				if p^.links=nil then
 					begin
 						TexelApp.ActivateExtResource;
-						new(p^.links,Init(p,TEXELWINDPREFIX+'VerknÅpfungen','VerknÅpfungen-Dialog','LINKS',RTLINKS));
+						new(p^.links,Init(p,TEXELWINDPREFIX+TITLE_LINKS,STG_LINKS,ICNTITLE_LINKS,RTLINKS));
 						if p^.links<>nil then
 							begin
 								new(p^.links^.linklist,Init(20,10));
-								new(p^.links^.plb,Init(p^.links,RTLILIST,RTLISLID,RTLIDEC,RTLIINC,p^.links^.linklist,true,'')); { ... }
+								new(p^.links^.plb,Init(p^.links,RTLILIST,RTLISLID,RTLIDEC,RTLIINC,p^.links^.linklist,true,BUBBLE_LINK_LIST));
 								new(pb,Init(p^.links,RTLIHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 								if pb<>nil then
 									if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-								new(p^.links^.pb1,Init(p^.links,RTLICHANGE,id_No,true,'')); { ... }
-								new(p^.links^.pb2,Init(p^.links,RTLIACTIVATE,id_No,true,'')); { ... }
-								new(p^.links^.pb3,Init(p^.links,RTLIEDIT,id_No,true,'')); { ... }
-								new(PButton,Init(p^.links,RTLIOK,id_OK,true,'')); { ... }
+								new(p^.links^.pb1,Init(p^.links,RTLICHANGE,id_No,true,BUBBLE_LINK_CHANGE));
+								new(p^.links^.pb2,Init(p^.links,RTLIACTIVATE,id_No,true,BUBBLE_LINK_ACTIVATE));
+								new(p^.links^.pb3,Init(p^.links,RTLIEDIT,id_No,true,BUBBLE_LINK_EDIT));
+								new(PButton,Init(p^.links,RTLIOK,id_OK,true,BUBBLE_GENERAL_CLOSE));
 								if p^.links^.linklist<>nil then
 									begin
 										pe:=p^.Embedded;
@@ -32352,8 +35356,9 @@ procedure TObjects.HandleMenu(Indx: integer);
 					end;
 				if p^.links<>nil then
 					begin
+						pe:=p^.FirstSelectedObject;
 						p^.links^.MakeWindow;
-						p^.links^.UpdateList
+						p^.links^.UpdateList(pe)
 					end
 			end
 		end
@@ -32363,9 +35368,12 @@ procedure TObjects.HandleMenu(Indx: integer);
 procedure TClear.HandleMenu(Indx: integer);
 	var p    : PCalcWindow;
 	    x,y,
+	    cmin,
+	    cmax,
 	    rs,cs,
 	    re,ce: integer;
 	    cell : PCell;
+	    valid: boolean;
 
 	begin
 		p:=PCalcWindow(Parent);
@@ -32389,6 +35397,9 @@ procedure TClear.HandleMenu(Indx: integer);
 			p^.DeleteCells;
 		1:
 			begin
+				cmin:=cs;
+				cmax:=ce;
+				p^.RowsClearOverflow(rs,re,cmin,cmax);
 				for y:=rs to re do
 					begin
 						cell:=p^.GetCell(y,cs);
@@ -32421,20 +35432,28 @@ procedure TClear.HandleMenu(Indx: integer);
 								inc(longint(cell),CELLSIZE)
 							end
 					end;
+				p^.RowsCheckOverflow(rs,re,cmin,cmax);
 				p^.SetDirty;
-				p^.DrawCells(rs,cs,re,ce)
+				p^.DrawCells(rs,cmin,re,cmax)
 			end;
 		2:
-			if p^.FreeBlock(rs,cs,re,ce,false) then
-				begin
-					p^.SetDirty;
-					p^.DrawCells(rs,cs,re,ce);
-					p^.Calculate(true)
-				end
-			else
-				Application^.Bing;
+			begin
+				cmin:=cs;
+				cmax:=ce;
+				p^.RowsClearOverflow(rs,re,cmin,cmax);
+				valid:=p^.FreeBlock(rs,cs,re,ce,false);
+				p^.RowsCheckOverflow(rs,re,cmin,cmax);
+				if valid then
+					begin
+						p^.SetDirty;
+						p^.DrawCells(rs,cmin,re,cmax);
+						p^.AutoCalculate(true)
+					end
+				else
+					Application^.Bing
+			end;
 		3:
-			{ ... }
+			{ Notizen lîschen... }
 		end
 	end;
 
@@ -32651,18 +35670,20 @@ procedure TClearCellDialog.CheckButtons;
 
 function TClearCellDialog.OK: boolean;
 	var valid,
-	    movesize: boolean;
-	    p       : PCalcWindow;
+	    movesize : boolean;
+	    p        : PCalcWindow;
 	    rs,cs,
 	    re,ce,
 	    r,rbis,
 	    c,cbis,
 	    x,cdif,
 	    y,rdif,
-	    dummy   : integer;
+	    cmin,cmax,
+	    rmin,rmax,
+	    dummy    : integer;
 	    ocell,
-	    cell    : PCell;
-	    oldsel  : byte;
+	    cell     : PCell;
+	    oldsel   : byte;
 
 	begin
 		valid:=inherited OK;
@@ -32674,6 +35695,35 @@ function TClearCellDialog.OK: boolean;
 					begin
 						BusyMouse;
 						p^.GetBlock(p^.dblock^.GetText,false,rs,cs,re,ce,dummy,dummy);
+						if rb2^.GetCheck=bf_Checked then
+							begin
+								rmin:=rs;
+								rmax:=re;
+								cmin:=cs;
+								cmax:=p^.Parms.Columns
+							end
+						else if rb3^.GetCheck=bf_Checked then
+							begin
+								rmin:=rs;
+								rmax:=re;
+								cmin:=0;
+								cmax:=ce
+							end
+						else if rb4^.GetCheck=bf_Checked then
+							begin
+								rmin:=rs;
+								rmax:=p^.Parms.Rows;
+								cmin:=cs;
+								cmax:=ce
+							end
+						else
+							begin
+								rmin:=0;
+								rmax:=re;
+								cmin:=cs;
+								cmax:=ce
+							end;
+						p^.RowsClearOverflow(rmin,rmax,cmin,cmax);
 						p^.FreeBlock(rs,cs,re,ce,true);
 						if rb2^.GetCheck=bf_Checked then
 							begin
@@ -32792,6 +35842,7 @@ function TClearCellDialog.OK: boolean;
 										rs:=0
 									end;
 						p^.TranslateCells(r,c,rbis,cbis,rdif,cdif,true);
+						p^.RowsCheckOverflow(rmin,rmax,cmin,cmax);
 						p^.SetDirty;
 						if movesize then
 							begin
@@ -32799,8 +35850,8 @@ function TClearCellDialog.OK: boolean;
 								p^.ForceVRedraw
 							end
 						else
-							p^.DrawCells(rs,cs,re,ce);
-						p^.Calculate(true);
+							p^.DrawCells(rmin,cmin,rmax,cmax);
+						p^.AutoCalculate(true);
 						ArrowMouse
 					end
 			end;
@@ -32816,24 +35867,24 @@ procedure TClearCell.Work;
 		p:=PCalcWindow(Parent);
 		if ADialog=nil then
 			begin
-				ADialog:=new(PClearCellDialog,Init(p,TEXELWINDPREFIX+'Zellen lîschen','Zellen lîschen-Dialog','ZELLEN LôSCHEN',RTCLEARCELL));
+				ADialog:=new(PClearCellDialog,Init(p,TEXELWINDPREFIX+TITLE_CLEAR,STG_CLEAR,ICNTITLE_CLEAR,RTCLEARCELL));
 				if ADialog<>nil then
 					begin
 						new(PGroupBox,Init(ADialog,RTCCBEREICH,GROUP_GENERAL_RANGE,BUBBLE_GENERAL_RANGE));
 						new(PGroupBox,Init(ADialog,RTCCFILL,GROUP_DELCELL_FILL,''));
 						new(PClearCellDialog(ADialog)^.bedt,Init(ADialog,RTCCBEDIT,16,false,BUBBLE_GENERAL_RANGE));
-						new(PClearCellDialog(ADialog)^.rb1,Init(ADialog,RTCCEMPTY,true,'FÅllt den gelîschten Bereich mit leeren Zellen auf (identisch mit "Alles lîschen")'));
-						new(PClearCellDialog(ADialog)^.rb2,Init(ADialog,RTCCLEFT,true,'Verschiebt die Zellen rechts vom ursprÅnglichen Block nach links'));
-						new(PClearCellDialog(ADialog)^.rb3,Init(ADialog,RTCCRIGHT,true,'Verschiebt die Zellen links vom ursprÅnglichen Block nach rechts'));
-						new(PClearCellDialog(ADialog)^.rb4,Init(ADialog,RTCCUP,true,'Verschiebt die Zellen unterhalb des ursprÅnglichen Blocks nach oben'));
-						new(PClearCellDialog(ADialog)^.rb5,Init(ADialog,RTCCDOWN,true,'Verschiebt die Zellen oberhalb des ursprÅnglichen Blocks nach unten'));
+						new(PClearCellDialog(ADialog)^.rb1,Init(ADialog,RTCCEMPTY,true,BUBBLE_CLEAR_FILL));
+						new(PClearCellDialog(ADialog)^.rb2,Init(ADialog,RTCCLEFT,true,BUBBLE_CLEAR_LEFT));
+						new(PClearCellDialog(ADialog)^.rb3,Init(ADialog,RTCCRIGHT,true,BUBBLE_CLEAR_RIGHT));
+						new(PClearCellDialog(ADialog)^.rb4,Init(ADialog,RTCCUP,true,BUBBLE_CLEAR_UP));
+						new(PClearCellDialog(ADialog)^.rb5,Init(ADialog,RTCCDOWN,true,BUBBLE_CLEAR_DOWN));
 						new(pb,Init(ADialog,RTCCHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(ADialog,RTCCZEILE,id_No,true,'Erweitert den Block bis zur ersten und letzten Spalte'));
-						new(PButton,Init(ADialog,RTCCSPALTE,id_No,true,'Erweitert den Block bis zur ersten und letzten Zeile'));
+						new(PButton,Init(ADialog,RTCCZEILE,id_No,true,BUBBLE_CLEAR_ROW));
+						new(PButton,Init(ADialog,RTCCSPALTE,id_No,true,BUBBLE_CLEAR_COLUMN));
 						new(PButton,Init(ADialog,RTCCABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
-						new(PButton,Init(ADialog,RTCCOK,id_OK,true,'Lîscht den angegebenen Block und verlÑût den Dialog'));
+						new(PButton,Init(ADialog,RTCCOK,id_OK,true,BUBBLE_CLEAR_OK));
 						with p^.tccbuffer do
 							begin
 								empty:=bf_Unchecked;
@@ -33057,23 +36108,23 @@ procedure TInsertCell.Work;
 		p:=PCalcWindow(Parent);
 		if ADialog=nil then
 			begin
-				ADialog:=new(PInsertCellDialog,Init(p,TEXELWINDPREFIX+'Zellen einfÅgen','Zellen-einfÅgen-Dialog','ZELLEN EINFöGEN',RTINSERTCELLS));
+				ADialog:=new(PInsertCellDialog,Init(p,TEXELWINDPREFIX+TITLE_INSERT,STG_INSERT,ICNTITLE_INSERT,RTINSERTCELLS));
 				if ADialog<>nil then
 					begin
 						new(PGroupBox,Init(ADialog,RTICBEREICH,GROUP_GENERAL_RANGE,BUBBLE_GENERAL_RANGE));
 						new(PGroupBox,Init(ADialog,RTICMOVE,'',''));
 						new(PInsertCellDialog(ADialog)^.bedt,Init(ADialog,RTICBEDIT,16,false,BUBBLE_GENERAL_RANGE));
-						new(PInsertCellDialog(ADialog)^.rb2,Init(ADialog,RTICLEFT,true,'Verschiebt die Zellen im markierten Block um die Breite des Blocks nach links'));
-						new(PInsertCellDialog(ADialog)^.rb3,Init(ADialog,RTICRIGHT,true,'Verschiebt die Zellen im markierten Block um die Breite des Blocks nach rechts'));
-						new(PInsertCellDialog(ADialog)^.rb4,Init(ADialog,RTICUP,true,'Verschiebt die Zellen im markierten Block um die Hîhe des Blocks nach oben'));
-						new(PInsertCellDialog(ADialog)^.rb5,Init(ADialog,RTICDOWN,true,'Verschiebt die Zellen im markierten Block um die Hîhe des Blocks nach unten'));
+						new(PInsertCellDialog(ADialog)^.rb2,Init(ADialog,RTICLEFT,true,BUBBLE_INSERT_LEFT));
+						new(PInsertCellDialog(ADialog)^.rb3,Init(ADialog,RTICRIGHT,true,BUBBLE_INSERT_RIGHT));
+						new(PInsertCellDialog(ADialog)^.rb4,Init(ADialog,RTICUP,true,BUBBLE_INSERT_UP));
+						new(PInsertCellDialog(ADialog)^.rb5,Init(ADialog,RTICDOWN,true,BUBBLE_INSERT_DOWN));
 						new(pb,Init(ADialog,RTICHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(ADialog,RTICZEILE,id_No,true,'Erweitert den Block bis zur ersten und letzten Spalte'));
-						new(PButton,Init(ADialog,RTICSPALTE,id_No,true,'Erweitert den Block bis zur ersten und letzten Zeile'));
+						new(PButton,Init(ADialog,RTICZEILE,id_No,true,BUBBLE_INSERT_ROW));
+						new(PButton,Init(ADialog,RTICSPALTE,id_No,true,BUBBLE_INSERT_COLUMN));
 						new(PButton,Init(ADialog,RTICABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
-						new(PInsertCellDialog(ADialog)^.pb,Init(ADialog,RTICOK,id_OK,true,'Verschiebt den markierten Block (und fÅgt an seiner Stelle leere Zellen ein) und verlÑût den Dialog'));
+						new(PInsertCellDialog(ADialog)^.pb,Init(ADialog,RTICOK,id_OK,true,BUBBLE_INSERT_OK));
 						with p^.ticbuffer do
 							begin
 								left:=bf_Unchecked;
@@ -33204,7 +36255,7 @@ procedure TInsert.Work;
 		p:=PCalcWindow(Parent);
 		if ADialog=nil then
 			begin
-				ADialog:=new(PInsertDialog,Init(p,TEXELWINDPREFIX+'Inhalte einfÅgen','Inhalte-einfÅgen-Dialog','INHALTE EINFöGEN',RTINSERT));
+				ADialog:=new(PInsertDialog,Init(p,TEXELWINDPREFIX+TITLE_INSVAL,STG_INSVAL,ICNTITLE_INSVAL,RTINSERT));
 				if ADialog<>nil then
 					begin
 						new(PGroupBox,Init(ADialog,RTINBEREICH,GROUP_GENERAL_RANGE,BUBBLE_GENERAL_RANGE));
@@ -33212,26 +36263,26 @@ procedure TInsert.Work;
 						new(PGroupBox,Init(ADialog,RTINOPERATION,GROUP_INSERT_OPERATION,''));
 						new(PGroupBox,Init(ADialog,RTINOPTIONS,'',''));
 						new(PInsertDialog(ADialog)^.bedt,Init(ADialog,RTINBEDIT,16,false,BUBBLE_GENERAL_RANGE));
-						new(PInsButton,Init(ADialog,RTINALL,true,'Formeln, Zahlen und Attribute werden eingefÅgt'));
-						new(PInsButton,Init(ADialog,RTINFORMULA,true,'Formeln und Zahlen werden eingefÅgt'));
-						new(PInsButton,Init(ADialog,RTINVALUE,true,'Es werden nur Zahlen eingefÅgt, bei Formeln wird dafÅr der aktuelle Wert genommen'));
-						new(PInsertDialog(ADialog)^.rb,Init(ADialog,RTINFORMATS,true,'Es werden nur Attribute Åbertragen'));
-						new(rb,Init(ADialog,RTINNOTES,true,'Es werden nur Notizen Åbertragen'));
+						new(PInsButton,Init(ADialog,RTINALL,true,BUBBLE_INSVAL_ALL));
+						new(PInsButton,Init(ADialog,RTINFORMULA,true,BUBBLE_INSVAL_FORMULA));
+						new(PInsButton,Init(ADialog,RTINVALUE,true,BUBBLE_INSVAL_VALUE));
+						new(PInsertDialog(ADialog)^.rb,Init(ADialog,RTINFORMATS,true,BUBBLE_INSVAL_FORMAT));
+						new(rb,Init(ADialog,RTINNOTES,true,BUBBLE_INSVAL_NOTE));
 						PInsertDialog(ADialog)^.rb0:=rb;
 						if rb<>nil then rb^.Disable; { ... }
-						new(PInsertDialog(ADialog)^.rb1,Init(ADialog,RTINNONE,true,'Die zu kopierenden Zellen ersetzen die Zellen im Zielbereich'));
-						new(PInsertDialog(ADialog)^.rb2,Init(ADialog,RTINADD,true,'Die zu kopierenden Zellen werden zu den Zellen im Zielbereich addiert'));
-						new(PInsertDialog(ADialog)^.rb3,Init(ADialog,RTINSUB,true,'Die zu kopierenden Zellen werden von den Zellen im Zielbereich abgezogen'));
-						new(PInsertDialog(ADialog)^.rb4,Init(ADialog,RTINMUL,true,'Die Zellen im Zielbereich werden mit den zu kopierenden Zellen multipliziert'));
-						new(PInsertDialog(ADialog)^.rb5,Init(ADialog,RTINDIV,true,'Die Zellen im Zielbereich werden durch die zu kopierenden Zellen geteilt'));
-						new(PInsertDialog(ADialog)^.cb,Init(ADialog,RTINEMPTY,true,'Wenn diese Box markiert ist, werden leere Zellen nicht kopiert, lîschen also auch keine Zellen im Zielbereich'));
-						new(PCheckBox,Init(ADialog,RTINTRANSPOSE,true,'Wenn diese Option aktiv ist, werden beim Kopieren Zeilen und Spalten vertauscht'));
+						new(PInsertDialog(ADialog)^.rb1,Init(ADialog,RTINNONE,true,BUBBLE_INSVAL_OPNONE));
+						new(PInsertDialog(ADialog)^.rb2,Init(ADialog,RTINADD,true,BUBBLE_INSVAL_OPADD));
+						new(PInsertDialog(ADialog)^.rb3,Init(ADialog,RTINSUB,true,BUBBLE_INSVAL_OPSUB));
+						new(PInsertDialog(ADialog)^.rb4,Init(ADialog,RTINMUL,true,BUBBLE_INSVAL_OPMUL));
+						new(PInsertDialog(ADialog)^.rb5,Init(ADialog,RTINDIV,true,BUBBLE_INSVAL_OPDIV));
+						new(PInsertDialog(ADialog)^.cb,Init(ADialog,RTINEMPTY,true,BUBBLE_INSVAL_EMPTY));
+						new(PCheckBox,Init(ADialog,RTINTRANSPOSE,true,BUBBLE_INSVAL_TRANSPOSE));
 						new(pb,Init(ADialog,RTINHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
 						new(PButton,Init(ADialog,RTINABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
-						new(PButton,Init(ADialog,RTININS,id_No,true,'FÅgt Zellen vom Klemmbrett ein, ohne den Dialog zu verlassen'));
-						new(PButton,Init(ADialog,RTINOK,id_OK,true,'FÅgt Zellen vom Klemmbrett ein und verlÑût den Dialog'));
+						new(PButton,Init(ADialog,RTININS,id_No,true,BUBBLE_INSVAL_INSERT));
+						new(PButton,Init(ADialog,RTINOK,id_OK,true,BUBBLE_INSVAL_OK));
 						with p^.tibuffer do
 							begin
 								all:=bf_Checked;
@@ -33292,19 +36343,59 @@ procedure TPrint.Work;
 
 
 procedure TPrint.Display(def: integer);
-	var t      : string;
-	    pe     : PEdit;
-	    drivers: PStringCollection;
-	    p      : PCalcWindow;
-	    pc     : PCheckBox;
-	    pb     : PButton;
+	var t          : string;
+	    pe         : PEdit;
+	    drivers    : PStringCollection;
+	    p          : PCalcWindow;
+	    pc         : PCheckBox;
+	    pb         : PButton;
+	    sub_dialogs: PPDLG_SUB;
+	    pt         : PTree;
 
 	begin
 		if not(Application^.GDOSActive) then exit;
 		p:=PCalcWindow(Parent);
 		if TexelApp.ExtPrnSel(p^.wnd_prnt_set,TexelApp.app_prnt_set) then
 			begin
-				t:=TEXELWINDPREFIX+'Drucken'#0;
+				getmem(sub_dialogs,sizeof(PDLG_SUB));
+				if sub_dialogs<>nil then
+					begin
+						pt:=Application^.GetAddr(RTICONS);
+						with sub_dialogs^ do
+							begin
+								next:=nil;
+								option_flags:=0;
+								sub_id:=-1;
+								sub_icon:=@pt^[RTIPRINTRANGE];
+								sub_tree:=Application^.GetAddr(RTPRINTSUBDIAL);
+								dialog:=nil;
+								tree:=nil;
+								index_offset:=0;
+								reserved1:=0;
+								reserved2:=0;
+								init_dlg:=pinit_texel;
+								do_dlg:=nil;
+								reset_dlg:=preset_texel;
+								reserved3:=0;
+								private1:=longint(p);
+								private2:=0;
+								private3:=0;
+								private4:=0
+							end;
+						with AES_pb do
+							begin
+								control^[0]:=205;
+								control^[1]:=1;
+								control^[2]:=1;
+								control^[3]:=2;
+								control^[4]:=0;
+								intin^[0]:=3;
+								addrin^[0]:=TexelApp.prnt_dialog;
+								addrin^[1]:=sub_dialogs;
+								_crystal(@AES_pb)
+							end
+					end;
+				t:=TEXELWINDPREFIX+TITLE_PRINT+#0;
 				with AES_pb do
 					begin
 						control^[0]:=207;
@@ -33323,48 +36414,63 @@ procedure TPrint.Display(def: integer);
 						PrintSheet(GetDevice);
 						if p^.pagepreview<>nil then p^.pagepreview^.Update(true);
 					end;
+				if sub_dialogs<>nil then
+					begin
+						with AES_pb do
+							begin
+								control^[0]:=205;
+								control^[1]:=1;
+								control^[2]:=1;
+								control^[3]:=1;
+								control^[4]:=0;
+								intin^[0]:=4;
+								addrin^[0]:=TexelApp.prnt_dialog;
+								_crystal(@AES_pb)
+							end;
+						free_sub_dialogs(sub_dialogs)
+					end;
 				exit
 			end;
 		if ADialog=nil then
 			begin
-				ADialog:=new(PPrintDialog,Init(p,TEXELWINDPREFIX+'Drucken','Drucken-Dialog','DRUCKEN',RTPRINT));
+				ADialog:=new(PPrintDialog,Init(p,TEXELWINDPREFIX+TITLE_PRINT,STG_PRINT,ICNTITLE_PRINT,RTPRINT));
 				if ADialog<>nil then
 					begin
 						PPrintDialog(ADialog)^.drvinfo:=nil;
 						new(PGroupBox,Init(ADialog,RTPBEREICH,GROUP_GENERAL_RANGE,''));
-						new(st0,Init(ADialog,RTPTITLE,43,true,'Der Dateiname des auszudruckenden Dokuments'));
-						new(PCheckBox,Init(ADialog,RTPSHEET,true,'Wenn dieses KÑstchen NICHT angekreuzt ist, wird der Benutzer zum Einlegen neuer Seiten aufgefordert'));
-						new(PCheckBox,Init(ADialog,RTPFEED,true,'Ist dieses KÑstchen angekreuzt, wird bei Druckern und Metafiles nach dem Ausdruck ein Seitenvorschub durchgefÅhrt'));
-						new(pe,Init(ADialog,RTPCOPIES,4,'Bestimmt, wie oft das Dokument ausgedruckt wird'));
+						new(st0,Init(ADialog,RTPTITLE,43,true,BUBBLE_PRINT_FILE));
+						new(PCheckBox,Init(ADialog,RTPSHEET,true,BUBBLE_PRINT_SHEET));
+						new(PCheckBox,Init(ADialog,RTPFEED,true,BUBBLE_PRINT_FEED));
+						new(pe,Init(ADialog,RTPCOPIES,4,BUBBLE_PRINT_COPIES));
 						if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(1,99)));
-						new(ppcb,Init(ADialog,RTPPERCSIZE,RTPPSCYC,RTPPSTITLE,RTPOPUPS,RTPPRINTPERC,id_no,false,true,'Stellt den Vergrîûerungs- bzw. Verkleinerungsfaktor ein'));
+						new(ppcb,Init(ADialog,RTPPERCSIZE,RTPPSCYC,RTPPSTITLE,RTPOPUPS,RTPPRINTPERC,id_no,false,true,BUBBLE_PRINT_SCALE));
 						if ppcb<>nil then
 							begin
 								if ppcb^.Popup<>nil then ppcb^.Popup^.AutoCheck:=false;
 								if ppcb^.Edit<>nil then ppcb^.Edit^.SetValidator(new(PRangeValidator,Init(MINPERCENT,MAXPERCENT)))
 							end;
 						new(drivers,Init(10,5));
-						new(PPrintDialog(ADialog)^.drvbox,InitCollection(ADialog,RTPDRIVER,RTPDRIVERCYC,RTPDRIVERTITLE,30,drivers,true,true,false,'Bestimmt einen Treiber fÅr das AusgabegerÑt'));
+						new(PPrintDialog(ADialog)^.drvbox,InitCollection(ADialog,RTPDRIVER,RTPDRIVERCYC,RTPDRIVERTITLE,30,drivers,true,true,false,BUBBLE_PRINT_DRIVER));
 						new(pb,Init(ADialog,RTPINFO,id_No,true,''));
 						if pb<>nil then pb^.Hide(false);
 						PPrintDialog(ADialog)^.inf:=pb;
-						new(PPrintDialog(ADialog)^.druck,Init(ADialog,RTPPRINT,id_No,true,'Druckt das Dokument aus'));
-						new(PPrintDialog(ADialog)^.devbox,Init(ADialog,RTPDEVICE,RTPDEVCYC,RTPDEVTITLE,RTPOPUPS,RTPDEVICES,id_No,false,false,'Legt das AusgabegerÑt fest'));
-						new(pc,Init(ADialog,RTPSW,true,'Wenn diese Option eingeschaltet ist, werden alle Textfarben (auûer weiû) schwarz gedruckt und alle Hintergrundfarben (auûer schwarz) weiû'));
+						new(PPrintDialog(ADialog)^.druck,Init(ADialog,RTPPRINT,id_No,true,BUBBLE_PRINT_PRINT));
+						new(PPrintDialog(ADialog)^.devbox,Init(ADialog,RTPDEVICE,RTPDEVCYC,RTPDEVTITLE,RTPOPUPS,RTPDEVICES,id_No,false,false,BUBBLE_PRINT_DEVICE));
+						new(pc,Init(ADialog,RTPSW,true,BUBBLE_PRINT_BW));
 						if pc<>nil then pc^.Disable; { ... }
-						new(PRadioButton,Init(ADialog,RTPPBLOCK,true,'Wird aus "Seite einrichten" Åbernommen. Ist dort kein Bereich eingetragen, ist dieser Punkt identisch mit "Alles".'));
-						new(PRadioButton,Init(ADialog,RTPALL,true,'Druckt das Blatt bis zur am weitesten rechts unten liegenden verwendeten Zellen aus'));
-						new(PRadioButton,Init(ADialog,RTPBLOCK,true,'Druckt den aktuell markierten Block aus'));
-						new(PPrintDialog(ADialog)^.paper,Init(ADialog,RTPPSIZE,RTPPCYC,RTPPTITLE,RTPOPUPS,RTPPAPER,id_No,false,false,'Stellt fÅr Drucker und Images die verwendete Papiergrîûe ein (ab NVDI3)'));
-						new(pe,Init(ADialog,RTPVON,4,'Legt fest, ab welcher Seite der gesplitteten Tabelle gedruckt werden soll. Die Numerierung wird in "Seite einrichten" festgelegt.'));
+						new(PRadioButton,Init(ADialog,RTPPBLOCK,true,BUBBLE_PRINT_RANGE));
+						new(PRadioButton,Init(ADialog,RTPALL,true,BUBBLE_PRINT_ALL));
+						new(PRadioButton,Init(ADialog,RTPBLOCK,true,BUBBLE_PRINT_SELECTION));
+						new(PPrintDialog(ADialog)^.paper,Init(ADialog,RTPPSIZE,RTPPCYC,RTPPTITLE,RTPOPUPS,RTPPAPER,id_No,false,false,BUBBLE_PRINT_PAPER));
+						new(pe,Init(ADialog,RTPVON,4,BUBBLE_PRINT_PAGEFROM));
 						if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(MINPAGES,MAXPAGESOLD)));
-						new(PEdit,Init(ADialog,RTPBIS,4,'Bestimmt, bis zu welcher Seite der gesplitteten Tabelle gedruckt werden soll. Bei zu groûen Werten hîrt der Druck nach der letzten Seite auf. Ist hier nichts eingetragen, wird nur eine Seite gedruckt.'));
+						new(PEdit,Init(ADialog,RTPBIS,4,BUBBLE_PRINT_PAGETO));
 						new(pb,Init(ADialog,RTPHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(ADialog,RTPPAGESETUP,id_No,true,'Ruft den "Seite einrichten"-Dialog auf'));
-						new(PButton,Init(ADialog,RTPPREVIEW,id_No,true,'Ruft die Seitenansicht auf'));
-						new(PButton,Init(ADialog,RTPOK,id_OK,true,'öbernimmt die Einstellungen (ohne zu drucken)'));
+						new(PButton,Init(ADialog,RTPPAGESETUP,id_No,true,BUBBLE_PRINT_LAYOUT));
+						new(PButton,Init(ADialog,RTPPREVIEW,id_No,true,BUBBLE_PRINT_PREVIEW));
+						new(PButton,Init(ADialog,RTPOK,id_OK,true,BUBBLE_PRINT_OK));
 						new(PButton,Init(ADialog,RTPCANCEL,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
 						p^.prnbuffer:=TexelApp.stdprnbuffer;
 						p^.prnbuffer.prcindx:=0;
@@ -33436,7 +36542,7 @@ procedure TPrint.GetDriverNames(num,hdl: integer; var txt,dummy: string);
 							exit
 						end;
 				txt:='';
-				dummy:='GerÑt #'+ltoa(num)
+				dummy:=STRING_DEVICE+' #'+ltoa(num)
 			end
 		else
 			with PPrintDialog(ADialog)^.drvbox^ do
@@ -33516,7 +36622,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 			ret:=evnt_multi(MU_KEYBD or MU_TIMER,2,1,1,0,0,0,0,0,0,0,0,0,0,pipe,1,0,dummy,dummy,dummy,kstat,key,dummy);
 			if bTst(ret,MU_KEYBD) then
 				if (kstat=K_NORMAL) and (key=S_Esc) then
-					if Application^.Alert(p,2,WAIT,'Ausdruck abbrechen?','  &Ja  | &Nein ')=1 then abort:=true
+					if Application^.Alert(p,2,WAIT,MESSAGE_PRINT_STOP,BUTTON_YESNO)=1 then abort:=true
 		end;
 
 	procedure setfont(indx,sze: integer);
@@ -33555,233 +36661,31 @@ function TPrint.PrintSheet(num: integer): boolean;
 	function printdoc(xoffs,yoffs,xoffs2,yoffs2: integer): boolean;
 		label _nextgit,_endgit;
 
-		var xy,xy2,xy3,brd    : ARRAY_4;
+		var xy,xy2,xy3,brd,
+		    tover             : ARRAY_4;
 		    ext               : ARRAY_8;
 		    clp,clp2,clp3,clip,
 		    sr,bclp           : GRECT;
-		    brd1w,brd2w,brd3w,
-		    brd1h,brd2h,brd3h,
-		    q,w,oldfont,dummy,
-		    oldsize,oldtcolor,
+		    q,w,dummy,c2,
 		    oldstyle,oldcolor,
-		    oldinter,oldalign,
-		    oldlcolor,b,
-		    oldskew,oldrotat,
-		    oldeffects,tx,ty  : integer;
+		    oldinter,oldlcolor,
+		    b,tx,ty           : integer;
 		    cnum,lofs         : longint;
 		    title,sval        : string;
-		    midalign,
-		    gitter            : boolean;
 		    prctemp           : real;
 		    pe                : PEmbedded;
+		    cmpval            : TOldTxtVal;
+		    cell2             : PCell;
 
-		procedure settxtvalues(const tval: TTxtVal);
-
+		procedure setfontattr(const tval: TTxtVal);
+		
 			begin
-				with tval do
+				if (tval.Font<>cmpval.oldfont) or (tval.Size<>cmpval.oldsize) then
 					begin
-						if (Font<>oldfont) or (Size<>oldsize) then
-							begin
-								setfont(Font,Size);
-								oldsize:=Size;
-								oldfont:=Font
-							end;
-						if Color<>oldtcolor then
-							begin
-								vst_color(hndl,Color);
-								oldtcolor:=Color
-							end;
-						if Effects<>oldeffects then
-							begin
-								vst_effects(hndl,Effects);
-								oldeffects:=Effects
-							end;
-						if Rotat<>oldrotat then
-							begin
-								vst_rotation(hndl,Rotat);
-								oldrotat:=Rotat
-							end;
-						if Align<>oldalign then
-							begin
-								case (Align and $f0) of
-								TA_OBEN:
-									vst_alignment(hndl,Align and $0f,TA_TOP,dummy,dummy);
-								TA_MITTE:
-									vst_alignment(hndl,Align and $0f,TA_TOP,dummy,dummy)
-								else
-									vst_alignment(hndl,Align and $0f,TA_BOTTOM,dummy,dummy)
-								end;
-								oldalign:=Align
-							end;
-						if Skew<>oldskew then
-							begin
-								if p^.Speedo then vst_skew(hndl,Skew);
-								oldskew:=Skew
-							end;
-						case (Align and $0f) of
-						TA_CENTER:
-							tx:=(xy3[0]+xy3[2]) shr 1;
-						TA_RIGHT:
-							begin
-								tx:=xy3[2];
-								if not(gitter) then dec(tx);
-								if PCell(cnum)^.Border.Right>16 then
-									case (PCell(cnum)^.Border.Right shr 4) of
-									2:
-										dec(tx,brd1w);
-									3:
-										dec(tx,brd2w);
-									4,5:
-										dec(tx,brd3w)
-									end
-							end
-						else
-							begin
-								tx:=xy3[0]+1;
-								if PCell(cnum)^.Border.Left>16 then
-									case (PCell(cnum)^.Border.Left shr 4) of
-									2:
-										inc(tx,brd1w);
-									3:
-										inc(tx,brd2w);
-									4,5:
-										inc(tx,brd3w)
-									end
-							end
-						end;
-						case (Align and $f0) of
-						TA_OBEN:
-							begin
-								ty:=xy3[1];
-								midalign:=false;
-								if PCell(cnum)^.Border.Top>16 then
-									case (PCell(cnum)^.Border.Top shr 4) of
-									2:
-										inc(ty,brd1w);
-									3:
-										inc(ty,brd2w);
-									4,5:
-										inc(ty,brd3w)
-									end
-							end;
-						TA_MITTE:
-							begin
-								ty:=(xy3[1]+xy3[3]) shr 1;
-								midalign:=true
-							end
-						else
-							begin
-								ty:=xy3[3];
-								if gitter then inc(ty);
-								midalign:=false;
-								if PCell(cnum)^.Border.Bottom>16 then
-									case (PCell(cnum)^.Border.Bottom shr 4) of
-									2:
-										dec(ty,brd1w);
-									3:
-										dec(ty,brd2w);
-									4,5:
-										dec(ty,brd3w)
-									end
-							end
-						end
+						setfont(tval.Font,tval.Size);
+						cmpval.oldsize:=tval.Size;
+						cmpval.oldfont:=tval.Font
 					end
-			end;
-
-		procedure outputtext;
-
-			begin
-				if p^.Speedo then
-					begin
-						vqt_f_extent(hndl,sval,ext);
-						if abs(ext[2]-ext[0])>(xy3[2]-xy3[0]) then sval:=StrPFill(length(sval),'#');
-						if midalign then v_ftext(hndl,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-						else
-							v_ftext(hndl,tx,ty,sval)
-					end
-				else
-					begin
-						vqt_extent(hndl,sval,ext);
-						if abs(ext[2]-ext[0])>(xy3[2]-xy3[0]) then sval:=StrPFill(length(sval),'#');
-						if midalign then v_gtext(hndl,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-						else
-							v_gtext(hndl,tx,ty,sval)
-					end
-			end;
-
-		procedure outputerror(tval: TTxtVal; err: shortint; xd,yd: integer);
-
-			begin
-				tval.Align:=ERRORALIGN;
-				tval.Effects:=TF_NORMAL;
-				tval.Rotat:=0;
-				tval.Skew:=0;
-				settxtvalues(tval);
-				dec(tx,xd);
-				dec(ty,yd);
-				sval:=p^.Error2Txt(err);
-				if p^.Speedo then
-					begin
-						if midalign then
-							begin
-								vqt_f_extent(hndl,sval,ext);
-								v_ftext(hndl,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-							end
-						else
-							v_ftext(hndl,tx,ty,sval)
-					end
-				else
-					begin
-						if midalign then
-							begin
-								vqt_extent(hndl,sval,ext);
-								v_gtext(hndl,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-							end
-						else
-							v_gtext(hndl,tx,ty,sval)
-					end
-			end;
-
-		procedure outputkf(kfx,kfy,alh,alv: integer; s: string);
-			var k      : integer;
-			    c      : char;
-			    wert,s2: string;
-
-			begin
-				k:=pos('#',s);
-				s2:='';
-				while k>0 do
-					begin
-						c:=upcase(s[k+1]);
-						case c of
-						'#':
-							wert:='#';
-						'D':
-							wert:=StrPLeft(TexelApp.Time2Str(printtime),8);
-						'T','Z':
-							wert:=StrPRight(TexelApp.Time2Str(printtime),5);
-						'F':
-							begin
-								wert:=p^.GetWindowFilename;
-								if length(wert)=0 then wert:=p^.GetRawIconTitle
-							end;
-						'P','S':
-							wert:=ltoa(page+1);
-						'G':
-							wert:=ltoa(pages);
-						'A':
-							wert:=p^.infobuf.Autor
-						else
-							wert:=''
-						end;
-						s2:=s2+StrPLeft(s,k-1)+wert;
-						s:=StrPRight(s,length(s)-k-1);
-						k:=pos('#',s)
-					end;
-				vst_alignment(hndl,alh,alv,dummy,dummy);
-				if p^.Speedo then v_ftext(hndl,kfx,kfy,s2+s)
-				else
-					v_gtext(hndl,kfx,kfy,s2+s)
 			end;
 		
 		procedure drawbackground;
@@ -33839,9 +36743,9 @@ function TPrint.PrintSheet(num: integer): boolean;
 					prctemp:=prcfak;
 					prcfak:=1.0;
 					setfont(p^.GetStdFontIndex,p^.GetStdFontSize);
-					if p^.Parms.psbuffer.hlefton=bf_Checked then outputkf(clip.X1,clip.Y1,TA_LEFT,TA_TOP,p^.Parms.psbuffer.hleft);
-					if p^.Parms.psbuffer.hcenteron=bf_Checked then outputkf((clip.X1+clip.X2) shr 1,clip.Y1,TA_CENTER,TA_TOP,p^.Parms.psbuffer.hmid);
-					if p^.Parms.psbuffer.hrighton=bf_Checked then outputkf(clip.X2,clip.Y1,TA_RIGHT,TA_TOP,p^.Parms.psbuffer.hright);
+					if p^.Parms.psbuffer.hlefton=bf_Checked then p^.OutputKF(hndl,clip.X1,clip.Y1,TA_LEFT,TA_TOP,page,pages,printtime,p^.Parms.psbuffer.hleft);
+					if p^.Parms.psbuffer.hcenteron=bf_Checked then p^.OutputKF(hndl,(clip.X1+clip.X2) shr 1,clip.Y1,TA_CENTER,TA_TOP,page,pages,printtime,p^.Parms.psbuffer.hmid);
+					if p^.Parms.psbuffer.hrighton=bf_Checked then p^.OutputKF(hndl,clip.X2,clip.Y1,TA_RIGHT,TA_TOP,page,pages,printtime,p^.Parms.psbuffer.hright);
 					prcfak:=prctemp;
 					EndGroup
 				end;
@@ -33997,30 +36901,28 @@ function TPrint.PrintSheet(num: integer): boolean;
 				clp.W:=xoffs;
 			clp.H:=GetRowHeight(w);
 			GRtoA2(clp);
-			brd1w:=Max(round(prcfak*Border1*xmmfak)-1,0);
-			brd2w:=Max(round(prcfak*Border2*xmmfak)-1,0);
-			brd3w:=Max(round(prcfak*Border3*xmmfak)-1,0);
-			brd1h:=Max(round(prcfak*Border1*ymmfak)-1,0);
-			brd2h:=Max(round(prcfak*Border2*ymmfak)-1,0);
-			brd3h:=Max(round(prcfak*Border3*ymmfak)-1,0);
+			with cmpval do
+				begin
+					oldfont:=p^.GetFontIndex;
+					oldsize:=p^.GetFontSize;
+					brd1w:=Max(round(prcfak*Border1*xmmfak)-1,0);
+					brd2w:=Max(round(prcfak*Border2*xmmfak)-1,0);
+					brd3w:=Max(round(prcfak*Border3*xmmfak)-1,0);
+					brd1h:=Max(round(prcfak*Border1*ymmfak)-1,0);
+					brd2h:=Max(round(prcfak*Border2*ymmfak)-1,0);
+					brd3h:=Max(round(prcfak*Border3*ymmfak)-1,0);
+					gitter:=(p^.Parms.psbuffer.gitter=bf_Checked)
+				end;
 			oldcolor:=White;
-			oldtcolor:=Black;
 			oldlcolor:=Black;
 			oldstyle:=0;
 			oldinter:=FIS_HOLLOW;
-			oldalign:=TA_LEFT;
-			oldskew:=0;
-			oldrotat:=0;
-			oldeffects:=TF_NORMAL;
-			gitter:=(p^.Parms.psbuffer.gitter=bf_Checked);
-			oldfont:=p^.GetFontIndex;
-			oldsize:=p^.GetFontSize;
-			setfont(oldfont,oldsize);
 			vsf_color(hndl,oldcolor);
 			vsf_style(hndl,oldstyle);
 			vsf_interior(hndl,oldinter);
-			vst_alignment(hndl,TA_LEFT,TA_BOTTOM,dummy,dummy);
 			vsl_color(hndl,oldlcolor);
+			setfont(cmpval.oldfont,cmpval.oldsize);
+			p^.InitTextValues(hndl,cmpval);
 			if abort then
 				begin
 					printdoc:=false;
@@ -34038,7 +36940,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 				xy3[0]:=clp3.X-1;
 				xy3[1]:=clp3.Y-1;
 				xy3[3]:=clp3.Y+clp3.H-1;
-				if gitter then dec(xy3[3]);
+				if cmpval.gitter then dec(xy3[3]);
 				GRtoA2(clp3);
 				repeat
 					clp2:=clp3;
@@ -34047,63 +36949,92 @@ function TPrint.PrintSheet(num: integer): boolean;
 							StartGroup;
 							vs_clip(hndl,CLIP_ON,clp2.A2);
 							xy3[2]:=clp3.X2;
-							if gitter then dec(xy3[2]);
+							if cmpval.gitter then
+								if (PCell(cnum)^.TxtVal.Flags and TFL_GITTERMASK)=0 then dec(xy3[2]);
 							{ Zellinhalt }
 							drawbackground;
 							with PCell(cnum)^ do
 								begin
-									if Data.Value<>0 then
-										if not(bTst(TxtVal.Flags,TFL_NOCLIP)) then
+									vswr_mode(hndl,MD_TRANS);
+									case Typ of
+									CTYPE_TEXT:
+										if Data.Value<>0 then
 											begin
-												vswr_mode(hndl,MD_TRANS);
-												case Typ of
-												CTYPE_TEXT:
-													begin
-														settxtvalues(TxtVal);
-														if p^.Speedo then
-															begin
-																if midalign then
-																	begin
-																		vqt_f_extent(hndl,Data.Txt^,ext);
-																		v_ftext(hndl,tx,ty-((ext[5]-ext[1]) shr 1),Data.Txt^)
-																	end
-																else
-																	v_ftext(hndl,tx,ty,Data.Txt^)
-															end
-														else
-															begin
-																if midalign then
-																	begin
-																		vqt_extent(hndl,Data.Txt^,ext);
-																		v_gtext(hndl,tx,ty-((ext[5]-ext[1]) shr 1),Data.Txt^)
-																	end
-																else
-																	v_gtext(hndl,tx,ty,Data.Txt^)
-															end
-													end;
-												CTYPE_CONST:
-													with Data.Konst^ do
-														begin
-															if p^.Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
-															settxtvalues(TxtVal);
-															outputtext
-														end;
-												CTYPE_FORMULA:
-													with Data.Formula^ do
-														if Error=FE_OK then
-															begin
-																if p^.Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
-																settxtvalues(TxtVal);
-																outputtext
-															end
-														else
-															outputerror(TxtVal,Error,0,0)
-												end;
-												vswr_mode(hndl,MD_REPLACE)
+												setfontattr(TxtVal);
+												p^.OutputVectorText(hndl,PCell(cnum),Data.Txt^,TxtVal,cmpval,xy3,false)
 											end;
-									if gitter then
+									CTYPE_CONST:
+										with Data.Konst^ do
+											begin
+												if p^.Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
+												setfontattr(TxtVal);
+												p^.OutputVectorText(hndl,PCell(cnum),sval,TxtVal,cmpval,xy3,true)
+											end;
+									CTYPE_FORMULA:
+										with Data.Formula^ do
+											if Error=FE_OK then
+												begin
+													if p^.Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
+													setfontattr(TxtVal);
+													p^.OutputVectorText(hndl,PCell(cnum),sval,TxtVal,cmpval,xy3,true)
+												end
+											else
+												begin
+													setfontattr(TxtVal);
+													p^.OutputErrorText(hndl,PCell(cnum),TxtVal,cmpval,xy3,Error)
+												end;
+									CTYPE_EMPTY:
 										begin
-											inc(xy3[2]);
+											if bTst(TxtVal.Flags,TFL_TEXTFROMLEFT) then
+												begin
+													tover:=xy3;
+													c2:=q;
+													cell2:=PCell(cnum);
+													repeat
+														dec(longint(cell2),CELLSIZE);
+														dec(c2);
+														if c2<0 then break
+														else
+															begin
+																tover[2]:=tover[0]-1;
+																dec(tover[0],GetColWidth(c2))
+															end;
+													until (cell2^.TxtVal.Flags and TFL_RIGHTMASK)=TFL_TEXT2RIGHT;
+													if c2>=0 then
+														begin
+															setfontattr(cell2^.TxtVal);
+															p^.OutputVectorText(hndl,cell2,cell2^.Data.Txt^,cell2^.TxtVal,cmpval,tover,false)
+														end
+												end
+											else
+												if bTst(TxtVal.Flags,TFL_TEXTFROMRIGHT) then
+													begin
+														tover:=xy3;
+														c2:=q;
+														cell2:=PCell(cnum);
+														repeat
+															inc(longint(cell2),CELLSIZE);
+															inc(c2);
+															if c2>p^.Parms.Columns then break
+															else
+																begin
+																	tover[0]:=tover[2]+1;
+																	inc(tover[2],GetColWidth(c2));
+																	if cmpval.gitter then dec(tover[2])
+																end;
+														until (cell2^.TxtVal.Flags and TFL_LEFTMASK)=TFL_TEXT2LEFT;
+														if c2<=p^.Parms.Columns then
+															begin
+																setfontattr(cell2^.TxtVal);
+																p^.OutputVectorText(hndl,cell2,cell2^.Data.Txt^,cell2^.TxtVal,cmpval,tover,false)
+															end
+													end
+										end
+									end;
+									vswr_mode(hndl,MD_REPLACE);
+									if cmpval.gitter then
+										begin
+											if (PCell(cnum)^.TxtVal.Flags and TFL_GITTERMASK)=0 then inc(xy3[2]);
 											inc(xy3[3])
 										end;
 									with Border do
@@ -34117,155 +37048,157 @@ function TPrint.PrintSheet(num: integer): boolean;
 													begin
 														vs_clip(hndl,CLIP_ON,bclp.A2);
 														if Left>=16 then
-															begin
-																if (Left and $f)<>oldlcolor then
-																	begin
-																		oldlcolor:=Left and $f;
-																		vsl_color(hndl,oldlcolor)
+															if (TxtVal.Flags and TFL_LEFTBORDER)=0 then
+																begin
+																	if (Left and $f)<>oldlcolor then
+																		begin
+																			oldlcolor:=Left and $f;
+																			vsl_color(hndl,oldlcolor)
+																		end;
+																	if q=cs then inc(xy3[0]);
+																	case (Left shr 4) of
+																	1:
+																		begin
+																			brd[0]:=xy3[0];
+																			brd[1]:=xy3[1];
+																			brd[2]:=brd[0];
+																			brd[3]:=xy3[3];
+																			v_pline(hndl,2,brd)
+																		end;
+																	2:
+																		begin
+																			brd[0]:=xy3[0];
+																			brd[1]:=xy3[1];
+																			brd[3]:=xy3[3];
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					brd[2]:=brd[0];
+																					v_pline(hndl,2,brd);
+																					inc(brd[0])
+																				end
+																		end;
+																	3:
+																		begin
+																			brd[0]:=xy3[0];
+																			brd[1]:=xy3[1];
+																			brd[3]:=xy3[3];
+																			for b:=0 to cmpval.brd2w do
+																				begin
+																					brd[2]:=brd[0];
+																					v_pline(hndl,2,brd);
+																					inc(brd[0])
+																				end
+																		end;
+																	4:
+																		begin
+																			brd[0]:=xy3[0];
+																			brd[1]:=xy3[1];
+																			brd[3]:=xy3[3];
+																			for b:=0 to cmpval.brd3w do
+																				begin
+																					brd[2]:=brd[0];
+																					v_pline(hndl,2,brd);
+																					inc(brd[0])
+																				end
+																		end;
+																	5:
+																		begin
+																			brd[0]:=xy3[0];
+																			brd[1]:=xy3[1];
+																			brd[3]:=xy3[3];
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					brd[2]:=brd[0];
+																					v_pline(hndl,2,brd);
+																					inc(brd[0])
+																				end;
+																			brd[0]:=xy3[0]+cmpval.brd3w;
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					brd[2]:=brd[0];
+																					v_pline(hndl,2,brd);
+																					dec(brd[0])
+																				end
+																		end
 																	end;
-																if q=cs then inc(xy3[0]);
-																case (Left shr 4) of
-																1:
-																	begin
-																		brd[0]:=xy3[0];
-																		brd[1]:=xy3[1];
-																		brd[2]:=brd[0];
-																		brd[3]:=xy3[3];
-																		v_pline(hndl,2,brd)
-																	end;
-																2:
-																	begin
-																		brd[0]:=xy3[0];
-																		brd[1]:=xy3[1];
-																		brd[3]:=xy3[3];
-																		for b:=0 to brd1w do
-																			begin
-																				brd[2]:=brd[0];
-																				v_pline(hndl,2,brd);
-																				inc(brd[0])
-																			end
-																	end;
-																3:
-																	begin
-																		brd[0]:=xy3[0];
-																		brd[1]:=xy3[1];
-																		brd[3]:=xy3[3];
-																		for b:=0 to brd2w do
-																			begin
-																				brd[2]:=brd[0];
-																				v_pline(hndl,2,brd);
-																				inc(brd[0])
-																			end
-																	end;
-																4:
-																	begin
-																		brd[0]:=xy3[0];
-																		brd[1]:=xy3[1];
-																		brd[3]:=xy3[3];
-																		for b:=0 to brd3w do
-																			begin
-																				brd[2]:=brd[0];
-																				v_pline(hndl,2,brd);
-																				inc(brd[0])
-																			end
-																	end;
-																5:
-																	begin
-																		brd[0]:=xy3[0];
-																		brd[1]:=xy3[1];
-																		brd[3]:=xy3[3];
-																		for b:=0 to brd1w do
-																			begin
-																				brd[2]:=brd[0];
-																				v_pline(hndl,2,brd);
-																				inc(brd[0])
-																			end;
-																		brd[0]:=xy3[0]+brd3w;
-																		for b:=0 to brd1w do
-																			begin
-																				brd[2]:=brd[0];
-																				v_pline(hndl,2,brd);
-																				dec(brd[0])
-																			end
+																	if q=cs then dec(xy3[0])
+																end;
+														if Right>=16 then
+															if (TxtVal.Flags and TFL_RIGHTBORDER)=0 then
+																begin
+																	if (Right and $f)<>oldlcolor then
+																		begin
+																			oldlcolor:=Right and $f;
+																			vsl_color(hndl,oldlcolor)
+																		end;
+																	case (Right shr 4) of
+																	1:
+																		begin
+																			brd[0]:=xy3[2];
+																			brd[1]:=xy3[1];
+																			brd[2]:=brd[0];
+																			brd[3]:=xy3[3];
+																			v_pline(hndl,2,brd)
+																		end;
+																	2:
+																		begin
+																			brd[0]:=xy3[2];
+																			brd[1]:=xy3[1];
+																			brd[3]:=xy3[3];
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					brd[2]:=brd[0];
+																					v_pline(hndl,2,brd);
+																					dec(brd[0])
+																				end
+																		end;
+																	3:
+																		begin
+																			brd[0]:=xy3[2];
+																			brd[1]:=xy3[1];
+																			brd[3]:=xy3[3];
+																			for b:=0 to cmpval.brd2w do
+																				begin
+																					brd[2]:=brd[0];
+																					v_pline(hndl,2,brd);
+																					dec(brd[0])
+																				end
+																		end;
+																	4:
+																		begin
+																			brd[0]:=xy3[2];
+																			brd[1]:=xy3[1];
+																			brd[3]:=xy3[3];
+																			for b:=0 to cmpval.brd3w do
+																				begin
+																					brd[2]:=brd[0];
+																					v_pline(hndl,2,brd);
+																					dec(brd[0])
+																				end
+																		end;
+																	5:
+																		begin
+																			brd[0]:=xy3[2];
+																			brd[1]:=xy3[1];
+																			brd[3]:=xy3[3];
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					brd[2]:=brd[0];
+																					v_pline(hndl,2,brd);
+																					dec(brd[0])
+																				end;
+																			brd[0]:=xy3[2]-cmpval.brd3w;
+																			brd[1]:=xy3[1];
+																			brd[3]:=xy3[3];
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					brd[2]:=brd[0];
+																					v_pline(hndl,2,brd);
+																					inc(brd[0])
+																				end
+																		end
 																	end
 																end;
-																if q=cs then dec(xy3[0])
-															end;
-														if Right>=16 then
-															begin
-																if (Right and $f)<>oldlcolor then
-																	begin
-																		oldlcolor:=Right and $f;
-																		vsl_color(hndl,oldlcolor)
-																	end;
-																case (Right shr 4) of
-																1:
-																	begin
-																		brd[0]:=xy3[2];
-																		brd[1]:=xy3[1];
-																		brd[2]:=brd[0];
-																		brd[3]:=xy3[3];
-																		v_pline(hndl,2,brd)
-																	end;
-																2:
-																	begin
-																		brd[0]:=xy3[2];
-																		brd[1]:=xy3[1];
-																		brd[3]:=xy3[3];
-																		for b:=0 to brd1w do
-																			begin
-																				brd[2]:=brd[0];
-																				v_pline(hndl,2,brd);
-																				dec(brd[0])
-																			end
-																	end;
-																3:
-																	begin
-																		brd[0]:=xy3[2];
-																		brd[1]:=xy3[1];
-																		brd[3]:=xy3[3];
-																		for b:=0 to brd2w do
-																			begin
-																				brd[2]:=brd[0];
-																				v_pline(hndl,2,brd);
-																				dec(brd[0])
-																			end
-																	end;
-																4:
-																	begin
-																		brd[0]:=xy3[2];
-																		brd[1]:=xy3[1];
-																		brd[3]:=xy3[3];
-																		for b:=0 to brd3w do
-																			begin
-																				brd[2]:=brd[0];
-																				v_pline(hndl,2,brd);
-																				dec(brd[0])
-																			end
-																	end;
-																5:
-																	begin
-																		brd[0]:=xy3[2];
-																		brd[1]:=xy3[1];
-																		brd[3]:=xy3[3];
-																		for b:=0 to brd1w do
-																			begin
-																				brd[2]:=brd[0];
-																				v_pline(hndl,2,brd);
-																				dec(brd[0])
-																			end;
-																		brd[0]:=xy3[2]-brd3w;
-																		brd[1]:=xy3[1];
-																		brd[3]:=xy3[3];
-																		for b:=0 to brd1w do
-																			begin
-																				brd[2]:=brd[0];
-																				v_pline(hndl,2,brd);
-																				inc(brd[0])
-																			end
-																	end
-																end
-															end;
 														if Top>=16 then
 															begin
 																if (Top and $f)<>oldlcolor then
@@ -34288,7 +37221,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 																		brd[1]:=xy3[1];
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd1h do
+																		for b:=0 to cmpval.brd1h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34300,7 +37233,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 																		brd[1]:=xy3[1];
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd2h do
+																		for b:=0 to cmpval.brd2h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34312,7 +37245,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 																		brd[1]:=xy3[1];
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd3h do
+																		for b:=0 to cmpval.brd3h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34324,14 +37257,14 @@ function TPrint.PrintSheet(num: integer): boolean;
 																		brd[1]:=xy3[1];
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd1h do
+																		for b:=0 to cmpval.brd1h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
 																				inc(brd[1])
 																			end;
-																		brd[1]:=xy3[1]+brd3h;
-																		for b:=0 to brd1h do
+																		brd[1]:=xy3[1]+cmpval.brd3h;
+																		for b:=0 to cmpval.brd1h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34362,7 +37295,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 																		brd[1]:=xy3[3];
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd1h do
+																		for b:=0 to cmpval.brd1h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34374,7 +37307,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 																		brd[1]:=xy3[3];
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd2h do
+																		for b:=0 to cmpval.brd2h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34386,7 +37319,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 																		brd[1]:=xy3[3];
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd3h do
+																		for b:=0 to cmpval.brd3h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34398,14 +37331,14 @@ function TPrint.PrintSheet(num: integer): boolean;
 																		brd[1]:=xy3[3];
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd1h do
+																		for b:=0 to cmpval.brd1h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
 																				dec(brd[1])
 																			end;
-																		brd[1]:=xy3[3]-brd3h;
-																		for b:=0 to brd1h do
+																		brd[1]:=xy3[3]-cmpval.brd3h;
+																		for b:=0 to cmpval.brd1h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34432,10 +37365,10 @@ function TPrint.PrintSheet(num: integer): boolean;
 																	end;
 																2:
 																	begin
-																		brd[1]:=(xy3[1]+xy3[3]-brd1h) shr 1;
+																		brd[1]:=(xy3[1]+xy3[3]-cmpval.brd1h) shr 1;
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd1h do
+																		for b:=0 to cmpval.brd1h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34444,10 +37377,10 @@ function TPrint.PrintSheet(num: integer): boolean;
 																	end;
 																3:
 																	begin
-																		brd[1]:=(xy3[1]+xy3[3]-brd2h) shr 1;
+																		brd[1]:=(xy3[1]+xy3[3]-cmpval.brd2h) shr 1;
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd2h do
+																		for b:=0 to cmpval.brd2h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34456,10 +37389,10 @@ function TPrint.PrintSheet(num: integer): boolean;
 																	end;
 																4:
 																	begin
-																		brd[1]:=(xy3[1]+xy3[3]-brd3h) shr 1;
+																		brd[1]:=(xy3[1]+xy3[3]-cmpval.brd3h) shr 1;
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd3h do
+																		for b:=0 to cmpval.brd3h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34468,17 +37401,17 @@ function TPrint.PrintSheet(num: integer): boolean;
 																	end;
 																5:
 																	begin
-																		brd[1]:=(xy3[1]+xy3[3]-brd3h) shr 1;
+																		brd[1]:=(xy3[1]+xy3[3]-cmpval.brd3h) shr 1;
 																		brd[0]:=xy3[0];
 																		brd[2]:=xy3[2];
-																		for b:=0 to brd1h do
+																		for b:=0 to cmpval.brd1h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
 																				inc(brd[1])
 																			end;
-																		brd[1]:=(xy3[1]+xy3[3]+brd3h) shr 1;
-																		for b:=0 to brd1h do
+																		brd[1]:=(xy3[1]+xy3[3]+cmpval.brd3h) shr 1;
+																		for b:=0 to cmpval.brd1h do
 																			begin
 																				brd[3]:=brd[1];
 																				v_pline(hndl,2,brd);
@@ -34505,10 +37438,10 @@ function TPrint.PrintSheet(num: integer): boolean;
 																	end;
 																2:
 																	begin
-																		brd[0]:=(xy3[0]+xy3[2]-brd1w) shr 1;
+																		brd[0]:=(xy3[0]+xy3[2]-cmpval.brd1w) shr 1;
 																		brd[1]:=xy3[1];
 																		brd[3]:=xy3[3];
-																		for b:=0 to brd1w do
+																		for b:=0 to cmpval.brd1w do
 																			begin
 																				brd[2]:=brd[0];
 																				v_pline(hndl,2,brd);
@@ -34517,10 +37450,10 @@ function TPrint.PrintSheet(num: integer): boolean;
 																	end;
 																3:
 																	begin
-																		brd[0]:=(xy3[0]+xy3[2]-brd2w) shr 1;
+																		brd[0]:=(xy3[0]+xy3[2]-cmpval.brd2w) shr 1;
 																		brd[1]:=xy3[1];
 																		brd[3]:=xy3[3];
-																		for b:=0 to brd2w do
+																		for b:=0 to cmpval.brd2w do
 																			begin
 																				brd[2]:=brd[0];
 																				v_pline(hndl,2,brd);
@@ -34529,10 +37462,10 @@ function TPrint.PrintSheet(num: integer): boolean;
 																	end;
 																4:
 																	begin
-																		brd[0]:=(xy3[0]+xy3[2]-brd3w) shr 1;
+																		brd[0]:=(xy3[0]+xy3[2]-cmpval.brd3w) shr 1;
 																		brd[1]:=xy3[1];
 																		brd[3]:=xy3[3];
-																		for b:=0 to brd3w do
+																		for b:=0 to cmpval.brd3w do
 																			begin
 																				brd[2]:=brd[0];
 																				v_pline(hndl,2,brd);
@@ -34541,17 +37474,17 @@ function TPrint.PrintSheet(num: integer): boolean;
 																	end;
 																5:
 																	begin
-																		brd[0]:=(xy3[0]+xy3[2]-brd3w) shr 1;
+																		brd[0]:=(xy3[0]+xy3[2]-cmpval.brd3w) shr 1;
 																		brd[1]:=xy3[1];
 																		brd[3]:=xy3[3];
-																		for b:=0 to brd1w do
+																		for b:=0 to cmpval.brd1w do
 																			begin
 																				brd[2]:=brd[0];
 																				v_pline(hndl,2,brd);
 																				inc(brd[0])
 																			end;
-																		brd[0]:=(xy3[0]+xy3[2]+brd3w) shr 1;
-																		for b:=0 to brd1w do
+																		brd[0]:=(xy3[0]+xy3[2]+cmpval.brd3w) shr 1;
+																		for b:=0 to cmpval.brd1w do
 																			begin
 																				brd[2]:=brd[0];
 																				v_pline(hndl,2,brd);
@@ -34563,9 +37496,9 @@ function TPrint.PrintSheet(num: integer): boolean;
 														vs_clip(hndl,CLIP_ON,clp2.A2)
 													end
 											end;
-									if gitter then dec(xy3[3])
+									if cmpval.gitter then dec(xy3[3])
 								end;
-							if gitter then
+							if cmpval.gitter then
 								begin
 									{ Begrenzungslinien }
 									if colfx then
@@ -34586,15 +37519,16 @@ function TPrint.PrintSheet(num: integer): boolean;
 											vsl_type(hndl,LT_USERDEF)
 										end;
 									if PCell(cnum)^.Border.Right<16 then
-										begin
-											if q<p^.Parms.Columns then
-												if PCell(cnum+CELLSIZE)^.Border.Left>=16 then goto _nextgit;
-											xy2[0]:=xy3[2];
-											xy2[1]:=xy3[1];
-											xy2[2]:=xy2[0];
-											xy2[3]:=xy3[3]+1;
-											v_pline(hndl,2,xy2)
-										end;
+										if (PCell(cnum)^.TxtVal.Flags and TFL_GITTERMASK)=0 then
+											begin
+												if q<p^.Parms.Columns then
+													if PCell(cnum+CELLSIZE)^.Border.Left>=16 then goto _nextgit;
+												xy2[0]:=xy3[2];
+												xy2[1]:=xy3[1];
+												xy2[2]:=xy2[0];
+												xy2[3]:=xy3[3]+1;
+												v_pline(hndl,2,xy2)
+											end;
 									_nextgit:
 									if PCell(cnum)^.Border.Bottom<16 then
 										begin
@@ -34612,7 +37546,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 							else
 								dec(xy3[3]);
 							EndGroup;
-							if not(gitter) then inc(xy3[3])
+							if not(cmpval.gitter) then inc(xy3[3])
 						end;
 					inc(q);
 					if q>ce then break;
@@ -34647,26 +37581,25 @@ function TPrint.PrintSheet(num: integer): boolean;
 								pe:=p^.Embedded;
 								while pe<>nil do
 									begin
-										pe^.SetWorkstationValues(num,wrkout[13],XPixOffs-xoffs,YPixOffs-yoffs,xmm100fak,ymm100fak,prcfak,1.0,bTst(ewrkout[30],1),false);
-										if pe^.IsVisible(clp,false) then
+										if pe^.CanPrint then
 											begin
-												vs_clip(hndl,CLIP_ON,clp.A2);
-												pe^.Paint(hndl,clp,false)
+												pe^.SetWorkstationValues(num,wrkout[13],XPixOffs-xoffs,YPixOffs-yoffs,xmm100fak,ymm100fak,prcfak,1.0,bTst(ewrkout[30],1),false);
+												if pe^.IsVisible(clp,false) then
+													begin
+														vs_clip(hndl,CLIP_ON,clp.A2);
+														pe^.Paint(hndl,clp,false)
+													end
 											end;
 										pe:=pe^.Next
 									end
 							end
 					end;
 			setfont(p^.GetStdFontIndex,p^.GetStdFontSize);
-			vst_color(hndl,Black);
-			vst_effects(hndl,TF_NORMAL);
-			vst_rotation(hndl,0);
+			p^.RestoreTextValues(hndl);
 			vsl_color(hndl,Black);
-			if p^.Speedo then vst_skew(hndl,0);
-			vst_alignment(hndl,TA_LEFT,TA_BASELINE,dummy,dummy);
 			vs_clip(hndl,CLIP_ON,clip.A2);
 			{ durchgezogene Linien }
-			if (p^.Parms.psbuffer.columns=bf_Checked) or (p^.Parms.psbuffer.rows=bf_Checked) or gitter then
+			if (p^.Parms.psbuffer.columns=bf_Checked) or (p^.Parms.psbuffer.rows=bf_Checked) or cmpval.gitter then
 				begin
 					StartGroup;
 					pxya[0]:=xoffs;
@@ -34716,9 +37649,9 @@ function TPrint.PrintSheet(num: integer): boolean;
 					prctemp:=prcfak;
 					prcfak:=1.0;
 					setfont(p^.GetStdFontIndex,p^.GetStdFontSize);
-					if p^.Parms.psbuffer.flefton=bf_Checked then outputkf(clip.X1,clip.Y2,TA_LEFT,TA_BOTTOM,p^.Parms.psbuffer.fleft);
-					if p^.Parms.psbuffer.fcenteron=bf_Checked then outputkf((clip.X1+clip.X2) shr 1,clip.Y2,TA_CENTER,TA_BOTTOM,p^.Parms.psbuffer.fmid);
-					if p^.Parms.psbuffer.frighton=bf_Checked then outputkf(clip.X2,clip.Y2,TA_RIGHT,TA_BOTTOM,p^.Parms.psbuffer.fright);
+					if p^.Parms.psbuffer.flefton=bf_Checked then p^.OutputKF(hndl,clip.X1,clip.Y2,TA_LEFT,TA_BOTTOM,page,pages,printtime,p^.Parms.psbuffer.fleft);
+					if p^.Parms.psbuffer.fcenteron=bf_Checked then p^.OutputKF(hndl,(clip.X1+clip.X2) shr 1,clip.Y2,TA_CENTER,TA_BOTTOM,page,pages,printtime,p^.Parms.psbuffer.fmid);
+					if p^.Parms.psbuffer.frighton=bf_Checked then p^.OutputKF(hndl,clip.X2,clip.Y2,TA_RIGHT,TA_BOTTOM,page,pages,printtime,p^.Parms.psbuffer.fright);
 					prcfak:=prctemp;
 					EndGroup
 				end;
@@ -34729,7 +37662,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 					exit
 				end;
 			if ppa<>nil then ppa^.Disable;
-			if pps<>nil then pps^.SetText('SEITE AUSDRUCKEN...');
+			if pps<>nil then pps^.SetText(STRING_PRINTPAGE);
 			v_updwk(hndl);
 			if ppa<>nil then ppa^.Enable
 		end;
@@ -34750,16 +37683,17 @@ function TPrint.PrintSheet(num: integer): boolean;
 					for w:=0 to p^.Parms.Columns do
 						begin
 							if cell^.Typ=CTYPE_EMPTY then
-								if cell^.Color=Black then
-									if cell^.Style=8 then
-										if cell^.Interior=FIS_HOLLOW then
-											with cell^.Border do
-												if Left<16 then
-													if Right<16 then
-														if Top<16 then
-															if Bottom<16 then
-																if Hor<16 then
-																	if Vert<16 then goto _leer;
+								if cell^.TxtVal.Flags=0 then
+									if cell^.Color=Black then
+										if cell^.Style=8 then
+											if cell^.Interior=FIS_HOLLOW then
+												with cell^.Border do
+													if Left<16 then
+														if Right<16 then
+															if Top<16 then
+																if Bottom<16 then
+																	if Hor<16 then
+																		if Vert<16 then goto _leer;
 							if q>rec then rec:=q;
 							if w>cec then cec:=w;
 							_leer:
@@ -34773,8 +37707,11 @@ function TPrint.PrintSheet(num: integer): boolean;
 							pe:=p^.Embedded;
 							while pe<>nil do
 								begin
-									if pe^.XPos_mm100+pe^.Width_mm100>xmm then xmm:=pe^.XPos_mm100+pe^.Width_mm100;
-									if pe^.YPos_mm100+pe^.Height_mm100>ymm then ymm:=pe^.YPos_mm100+pe^.Height_mm100;
+									if pe^.CanPrint then
+										begin
+											if pe^.XPos_mm100+pe^.Width_mm100>xmm then xmm:=pe^.XPos_mm100+pe^.Width_mm100;
+											if pe^.YPos_mm100+pe^.Height_mm100>ymm then ymm:=pe^.YPos_mm100+pe^.Height_mm100
+										end;
 									pe:=pe^.Next
 								end;
 							if xmm>0 then
@@ -34798,7 +37735,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 						end;
 				if (rec<0) or (cec<0) then
 					begin
-						Application^.Alert(p,1,NOTE,'Der Druckbereich enthÑlt keine Daten.','  &OK  ');
+						Application^.Alert(p,1,NOTE,MESSAGE_PRINT_EMPTY,BUTTON_OK);
 						goto _error
 					end
 			end
@@ -34811,14 +37748,14 @@ function TPrint.PrintSheet(num: integer): boolean;
 		if not(TexelApp.ExtPrnSel(p^.wnd_prnt_set,TexelApp.app_prnt_set)) then
 			begin
 				if meta then
-					if not(FileSelect(p,'AUSDRUCK IN METAFILE...','*.gem',TexelApp.LastPath[11],TexelApp.LastFile[11],false)) then goto _error;
+					if not(FileSelect(p,FSELTITLE_PRINTMETA,'*.gem',TexelApp.LastPath[11],TexelApp.LastFile[11],false)) then goto _error;
 				if bitimage then
-					if not(FileSelect(p,'AUSDRUCK IN IMG-DATEI...','*.img',TexelApp.LastPath[14],TexelApp.LastFile[14],false)) then goto _error;
+					if not(FileSelect(p,FSELTITLE_PRINTIMG,'*.img',TexelApp.LastPath[14],TexelApp.LastFile[14],false)) then goto _error;
 			end;
  		if bitimage then vOpnwk(num,hndl,wrkout,p^.prnbuffer.papier,TexelApp.LastPath[14]+TexelApp.LastFile[14],p^.wnd_prnt_set)
  		else
 			vOpnwk(num,hndl,wrkout,p^.prnbuffer.papier,'',p^.wnd_prnt_set);
-		if hndl=0 then Application^.Alert(p,1,NOTE,'Konnte GerÑtetreiber '+ltoa(num)+' nicht îffnen.','  &OK  ')
+		if hndl=0 then Application^.Alert(p,1,NOTE,MESSAGE_PRINT_DEVICE1+ltoa(num)+MESSAGE_PRINT_DEVICE2,BUTTON_OK)
 		else
 			begin
 				if not(TexelApp.ExtPrnSel(p^.wnd_prnt_set,TexelApp.app_prnt_set)) then
@@ -34878,7 +37815,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 				yoffs2:=wrkout[1]-yoffs2;
 				if (xoffs2<=xoffs) or (yoffs2<=yoffs) then
 					begin
-						Application^.Alert(p,1,NOTE,'Die RÑnder Åberschneiden sich oder ragen Åber den Blattrand hinaus.','  &OK  ');
+						Application^.Alert(p,1,NOTE,MESSAGE_PRINT_MARGINS,BUTTON_OK);
 						goto _borderr
 					end;
 				setfont(p^.GetStdFontIndex,p^.GetStdFontSize);
@@ -34929,7 +37866,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 					end;
 				if srect.Y>th then inc(pagey);
 				pages:=pagex*pagey;
-				new(progress,Init(p,'Texel',RTPRINTPROGRESS));
+				new(progress,Init(p,TEXELNAME,RTPRINTPROGRESS));
 				if progress<>nil then
 					begin
 						new(st,Init(progress,RTPPFILE,50,false,''));
@@ -34978,7 +37915,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 					end;
 				vbpages:=pgbis+1-pgvon;
 				repeat
-					if ppc<>nil then ppc^.SetText('Exemplar '+ltoa(p^.GetCopies(hndl)+1-copies)+'/'+ltoa(p^.GetCopies(hndl)));
+					if ppc<>nil then ppc^.SetText(STRING_COPY+' '+ltoa(p^.GetCopies(hndl)+1-copies)+'/'+ltoa(p^.GetCopies(hndl)));
 					re:=rsc-1;
 					for pgy:=0 to pagey-1 do
 						begin
@@ -35004,8 +37941,8 @@ function TPrint.PrintSheet(num: integer): boolean;
 										page:=pgx*pagey+pgy;
 									if (page>=pgvon) and (page<=pgbis) then
 										begin
-											if ppp<>nil then ppp^.SetText('Seite '+ltoa(pgy*pagex+pgx+1-pgvon)+'/'+ltoa(vbpages));
-											if pps<>nil then pps^.SetText('SEITE AUFBAUEN...');
+											if ppp<>nil then ppp^.SetText(STRING_PAGE+' '+ltoa(pgy*pagex+pgx+1-pgvon)+'/'+ltoa(vbpages));
+											if pps<>nil then pps^.SetText(STRING_BUILDPAGE);
 											if p^.ClearDispList then v_clear_disp_list(hndl);
 											srect.X1:=0;
 											srect.Y1:=0;
@@ -35031,7 +37968,7 @@ function TPrint.PrintSheet(num: integer): boolean;
 												end;
 											if p^.DoFeed then v_form_adv(hndl);
 											if not(p^.DoSheet) then
-												if Application^.Alert(p,1,NOTE,'Bitte legen Sie eine neue Seite ein.','  &OK  |&Abbruch')=2 then goto _borderr
+												if Application^.Alert(p,1,NOTE,MESSAGE_PRINT_NEWSHEET,BUTTON_OKCANCEL)=2 then goto _borderr
 										end
 								end
 						end;
@@ -35058,14 +37995,54 @@ function TPrint.PrintSheet(num: integer): boolean;
 
 
 procedure TPaper.Work;
-	var p      : PCalcWindow;
-	    docname: string;
+	var p          : PCalcWindow;
+	    docname    : string;
+	    sub_dialogs: PPDLG_SUB;
+	    pt         : PTree;
 
 	begin
 		p:=PCalcWindow(Parent);
 		if TexelApp.ExtPrnSel(p^.wnd_prnt_set,TexelApp.app_prnt_set) then
 			begin
-				docname:=TEXELWINDPREFIX+'Papierformat'#0;
+				getmem(sub_dialogs,sizeof(PDLG_SUB));
+				if sub_dialogs<>nil then
+					begin
+						pt:=Application^.GetAddr(RTICONS);
+						with sub_dialogs^ do
+							begin
+								next:=nil;
+								option_flags:=0;
+								sub_id:=-1;
+								sub_icon:=@pt^[RTIPRINTRANGE];
+								sub_tree:=Application^.GetAddr(RTPRINTSUBDIAL);
+								dialog:=nil;
+								tree:=nil;
+								index_offset:=0;
+								reserved1:=0;
+								reserved2:=0;
+								init_dlg:=pinit_texel;
+								do_dlg:=nil;
+								reset_dlg:=preset_texel;
+								reserved3:=0;
+								private1:=longint(p);
+								private2:=0;
+								private3:=0;
+								private4:=0
+							end;
+						with AES_pb do
+							begin
+								control^[0]:=205;
+								control^[1]:=1;
+								control^[2]:=1;
+								control^[3]:=2;
+								control^[4]:=0;
+								intin^[0]:=3;
+								addrin^[0]:=TexelApp.prnt_dialog;
+								addrin^[1]:=sub_dialogs;
+								_crystal(@AES_pb)
+							end
+					end;
+				docname:=TEXELWINDPREFIX+TITLE_PAPER+#0;
 				with AES_pb do
 					begin
 						control^[0]:=207;
@@ -35079,7 +38056,25 @@ procedure TPaper.Work;
 						addrin^[2]:=@docname[1];
 						_crystal(@AES_pb);
 						if intout^[0]=PDLG_OK then
-							if p^.pagepreview<>nil then p^.pagepreview^.Update(true);
+							begin
+								p^.SetDirty;
+								if p^.pagepreview<>nil then p^.pagepreview^.Update(true)
+							end;
+					end;
+				if sub_dialogs<>nil then
+					begin
+						with AES_pb do
+							begin
+								control^[0]:=205;
+								control^[1]:=1;
+								control^[2]:=1;
+								control^[3]:=1;
+								control^[4]:=0;
+								intin^[0]:=4;
+								addrin^[0]:=TexelApp.prnt_dialog;
+								_crystal(@AES_pb)
+							end;
+						free_sub_dialogs(sub_dialogs)
 					end
 			end
 	end;
@@ -35096,49 +38091,48 @@ procedure TFormSheet.Work;
 	begin
 		if ADialog=nil then
 			begin
-				ADialog:=new(PSheetDialog,Init(PCalcWindow(Parent),TEXELWINDPREFIX+'Blattformat','Blattformat-Dialog','BLATTFORMAT',RTFORMSHEET));
+				ADialog:=new(PSheetDialog,Init(PCalcWindow(Parent),TEXELWINDPREFIX+TITLE_SHFORM,STG_SHFORM,ICNTITLE_SHFORM,RTFORMSHEET));
 				if ADialog<>nil then
 					begin
-						new(PGroupBox,Init(ADialog,RTFSSIZE,GROUP_SHEET_SIZE,'Ermîglicht es, die Blattgrîûe nachtrÑglich zu Ñndern'));
+						new(PGroupBox,Init(ADialog,RTFSSIZE,GROUP_SHEET_SIZE,BUBBLE_SHFORM_SIZE));
 						new(PGroupBox,Init(ADialog,RTFSLINEAL,GROUP_SHEET_RULER,''));
 						new(PGroupBox,Init(ADialog,RTFSGENERAL,GROUP_SHEET_GENERAL,''));
-						new(pe,Init(ADialog,RTFSROWS,6,'Legt die Zeilenanzahl fest (max. 16384)'));
+						new(pe,Init(ADialog,RTFSROWS,6,BUBBLE_SHFORM_ROWS));
 						if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(2,16384)));
 						PSheetDialog(ADialog)^.ed1:=pe;
-						new(pe,Init(ADialog,RTFSCOLUMNS,4,'Bestimmt die Anzahl der Spalten (max. 702)'));
+						new(pe,Init(ADialog,RTFSCOLUMNS,4,BUBBLE_SHFORM_COLUMNS));
 						if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(2,702)));
 						PSheetDialog(ADialog)^.ed2:=pe;
-						new(pfb,InitCollection(ADialog,RTFSFONTPOP,RTFSFONTCYC,RTFSFONTTITLE,26,PCalcWindow(Parent)^.Fonts,false,false,false,'Stellt den Zeichensatz fÅr die Zeilen- und Spaltenbeschriftungen ein'));
+						new(pfb,InitCollection(ADialog,RTFSFONTPOP,RTFSFONTCYC,RTFSFONTTITLE,26,PCalcWindow(Parent)^.Fonts,false,false,false,BUBBLE_SHFORM_FONTID));
 						if pfb<>nil then
 							begin
 								pfb^.newsize:=-1;
 								new(fsizes,Init(130,20));
-								new(pfsb,InitCollection(ADialog,RTFSSIZEPOP,RTFSSIZECYC,RTFSSIZETITLE,6,fsizes,true,false,false,'Bestimmt die Zeichenhîhe der Zeilen- und Spaltenbeschriftungen'));
+								new(pfsb,InitCollection(ADialog,RTFSSIZEPOP,RTFSSIZECYC,RTFSSIZETITLE,6,fsizes,true,false,false,BUBBLE_SHFORM_FONTSIZE));
 								pfsb^.setsize:=true;
 								pfb^.fsizebox:=pfsb;
 								pfb^.Work
 							end;
-						new(PCheckBox,Init(ADialog,RTFSGITTER,true,'Wenn dieses KÑstchen markiert ist, werden auch die einfachen Gitterlinien gezeichnet, sonst nicht'));
-						new(PCheckBox,Init(ADialog,RTFSAUTOCALC,true,'Bestimmt, ob das Blatt nach jeder Eingabe neu durchgerechnet werden soll'));
-						new(PCheckBox,Init(ADialog,RTFSVORLAGE,true,'Wenn diese Checkbox angekreuzt ist, ist das Blatt eine sog. Vorlage, d.h. es kann nicht mehr versehentlich unter seinem Namen gespeichert werden, sondern'+
-						                                            ' man wird bei jedem Speichern aufgefordert, einen neuen Namen auszuwÑhlen'));
-						new(pc,Init(ADialog,RTFSLHOR,true,'Zeigt unter der Funktionsleiste ein horizontales Millimeter-Lineal an'));
+						new(PCheckBox,Init(ADialog,RTFSGITTER,true,BUBBLE_SHFORM_GRID));
+						new(PCheckBox,Init(ADialog,RTFSAUTOCALC,true,BUBBLE_SHFORM_AUTOCALC));
+						new(PCheckBox,Init(ADialog,RTFSVORLAGE,true,BUBBLE_SHFORM_FORM));
+						new(pc,Init(ADialog,RTFSLHOR,true,BUBBLE_SHFORM_HRULER));
 						if pc<>nil then pc^.Disable; { ... }
-						new(pc,Init(ADialog,RTFSLVERT,true,'Zeigt links am Fensterrand ein vertikales Millimeter-Lineal an'));
+						new(pc,Init(ADialog,RTFSLVERT,true,BUBBLE_SHFORM_VRULER));
 						if pc<>nil then pc^.Disable; { ... }
-						new(pc,Init(ADialog,RTFSLMOUSE,true,'Bestimmt, ob im Lineal die Mausposition angezeigt wird'));
+						new(pc,Init(ADialog,RTFSLMOUSE,true,BUBBLE_SHFORM_RMOUSE));
 						if pc<>nil then pc^.Disable; { ... }
-						new(pc,Init(ADialog,RTFSLLAYOUT,true,'Legt fest, ob das Lineal die SeitenumbrÅche des Ausdrucks beachtet'));
+						new(pc,Init(ADialog,RTFSLLAYOUT,true,BUBBLE_SHFORM_RLAYOUT));
 						if pc<>nil then pc^.Disable; { ... }
-						new(PCheckBox,Init(ADialog,RTFSOBJECTS,true,'Gibt an, ob eingebettete Objekte angezeigt werden sollen. Dies kann aus PerformancegrÅnden ausgeschaltet werden'));
-						new(PCheckBox,Init(ADialog,RTFSPROTECT,true,'Legt fest, ob die Zellschutzmarkierungen angezeigt werden'));
-						new(PCheckBox,Init(ADialog,RTFSUMBRUCH,true,'Legt fest, ob bei manuellen (harten) SeitenumbrÅchen Markierungen angezeigt werden'));
-						new(PButton,Init(ADialog,RTFSCURRENT,id_No,true,'TrÑgt in den Eingabefeldern die aktuelle Grîûe des Blatts ein'));
-						new(PButton,Init(ADialog,RTFSMINIMAL,id_No,true,'Berechnet eine minimale Blattgrîûe (bis zur am weitesten rechts unten liegenden verwendeten Zelle)'));
+						new(PCheckBox,Init(ADialog,RTFSOBJECTS,true,BUBBLE_SHFORM_OBJECTS));
+						new(PCheckBox,Init(ADialog,RTFSPROTECT,true,BUBBLE_SHFORM_PROTECT));
+						new(PCheckBox,Init(ADialog,RTFSUMBRUCH,true,BUBBLE_SHFORM_BREAK));
+						new(PButton,Init(ADialog,RTFSCURRENT,id_No,true,BUBBLE_SHFORM_CURRENT));
+						new(PButton,Init(ADialog,RTFSMINIMAL,id_No,true,BUBBLE_SHFORM_MINIMAL));
 						new(pb,Init(ADialog,RTFSHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(ADialog,RTFSOK,id_OK,true,'öbernimmt die Einstellungen'));
+						new(PButton,Init(ADialog,RTFSOK,id_OK,true,BUBBLE_GENERAL_OK2));
 						new(PButton,Init(ADialog,RTFSCANCEL,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
 						ADialog^.TransferBuffer:=@PCalcWindow(Parent)^.sheetbuffer
 					end
@@ -35431,235 +38425,32 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 				xcolor:=cl
 		end;
 
-	procedure outputkf(kfx,kfy,alh,alv: integer; s: string);
-		var k      : integer;
-		    c      : char;
-		    wert,s2: string;
-
-		begin
-			k:=pos('#',s);
-			s2:='';
-			while k>0 do
-				begin
-					c:=upcase(s[k+1]);
-					case c of
-					'#':
-						wert:='#';
-					'D':
-						wert:=StrPLeft(TexelApp.Time2Str(printtime),8);
-					'T','Z':
-						wert:=StrPRight(TexelApp.Time2Str(printtime),5);
-					'F':
-						begin
-							wert:=p^.GetWindowFilename;
-							if length(wert)=0 then wert:=p^.GetRawIconTitle
-						end;
-					'P','S':
-						wert:=ltoa(pagenum+1);
-					'G':
-						wert:=ltoa(pages);
-					'A':
-						wert:=p^.infobuf.Autor
-					else
-						wert:=''
-					end;
-					s2:=s2+StrPLeft(s,k-1)+wert;
-					s:=StrPRight(s,length(s)-k-1);
-					k:=pos('#',s)
-				end;
-			vst_alignment(vdiHandle,alh,alv,dummy,dummy);
-			if Speedo then v_ftext(vdiHandle,kfx,kfy,s2+s)
-			else
-				v_gtext(vdiHandle,kfx,kfy,s2+s)
-		end;
-
 	procedure printdoc(xoffs,yoffs,xoffs2,yoffs2: integer);
 		label _nextgit,_endgit;
 
 		var xy,xy2,xy3,xy4,
-		    brd              : ARRAY_4;
+		    brd,tover        : ARRAY_4;
 		    ext              : ARRAY_8;
 		    clp,clp2,clp3,
 		    sr,bclp          : GRECT;
-		    brd1w,brd2w,brd3w,
-		    brd1h,brd2h,brd3h,
 		    oldlcolor,
-		    q,w,b,oldfont,
-		    oldsize,oldtcolor,
+		    q,w,b,c2,
 		    oldstyle,oldcolor,
-		    oldinter,oldalign,
-		    oldskew,oldrotat,
-		    oldeffects,tx,ty : integer;
+		    oldinter,tx,ty   : integer;
 		    cnum,lofs        : longint;
 		    title,sval       : string;
-		    midalign,
-		    gitter           : boolean;
 		    pe               : PEmbedded;
+		    cmpval           : TOldTxtVal;
+		    cell2            : PCell;
 
-		procedure settxtvalues(const tval: TTxtVal);
-
+		procedure setfontattr(const tval: TTxtVal);
+		
 			begin
-				with tval do
+				if (tval.Font<>cmpval.oldfont) or (tval.Size<>cmpval.oldsize) then
 					begin
-						if (Font<>oldfont) or (Size<>oldsize) then
-							begin
-								SetFont(Font,Size);
-								oldsize:=Size;
-								oldfont:=Font
-							end;
-						if Color<>oldtcolor then
-							begin
-								vst_color(vdiHandle,xcolor(Color));
-								oldtcolor:=Color
-							end;
-						if Effects<>oldeffects then
-							begin
-								vst_effects(vdiHandle,Effects);
-								oldeffects:=Effects
-							end;
-						if Rotat<>oldrotat then
-							begin
-								vst_rotation(vdiHandle,Rotat);
-								oldrotat:=Rotat
-							end;
-						if Align<>oldalign then
-							begin
-								case (Align and $f0) of
-								TA_OBEN:
-									vst_alignment(vdiHandle,Align and $0f,TA_TOP,dummy,dummy);
-								TA_MITTE:
-									vst_alignment(vdiHandle,Align and $0f,TA_TOP,dummy,dummy)
-								else
-									vst_alignment(vdiHandle,Align and $0f,TA_BOTTOM,dummy,dummy)
-								end;
-								oldalign:=Align
-							end;
-						if Skew<>oldskew then
-							begin
-								if Speedo then vst_skew(vdiHandle,Skew);
-								oldskew:=Skew
-							end;
-						case (Align and $0f) of
-						TA_CENTER:
-							tx:=(xy4[0]+xy4[2]) shr 1;
-						TA_RIGHT:
-							begin
-								tx:=xy4[2];
-								if not(gitter) then dec(tx);
-								if PCell(cnum)^.Border.Right>16 then
-									case (PCell(cnum)^.Border.Right shr 4) of
-									2:
-										dec(tx,brd1w);
-									3:
-										dec(tx,brd2w);
-									4,5:
-										dec(tx,brd3w)
-									end
-							end
-						else
-							begin
-								tx:=xy4[0]+1;
-								if PCell(cnum)^.Border.Left>16 then
-									case (PCell(cnum)^.Border.Left shr 4) of
-									2:
-										inc(tx,brd1w);
-									3:
-										inc(tx,brd2w);
-									4,5:
-										inc(tx,brd3w)
-									end
-							end
-						end;
-						case (Align and $f0) of
-						TA_OBEN:
-							begin
-								ty:=xy4[1];
-								midalign:=false;
-								if PCell(cnum)^.Border.Top>16 then
-									case (PCell(cnum)^.Border.Top shr 4) of
-									2:
-										inc(ty,brd1w);
-									3:
-										inc(ty,brd2w);
-									4,5:
-										inc(ty,brd3w)
-									end
-							end;
-						TA_MITTE:
-							begin
-								ty:=(xy4[1]+xy4[3]) shr 1;
-								midalign:=true
-							end
-						else
-							begin
-								ty:=xy4[3];
-								if gitter then inc(ty);
-								midalign:=false;
-								if PCell(cnum)^.Border.Bottom>16 then
-									case (PCell(cnum)^.Border.Bottom shr 4) of
-									2:
-										dec(ty,brd1w);
-									3:
-										dec(ty,brd2w);
-									4,5:
-										dec(ty,brd3w)
-									end
-							end
-						end
-					end
-			end;
-
-		procedure outputtext;
-
-			begin
-				if Speedo then
-					begin
-						vqt_f_extent(vdiHandle,sval,ext);
-						if abs(ext[2]-ext[0])>(xy4[2]-xy4[0]) then sval:=StrPFill(length(sval),'#');
-						if midalign then v_ftext(vdihandle,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-						else
-							v_ftext(vdiHandle,tx,ty,sval)
-					end
-				else
-					begin
-						vqt_extent(vdiHandle,sval,ext);
-						if abs(ext[2]-ext[0])>(xy4[2]-xy4[0]) then sval:=StrPFill(length(sval),'#');
-						if midalign then v_gtext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-						else
-							v_gtext(vdiHandle,tx,ty,sval)
-					end
-			end;
-
-		procedure outputerror(tval: TTxtVal; err: shortint; xd,yd: integer);
-
-			begin
-				tval.Align:=ERRORALIGN;
-				tval.Effects:=TF_NORMAL;
-				tval.Rotat:=0;
-				tval.Skew:=0;
-				settxtvalues(tval);
-				dec(tx,xd);
-				dec(ty,yd);
-				sval:=p^.Error2Txt(err);
-				if Speedo then
-					begin
-						if midalign then
-							begin
-								vqt_f_extent(vdiHandle,sval,ext);
-								v_ftext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-							end
-						else
-							v_ftext(vdiHandle,tx,ty,sval)
-					end
-				else
-					begin
-						if midalign then
-							begin
-								vqt_extent(vdiHandle,sval,ext);
-								v_gtext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),sval)
-							end
-						else
-							v_gtext(vdiHandle,tx,ty,sval)
+						SetFont(tval.Font,tval.Size);
+						cmpval.oldsize:=tval.Size;
+						cmpval.oldfont:=tval.Font
 					end
 			end;
 		
@@ -35866,30 +38657,28 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 			clp.H:=GetRowHeight(w);
 			GRtoA2(clp);
 			oldcolor:=White;
-			oldtcolor:=Black;
 			oldlcolor:=Black;
 			oldstyle:=0;
 			oldinter:=FIS_HOLLOW;
-			oldalign:=TA_LEFT;
-			oldskew:=0;
-			oldrotat:=0;
-			oldeffects:=TF_NORMAL;
-			gitter:=(p^.Parms.psbuffer.gitter=bf_Checked);
-			oldfont:=p^.GetFontIndex;
-			oldsize:=p^.GetFontSize;
-			SetFont(oldfont,oldsize);
 			vsf_color(vdiHandle,xcolor(oldcolor));
 			vsf_style(vdiHandle,oldstyle);
 			vsf_interior(vdiHandle,oldinter);
-			vst_alignment(vdiHandle,TA_LEFT,TA_BOTTOM,dummy,dummy);
 			vsl_color(vdiHandle,xcolor(oldlcolor));
+			with cmpval do
+				begin
+					oldfont:=p^.GetFontIndex;
+					oldsize:=p^.GetFontSize;
+					brd1w:=Max(round(Border1*prcfak*xmmfak*scale)-1,0);
+					brd2w:=Max(round(Border2*prcfak*xmmfak*scale)-1,0);
+					brd3w:=Max(round(Border3*prcfak*xmmfak*scale)-1,0);
+					brd1h:=Max(round(Border1*prcfak*ymmfak*scale)-1,0);
+					brd2h:=Max(round(Border2*prcfak*ymmfak*scale)-1,0);
+					brd3h:=Max(round(Border3*prcfak*ymmfak*scale)-1,0);
+					gitter:=(p^.Parms.psbuffer.gitter=bf_Checked)
+				end;
+			SetFont(cmpval.oldfont,cmpval.oldsize);
+			p^.InitTextValues(vdiHandle,cmpval);
 			lofs:=longint(p^.Parms.Columns+1)*CELLSIZE;
-			brd1w:=Max(round(Border1*prcfak*xmmfak)-1,0);
-			brd2w:=Max(round(Border2*prcfak*xmmfak)-1,0);
-			brd3w:=Max(round(Border3*prcfak*xmmfak)-1,0);
-			brd1h:=Max(round(Border1*prcfak*ymmfak)-1,0);
-			brd2h:=Max(round(Border2*prcfak*ymmfak)-1,0);
-			brd3h:=Max(round(Border3*prcfak*ymmfak)-1,0);
 			repeat
 				q:=cs;
 				cnum:=longint(p^.Sheet)+(longint(w)*longint(p^.Parms.Columns+1)+longint(q))*CELLSIZE;
@@ -35901,7 +38690,7 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 				xy3[0]:=clp3.X-1;
 				xy3[1]:=clp3.Y-1;
 				xy3[3]:=clp3.Y+clp3.H-1;
-				if gitter then dec(xy3[3]);
+				if cmpval.gitter then dec(xy3[3]);
 				GRtoA2(clp3);
 				repeat
 					clp2.X1:=pr.X1+round(scale*clp3.X1);
@@ -35913,7 +38702,8 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 						begin
 							vs_clip(vdiHandle,CLIP_ON,clp2.A2);
 							xy3[2]:=clp3.X2;
-							if gitter then dec(xy3[2]);
+							if cmpval.gitter then
+								if (PCell(cnum)^.TxtVal.Flags and TFL_GITTERMASK)=0 then dec(xy3[2]);
 							xy4[0]:=pr.X1+round(scale*xy3[0]);
 							xy4[1]:=pr.Y1+round(scale*xy3[1]);
 							xy4[2]:=pr.X1+round(scale*xy3[2]);
@@ -35921,58 +38711,94 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 							drawbackground;
 							with PCell(cnum)^ do
 								begin
-									if Data.Value<>0 then
-										if not(bTst(TxtVal.Flags,TFL_NOCLIP)) then
+									vswr_mode(vdiHandle,MD_TRANS);
+									case Typ of
+									CTYPE_TEXT:
+										if Data.Value<>0 then
 											begin
-												vswr_mode(vdiHandle,MD_TRANS);
-												case Typ of
-												CTYPE_TEXT:
-													begin
-														settxtvalues(TxtVal);
-														if Speedo then
-															begin
-																if midalign then
-																	begin
-																		vqt_f_extent(vdiHandle,Data.Txt^,ext);
-																		v_ftext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),Data.Txt^)
-																	end
-																else
-																	v_ftext(vdiHandle,tx,ty,Data.Txt^)
-															end
-														else
-															begin
-																if midalign then
-																	begin
-																		vqt_extent(vdiHandle,Data.Txt^,ext);
-																		v_gtext(vdiHandle,tx,ty-((ext[5]-ext[1]) shr 1),Data.Txt^)
-																	end
-																else
-																	v_gtext(vdiHandle,tx,ty,Data.Txt^)
-															end
-													end;
-												CTYPE_CONST:
-													with Data.Konst^ do
-														begin
-															if p^.Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
-															settxtvalues(TxtVal);
-															outputtext
-														end;
-												CTYPE_FORMULA:
-													with Data.Formula^ do
-														if Error=FE_OK then
-															begin
-																if p^.Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
-																settxtvalues(TxtVal);
-																outputtext
-															end
-														else
-															outputerror(TxtVal,Error,0,0)
-												end;
-												vswr_mode(vdiHandle,MD_REPLACE)
+												setfontattr(TxtVal);
+												p^.OutputVectorText(vdiHandle,PCell(cnum),Data.Txt^,TxtVal,cmpval,xy4,false)
 											end;
-									if gitter then
+									CTYPE_CONST:
+										with Data.Konst^ do
+											begin
+												if p^.Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
+												setfontattr(TxtVal);
+												p^.OutputVectorText(vdiHandle,PCell(cnum),sval,TxtVal,cmpval,xy4,true)
+											end;
+									CTYPE_FORMULA:
+										with Data.Formula^ do
+											if Error=FE_OK then
+												begin
+													if p^.Val2Txt(Value,sval,FPts,Format,PCell(cnum)) then drawbackground;
+													setfontattr(TxtVal);
+													p^.OutputVectorText(vdiHandle,PCell(cnum),sval,TxtVal,cmpval,xy4,true)
+												end
+											else
+												begin
+													setfontattr(TxtVal);
+													p^.OutputErrorText(vdiHandle,PCell(cnum),TxtVal,cmpval,xy4,Error)
+												end;
+									CTYPE_EMPTY:
 										begin
-											inc(xy3[2]);
+											if bTst(TxtVal.Flags,TFL_TEXTFROMLEFT) then
+												begin
+													tover:=xy3;
+													c2:=q;
+													cell2:=PCell(cnum);
+													repeat
+														dec(longint(cell2),CELLSIZE);
+														dec(c2);
+														if c2<cs then break
+														else
+															begin
+																tover[2]:=tover[0]-1;
+																dec(tover[0],GetColWidth(c2))
+															end;
+													until (cell2^.TxtVal.Flags and TFL_RIGHTMASK)=TFL_TEXT2RIGHT;
+													if c2>=cs then
+														begin
+															tover[0]:=pr.X1+round(scale*tover[0]);
+															tover[1]:=pr.Y1+round(scale*tover[1]);
+															tover[2]:=pr.X1+round(scale*tover[2]);
+															tover[3]:=pr.Y1+round(scale*tover[3]);
+															setfontattr(cell2^.TxtVal);
+															p^.OutputVectorText(vdiHandle,cell2,cell2^.Data.Txt^,cell2^.TxtVal,cmpval,tover,false)
+														end
+												end
+											else
+												if bTst(TxtVal.Flags,TFL_TEXTFROMRIGHT) then
+													begin
+														tover:=xy3;
+														c2:=q;
+														cell2:=PCell(cnum);
+														repeat
+															inc(longint(cell2),CELLSIZE);
+															inc(c2);
+															if c2>ce then break
+															else
+																begin
+																	tover[0]:=tover[2]+1;
+																	inc(tover[2],GetColWidth(c2));
+																	if cmpval.gitter then dec(tover[2])
+																end;
+														until (cell2^.TxtVal.Flags and TFL_LEFTMASK)=TFL_TEXT2LEFT;
+														if c2<=ce then
+															begin
+																tover[0]:=pr.X1+round(scale*tover[0]);
+																tover[1]:=pr.Y1+round(scale*tover[1]);
+																tover[2]:=pr.X1+round(scale*tover[2]);
+																tover[3]:=pr.Y1+round(scale*tover[3]);
+																setfontattr(cell2^.TxtVal);
+																p^.OutputVectorText(vdiHandle,cell2,cell2^.Data.Txt^,cell2^.TxtVal,cmpval,tover,false)
+															end
+													end
+										end
+									end;
+									vswr_mode(vdiHandle,MD_REPLACE);
+									if cmpval.gitter then
+										begin
+											if (PCell(cnum)^.TxtVal.Flags and TFL_GITTERMASK)=0 then inc(xy3[2]);
 											inc(xy3[3])
 										end;
 									with Border do
@@ -35987,171 +38813,163 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 													begin
 														vs_clip(vdiHandle,CLIP_ON,bclp.A2);
 														if Left>=16 then
-															begin
-																if (Left and $f)<>oldlcolor then
-																	begin
-																		oldlcolor:=Left and $f;
-																		vsl_color(vdiHandle,xcolor(oldlcolor))
+															if (TxtVal.Flags and TFL_LEFTBORDER)=0 then
+																begin
+																	if (Left and $f)<>oldlcolor then
+																		begin
+																			oldlcolor:=Left and $f;
+																			vsl_color(vdiHandle,xcolor(oldlcolor))
+																		end;
+																	if q=cs then inc(xy3[0]);
+																	case (Left shr 4) of
+																	1:
+																		begin
+																			brd[0]:=xy3[0];
+																			brd[1]:=xy3[1];
+																			brd[2]:=brd[0];
+																			brd[3]:=xy3[3];
+																			xy4[0]:=pr.X1+round(scale*brd[0]);
+																			xy4[1]:=pr.Y1+round(scale*brd[1]);
+																			xy4[2]:=pr.X1+round(scale*brd[2]);
+																			xy4[3]:=pr.Y1+round(scale*brd[3]);
+																			v_pline(vdiHandle,2,xy4)
+																		end;
+																	2:
+																		begin
+																			xy4[0]:=pr.X1+round(scale*xy3[0]);
+																			xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																			xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					xy4[2]:=xy4[0];
+																					v_pline(vdiHandle,2,xy4);
+																					inc(xy4[0])
+																				end
+																		end;
+																	3:
+																		begin
+																			xy4[0]:=pr.X1+round(scale*xy3[0]);
+																			xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																			xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																			for b:=0 to cmpval.brd2w do
+																				begin
+																					xy4[2]:=xy4[0];
+																					v_pline(vdiHandle,2,xy4);
+																					inc(xy4[0])
+																				end
+																		end;
+																	4:
+																		begin
+																			xy4[0]:=pr.X1+round(scale*xy3[0]);
+																			xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																			xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																			for b:=0 to cmpval.brd3w do
+																				begin
+																					xy4[2]:=xy4[0];
+																					v_pline(vdiHandle,2,xy4);
+																					inc(xy4[0])
+																				end
+																		end;
+																	5:
+																		begin
+																			xy4[0]:=pr.X1+round(scale*xy3[0]);
+																			xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																			xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					xy4[2]:=xy4[0];
+																					v_pline(vdiHandle,2,xy4);
+																					inc(xy4[0])
+																				end;
+																			xy4[0]:=pr.X1+round(scale*xy3[0])+cmpval.brd3w;
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					xy4[2]:=xy4[0];
+																					v_pline(vdiHandle,2,xy4);
+																					dec(xy4[0])
+																				end
+																		end
 																	end;
-																if q=cs then inc(xy3[0]);
-																case (Left shr 4) of
-																1:
-																	begin
-																		brd[0]:=xy3[0];
-																		brd[1]:=xy3[1];
-																		brd[2]:=brd[0];
-																		brd[3]:=xy3[3];
-																		xy4[0]:=pr.X1+round(scale*brd[0]);
-																		xy4[1]:=pr.Y1+round(scale*brd[1]);
-																		xy4[2]:=pr.X1+round(scale*brd[2]);
-																		xy4[3]:=pr.Y1+round(scale*brd[3]);
-																		v_pline(vdiHandle,2,xy4)
-																	end;
-																2:
-																	begin
-																		brd[0]:=xy3[0];
-																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
-																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
-																		for b:=0 to brd1w do
-																			begin
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[2]:=xy4[0];
-																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[0])
-																			end
-																	end;
-																3:
-																	begin
-																		brd[0]:=xy3[0];
-																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
-																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
-																		for b:=0 to brd2w do
-																			begin
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[2]:=xy4[0];
-																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[0])
-																			end
-																	end;
-																4:
-																	begin
-																		brd[0]:=xy3[0];
-																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
-																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
-																		for b:=0 to brd3w do
-																			begin
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[2]:=xy4[0];
-																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[0])
-																			end
-																	end;
-																5:
-																	begin
-																		brd[0]:=xy3[0];
-																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
-																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
-																		for b:=0 to brd1w do
-																			begin
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[2]:=xy4[0];
-																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[0])
-																			end;
-																		brd[0]:=xy3[0]+brd3w;
-																		for b:=0 to brd1w do
-																			begin
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[2]:=xy4[0];
-																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[0])
-																			end
+																	if q=cs then dec(xy3[0])
+																end;
+														if Right>=16 then
+															if (TxtVal.Flags and TFL_RIGHTBORDER)=0 then
+																begin
+																	if (Right and $f)<>oldlcolor then
+																		begin
+																			oldlcolor:=Right and $f;
+																			vsl_color(vdiHandle,xcolor(oldlcolor))
+																		end;
+																	case (Right shr 4) of
+																	1:
+																		begin
+																			brd[0]:=xy3[2];
+																			brd[1]:=xy3[1];
+																			brd[2]:=brd[0];
+																			brd[3]:=xy3[3];
+																			xy4[0]:=pr.X1+round(scale*brd[0])-1;
+																			xy4[1]:=pr.Y1+round(scale*brd[1]);
+																			xy4[2]:=pr.X1+round(scale*brd[2])-1;
+																			xy4[3]:=pr.Y1+round(scale*brd[3]);
+																			v_pline(vdiHandle,2,xy4)
+																		end;
+																	2:
+																		begin
+																			xy4[0]:=pr.X1+round(scale*xy3[2])-1;
+																			xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																			xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					xy4[2]:=xy4[0];
+																					v_pline(vdiHandle,2,xy4);
+																					dec(xy4[0])
+																				end
+																		end;
+																	3:
+																		begin
+																			xy4[0]:=pr.X1+round(scale*xy3[2])-1;
+																			xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																			xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																			for b:=0 to cmpval.brd2w do
+																				begin
+																					xy4[2]:=xy4[0];
+																					v_pline(vdiHandle,2,xy4);
+																					dec(xy4[0])
+																				end
+																		end;
+																	4:
+																		begin
+																			xy4[0]:=pr.X1+round(scale*xy3[2])-1;
+																			xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																			xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																			for b:=0 to cmpval.brd3w do
+																				begin
+																					xy4[2]:=xy4[0];
+																					v_pline(vdiHandle,2,xy4);
+																					dec(xy4[0])
+																				end
+																		end;
+																	5:
+																		begin
+																			xy4[0]:=pr.X1+round(scale*xy3[2])-1;
+																			xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																			xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					xy4[2]:=xy4[0];
+																					v_pline(vdiHandle,2,xy4);
+																					dec(xy4[0])
+																				end;
+																			xy4[0]:=pr.X1+round(scale*xy3[2])-cmpval.brd3w-1;
+																			for b:=0 to cmpval.brd1w do
+																				begin
+																					xy4[2]:=xy4[0];
+																					v_pline(vdiHandle,2,xy4);
+																					inc(xy4[0])
+																				end
+																		end
 																	end
 																end;
-																if q=cs then dec(xy3[0])
-															end;
-														if Right>=16 then
-															begin
-																if (Right and $f)<>oldlcolor then
-																	begin
-																		oldlcolor:=Right and $f;
-																		vsl_color(vdiHandle,xcolor(oldlcolor))
-																	end;
-																case (Right shr 4) of
-																1:
-																	begin
-																		brd[0]:=xy3[2];
-																		brd[1]:=xy3[1];
-																		brd[2]:=brd[0];
-																		brd[3]:=xy3[3];
-																		xy4[0]:=pr.X1+round(scale*brd[0])-1;
-																		xy4[1]:=pr.Y1+round(scale*brd[1]);
-																		xy4[2]:=pr.X1+round(scale*brd[2])-1;
-																		xy4[3]:=pr.Y1+round(scale*brd[3]);
-																		v_pline(vdiHandle,2,xy4)
-																	end;
-																2:
-																	begin
-																		brd[0]:=xy3[2];
-																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
-																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
-																		for b:=0 to brd1w do
-																			begin
-																				xy4[0]:=pr.X1+round(scale*brd[0])-1;
-																				xy4[2]:=xy4[0];
-																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[0])
-																			end
-																	end;
-																3:
-																	begin
-																		brd[0]:=xy3[2];
-																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
-																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
-																		for b:=0 to brd2w do
-																			begin
-																				xy4[0]:=pr.X1+round(scale*brd[0])-1;
-																				xy4[2]:=xy4[0];
-																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[0])
-																			end
-																	end;
-																4:
-																	begin
-																		brd[0]:=xy3[2];
-																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
-																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
-																		for b:=0 to brd3w do
-																			begin
-																				xy4[0]:=pr.X1+round(scale*brd[0])-1;
-																				xy4[2]:=xy4[0];
-																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[0])
-																			end
-																	end;
-																5:
-																	begin
-																		brd[0]:=xy3[2];
-																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
-																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
-																		for b:=0 to brd1w do
-																			begin
-																				xy4[0]:=pr.X1+round(scale*brd[0])-1;
-																				xy4[2]:=xy4[0];
-																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[0])
-																			end;
-																		brd[0]:=xy3[2]-brd3w;
-																		for b:=0 to brd1w do
-																			begin
-																				xy4[0]:=pr.X1+round(scale*brd[0])-1;
-																				xy4[2]:=xy4[0];
-																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[0])
-																			end
-																	end
-																end
-															end;
 														if Top>=16 then
 															begin
 																if (Top and $f)<>oldlcolor then
@@ -36175,62 +38993,57 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 																	end;
 																2:
 																	begin
-																		brd[1]:=xy3[1];
+																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
 																		xy4[0]:=pr.X1+round(scale*xy3[0]);
 																		xy4[2]:=pr.X1+round(scale*xy3[2]);
-																		for b:=0 to brd1h do
+																		for b:=0 to cmpval.brd1h do
 																			begin
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
 																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[1])
+																				inc(xy4[1])
 																			end
 																	end;
 																3:
 																	begin
-																		brd[1]:=xy3[1];
+																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
 																		xy4[0]:=pr.X1+round(scale*xy3[0]);
 																		xy4[2]:=pr.X1+round(scale*xy3[2]);
-																		for b:=0 to brd2h do
+																		for b:=0 to cmpval.brd2h do
 																			begin
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
 																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[1])
+																				inc(xy4[1])
 																			end
 																	end;
 																4:
 																	begin
-																		brd[1]:=xy3[1];
+																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
 																		xy4[0]:=pr.X1+round(scale*xy3[0]);
 																		xy4[2]:=pr.X1+round(scale*xy3[2]);
-																		for b:=0 to brd3h do
+																		for b:=0 to cmpval.brd3h do
 																			begin
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
 																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[1])
+																				inc(xy4[1])
 																			end
 																	end;
 																5:
 																	begin
-																		brd[1]:=xy3[1];
+																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
 																		xy4[0]:=pr.X1+round(scale*xy3[0]);
 																		xy4[2]:=pr.X1+round(scale*xy3[2]);
-																		for b:=0 to brd1h do
+																		for b:=0 to cmpval.brd1h do
 																			begin
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
 																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[1])
+																				inc(xy4[1])
 																			end;
-																		brd[1]:=xy3[1]+brd3h;
-																		for b:=0 to brd1h do
+																		xy4[1]:=pr.Y1+round(scale*xy3[1])+cmpval.brd3h;
+																		for b:=0 to cmpval.brd1h do
 																			begin
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
 																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[1])
+																				dec(xy4[1])
 																			end
 																	end
 																end;
@@ -36258,62 +39071,57 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 																	end;
 																2:
 																	begin
-																		brd[1]:=xy3[3];
+																		xy4[1]:=pr.Y1+round(scale*xy3[3])-1;
 																		xy4[0]:=pr.X1+round(scale*xy3[0]);
 																		xy4[2]:=pr.X1+round(scale*xy3[2]);
-																		for b:=0 to brd1h do
+																		for b:=0 to cmpval.brd1h do
 																			begin
-																				xy4[1]:=pr.Y1+round(scale*brd[1])-1;
 																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[1])
+																				dec(xy4[1])
 																			end
 																	end;
 																3:
 																	begin
-																		brd[1]:=xy3[3];
+																		xy4[1]:=pr.Y1+round(scale*xy3[3])-1;
 																		xy4[0]:=pr.X1+round(scale*xy3[0]);
 																		xy4[2]:=pr.X1+round(scale*xy3[2]);
-																		for b:=0 to brd2h do
+																		for b:=0 to cmpval.brd2h do
 																			begin
-																				xy4[1]:=pr.Y1+round(scale*brd[1])-1;
 																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[1])
+																				dec(xy4[1])
 																			end
 																	end;
 																4:
 																	begin
-																		brd[1]:=xy3[3];
+																		xy4[1]:=pr.Y1+round(scale*xy3[3])-1;
 																		xy4[0]:=pr.X1+round(scale*xy3[0]);
 																		xy4[2]:=pr.X1+round(scale*xy3[2]);
-																		for b:=0 to brd3h do
+																		for b:=0 to cmpval.brd3h do
 																			begin
-																				xy4[1]:=pr.Y1+round(scale*brd[1])-1;
 																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[1])
+																				dec(xy4[1])
 																			end
 																	end;
 																5:
 																	begin
-																		brd[1]:=xy3[3];
+																		xy4[1]:=pr.Y1+round(scale*xy3[3])-1;
 																		xy4[0]:=pr.X1+round(scale*xy3[0]);
 																		xy4[2]:=pr.X1+round(scale*xy3[2]);
-																		for b:=0 to brd1h do
+																		for b:=0 to cmpval.brd1h do
 																			begin
-																				xy4[1]:=pr.Y1+round(scale*brd[1])-1;
 																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[1])
+																				dec(xy4[1])
 																			end;
-																		brd[1]:=xy3[3]-brd3h;
-																		for b:=0 to brd1h do
+																		xy4[1]:=pr.Y1+round(scale*xy3[3])-cmpval.brd3h-1;
+																		for b:=0 to cmpval.brd1h do
 																			begin
-																				xy4[1]:=pr.Y1+round(scale*brd[1])-1;
 																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[1])
+																				inc(xy4[1])
 																			end
 																	end
 																end
@@ -36340,79 +39148,57 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 																	end;
 																2:
 																	begin
-																		brd[1]:=(xy3[1]+xy3[3]-brd1h) shr 1;
-																		for b:=0 to brd1h do
+																		xy4[1]:=pr.Y1+round(scale*(xy3[1]+xy3[3])/2.0)-((cmpval.brd1h+1) shr 1);
+																		xy4[0]:=pr.X1+round(scale*xy3[0]);
+																		xy4[2]:=pr.X1+round(scale*xy3[2]);
+																		for b:=0 to cmpval.brd1h do
 																			begin
-																				brd[0]:=xy3[0];
-																				brd[2]:=xy3[2];
-																				brd[3]:=brd[1];
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
-																				xy4[2]:=pr.X1+round(scale*brd[2]);
-																				xy4[3]:=pr.Y1+round(scale*brd[3]);
+																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[1])
+																				inc(xy4[1])
 																			end
 																	end;
 																3:
 																	begin
-																		brd[1]:=(xy3[1]+xy3[3]-brd2h) shr 1;
-																		for b:=0 to brd2h do
+																		xy4[1]:=pr.Y1+round(scale*(xy3[1]+xy3[3])/2.0)-((cmpval.brd2h+1) shr 1);
+																		xy4[0]:=pr.X1+round(scale*xy3[0]);
+																		xy4[2]:=pr.X1+round(scale*xy3[2]);
+																		for b:=0 to cmpval.brd2h do
 																			begin
-																				brd[0]:=xy3[0];
-																				brd[2]:=xy3[2];
-																				brd[3]:=brd[1];
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
-																				xy4[2]:=pr.X1+round(scale*brd[2]);
-																				xy4[3]:=pr.Y1+round(scale*brd[3]);
+																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[1])
+																				inc(xy4[1])
 																			end
 																	end;
 																4:
 																	begin
-																		brd[1]:=(xy3[1]+xy3[3]-brd3h) shr 1;
-																		for b:=0 to brd3h do
+																		xy4[1]:=pr.Y1+round(scale*(xy3[1]+xy3[3])/2.0)-((cmpval.brd3h+1) shr 1);
+																		xy4[0]:=pr.X1+round(scale*xy3[0]);
+																		xy4[2]:=pr.X1+round(scale*xy3[2]);
+																		for b:=0 to cmpval.brd3h do
 																			begin
-																				brd[0]:=xy3[0];
-																				brd[2]:=xy3[2];
-																				brd[3]:=brd[1];
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
-																				xy4[2]:=pr.X1+round(scale*brd[2]);
-																				xy4[3]:=pr.Y1+round(scale*brd[3]);
+																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[1])
+																				inc(xy4[1])
 																			end
 																	end;
 																5:
 																	begin
-																		brd[1]:=(xy3[1]+xy3[3]-brd3h) shr 1;
-																		for b:=0 to brd1h do
+																		xy4[1]:=pr.Y1+round(scale*(xy3[1]+xy3[3])/2.0)-((cmpval.brd3h+1) shr 1);
+																		xy4[0]:=pr.X1+round(scale*xy3[0]);
+																		xy4[2]:=pr.X1+round(scale*xy3[2]);
+																		for b:=0 to cmpval.brd1h do
 																			begin
-																				brd[0]:=xy3[0];
-																				brd[2]:=xy3[2];
-																				brd[3]:=brd[1];
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
-																				xy4[2]:=pr.X1+round(scale*brd[2]);
-																				xy4[3]:=pr.Y1+round(scale*brd[3]);
+																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[1])
+																				inc(xy4[1])
 																			end;
-																		brd[1]:=(xy3[1]+xy3[3]+brd3h) shr 1;
-																		for b:=0 to brd1h do
+																		xy4[1]:=pr.Y1+round(scale*(xy3[1]+xy3[3])/2.0)+cmpval.brd3h-((cmpval.brd3h+1) shr 1);
+																		for b:=0 to cmpval.brd1h do
 																			begin
-																				brd[0]:=xy3[0];
-																				brd[2]:=xy3[2];
-																				brd[3]:=brd[1];
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
-																				xy4[2]:=pr.X1+round(scale*brd[2]);
-																				xy4[3]:=pr.Y1+round(scale*brd[3]);
+																				xy4[3]:=xy4[1];
 																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[1])
+																				dec(xy4[1])
 																			end
 																	end
 																end
@@ -36439,79 +39225,57 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 																	end;
 																2:
 																	begin
-																		brd[0]:=(xy3[0]+xy3[2]-brd1w) shr 1;
-																		for b:=0 to brd1w do
+																		xy4[0]:=pr.X1+round(scale*(xy3[0]+xy3[2])/2.0)-((cmpval.brd1w+1) shr 1);
+																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																		for b:=0 to cmpval.brd1w do
 																			begin
-																				brd[1]:=xy3[1];
-																				brd[2]:=brd[0];
-																				brd[3]:=xy3[3];
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
-																				xy4[2]:=pr.X1+round(scale*brd[2]);
-																				xy4[3]:=pr.Y1+round(scale*brd[3]);
+																				xy4[2]:=xy4[0];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[0])
+																				inc(xy4[0])
 																			end
 																	end;
 																3:
 																	begin
-																		brd[0]:=(xy3[0]+xy3[2]-brd2w) shr 1;
-																		for b:=0 to brd2w do
+																		xy4[0]:=pr.X1+round(scale*(xy3[0]+xy3[2])/2.0)-((cmpval.brd2w+1) shr 1);
+																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																		for b:=0 to cmpval.brd2w do
 																			begin
-																				brd[1]:=xy3[1];
-																				brd[2]:=brd[0];
-																				brd[3]:=xy3[3];
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
-																				xy4[2]:=pr.X1+round(scale*brd[2]);
-																				xy4[3]:=pr.Y1+round(scale*brd[3]);
+																				xy4[2]:=xy4[0];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[0])
+																				inc(xy4[0])
 																			end
 																	end;
 																4:
 																	begin
-																		brd[0]:=(xy3[0]+xy3[2]-brd3w) shr 1;
-																		for b:=0 to brd3w do
+																		xy4[0]:=pr.X1+round(scale*(xy3[0]+xy3[2])/2.0)-((cmpval.brd3w+1) shr 1);
+																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																		for b:=0 to cmpval.brd3w do
 																			begin
-																				brd[1]:=xy3[1];
-																				brd[2]:=brd[0];
-																				brd[3]:=xy3[3];
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
-																				xy4[2]:=pr.X1+round(scale*brd[2]);
-																				xy4[3]:=pr.Y1+round(scale*brd[3]);
+																				xy4[2]:=xy4[0];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[0])
+																				inc(xy4[0])
 																			end
 																	end;
 																5:
 																	begin
-																		brd[0]:=(xy3[0]+xy3[2]-brd3w) shr 1;
-																		for b:=0 to brd1w do
+																		xy4[0]:=pr.X1+round(scale*(xy3[0]+xy3[2])/2.0)-((cmpval.brd3w+1) shr 1);
+																		xy4[1]:=pr.Y1+round(scale*xy3[1]);
+																		xy4[3]:=pr.Y1+round(scale*xy3[3]);
+																		for b:=0 to cmpval.brd1w do
 																			begin
-																				brd[1]:=xy3[1];
-																				brd[2]:=brd[0];
-																				brd[3]:=xy3[3];
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
-																				xy4[2]:=pr.X1+round(scale*brd[2]);
-																				xy4[3]:=pr.Y1+round(scale*brd[3]);
+																				xy4[2]:=xy4[0];
 																				v_pline(vdiHandle,2,xy4);
-																				inc(brd[0])
+																				inc(xy4[0])
 																			end;
-																		brd[0]:=(xy3[0]+xy3[2]+brd3w) shr 1;
-																		for b:=0 to brd1w do
+																		xy4[0]:=pr.X1+round(scale*(xy3[0]+xy3[2])/2.0)+cmpval.brd3w-((cmpval.brd3w+1) shr 1);
+																		for b:=0 to cmpval.brd1w do
 																			begin
-																				brd[1]:=xy3[1];
-																				brd[2]:=brd[0];
-																				brd[3]:=xy3[3];
-																				xy4[0]:=pr.X1+round(scale*brd[0]);
-																				xy4[1]:=pr.Y1+round(scale*brd[1]);
-																				xy4[2]:=pr.X1+round(scale*brd[2]);
-																				xy4[3]:=pr.Y1+round(scale*brd[3]);
+																				xy4[2]:=xy4[0];
 																				v_pline(vdiHandle,2,xy4);
-																				dec(brd[0])
+																				dec(xy4[0])
 																			end
 																	end
 																end
@@ -36519,9 +39283,9 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 														vs_clip(vdiHandle,CLIP_ON,clp2.A2);
 													end
 											end;
-									if gitter then dec(xy3[3])
+									if cmpval.gitter then dec(xy3[3])
 								end;
-							if gitter then
+							if cmpval.gitter then
 								begin
 									if colfx then
 										begin
@@ -36541,19 +39305,20 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 											vsl_type(vdiHandle,LT_USERDEF)
 										end;
 									if PCell(cnum)^.Border.Right<16 then
-										begin
-											if q<p^.Parms.Columns then
-												if PCell(cnum+CELLSIZE)^.Border.Left>=16 then goto _nextgit;
-											xy2[0]:=xy3[2];
-											xy2[1]:=xy3[1];
-											xy2[2]:=xy2[0];
-											xy2[3]:=xy3[3]+1;
-											xy4[0]:=pr.X1+round(scale*xy2[0])-1;
-											xy4[1]:=pr.Y1+round(scale*xy2[1]);
-											xy4[2]:=pr.X1+round(scale*xy2[2])-1;
-											xy4[3]:=pr.Y1+round(scale*xy2[3]);
-											v_pline(vdiHandle,2,xy4)
-										end;
+										if (PCell(cnum)^.TxtVal.Flags and TFL_GITTERMASK)=0 then
+											begin
+												if q<p^.Parms.Columns then
+													if PCell(cnum+CELLSIZE)^.Border.Left>=16 then goto _nextgit;
+												xy2[0]:=xy3[2];
+												xy2[1]:=xy3[1];
+												xy2[2]:=xy2[0];
+												xy2[3]:=xy3[3]+1;
+												xy4[0]:=pr.X1+round(scale*xy2[0])-1;
+												xy4[1]:=pr.Y1+round(scale*xy2[1]);
+												xy4[2]:=pr.X1+round(scale*xy2[2])-1;
+												xy4[3]:=pr.Y1+round(scale*xy2[3]);
+												v_pline(vdiHandle,2,xy4)
+											end;
 									_nextgit:
 									if PCell(cnum)^.Border.Bottom<16 then
 										begin
@@ -36574,7 +39339,7 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 								end
 							else
 								dec(xy3[3]);
-							if not(gitter) then inc(xy3[3])
+							if not(cmpval.gitter) then inc(xy3[3])
 						end;
 					inc(q);
 					if q>ce then break;
@@ -36603,25 +39368,24 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 								pe:=p^.Embedded;
 								while pe<>nil do
 									begin
-										pe^.SetWorkstationValues(drvnum,colors,-pr.X1-round(scale*(xoffs-XPixOffs)),-pr.Y1-round(scale*(yoffs-YPixOffs)),scale*xmm100fak,scale*ymm100fak,prcfak,fontfak*scale,bTst(ewrkout[30],1),true);
-										if pe^.IsVisible(clp,false) then
+										if pe^.CanPrint then
 											begin
-												vs_clip(vdiHandle,CLIP_ON,clp.A2);
-												pe^.Paint(vdiHandle,clp,false)
+												pe^.SetWorkstationValues(drvnum,colors,-pr.X1-round(scale*(xoffs-XPixOffs)),-pr.Y1-round(scale*(yoffs-YPixOffs)),scale*xmm100fak,scale*ymm100fak,prcfak,fontfak*scale,bTst(ewrkout[30],1),true);
+												if pe^.IsVisible(clp,false) then
+													begin
+														vs_clip(vdiHandle,CLIP_ON,clp.A2);
+														pe^.Paint(vdiHandle,clp,false)
+													end
 											end;
 										pe:=pe^.Next
 									end
 							end
 					end;
 			SetFont(p^.GetStdFontIndex,p^.GetStdFontSize);
-			vst_color(vdiHandle,xcolor(Black));
-			vst_effects(vdiHandle,TF_NORMAL);
-			vst_rotation(vdiHandle,0);
+			p^.RestoreTextValues(vdiHandle);
 			vsl_color(vdiHandle,Black);
-			if Speedo then vst_skew(vdiHandle,0);
-			vst_alignment(vdiHandle,TA_LEFT,TA_BASELINE,dummy,dummy);
 			vs_clip(vdiHandle,CLIP_ON,clip.A2);
-			if (p^.Parms.psbuffer.columns=bf_Checked) or (p^.Parms.psbuffer.rows=bf_Checked) or gitter then
+			if (p^.Parms.psbuffer.columns=bf_Checked) or (p^.Parms.psbuffer.rows=bf_Checked) or cmpval.gitter then
 				begin
 					pxya[0]:=pr.X1+round(scale*xoffs);
 					pxya[1]:=pr.Y1+round(scale*yoffs);
@@ -36703,9 +39467,9 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 						prctemp:=prcfak;
 						prcfak:=1.0;
 						SetFont(p^.GetStdFontIndex,p^.GetStdFontSize);
-						if p^.Parms.psbuffer.hlefton=bf_Checked then outputkf(clip.X1,clip.Y1,TA_LEFT,TA_TOP,p^.Parms.psbuffer.hleft);
-						if p^.Parms.psbuffer.hcenteron=bf_Checked then outputkf((clip.X1+clip.X2) shr 1,clip.Y1,TA_CENTER,TA_TOP,p^.Parms.psbuffer.hmid);
-						if p^.Parms.psbuffer.hrighton=bf_Checked then outputkf(clip.X2,clip.Y1,TA_RIGHT,TA_TOP,p^.Parms.psbuffer.hright);
+						if p^.Parms.psbuffer.hlefton=bf_Checked then p^.OutputKF(vdiHandle,clip.X1,clip.Y1,TA_LEFT,TA_TOP,pagenum,pages,printtime,p^.Parms.psbuffer.hleft);
+						if p^.Parms.psbuffer.hcenteron=bf_Checked then p^.OutputKF(vdiHandle,(clip.X1+clip.X2) shr 1,clip.Y1,TA_CENTER,TA_TOP,pagenum,pages,printtime,p^.Parms.psbuffer.hmid);
+						if p^.Parms.psbuffer.hrighton=bf_Checked then p^.OutputKF(vdiHandle,clip.X2,clip.Y1,TA_RIGHT,TA_TOP,pagenum,pages,printtime,p^.Parms.psbuffer.hright);
 						prcfak:=prctemp
 					end
 			end;
@@ -36721,9 +39485,9 @@ procedure TPreviewDialog.Paint(var PaintInfo: TPaintStruct);
 						prctemp:=prcfak;
 						prcfak:=1.0;
 						SetFont(p^.GetStdFontIndex,p^.GetStdFontSize);
-						if p^.Parms.psbuffer.flefton=bf_Checked then outputkf(clip.X1,clip.Y2,TA_LEFT,TA_BOTTOM,p^.Parms.psbuffer.fleft);
-						if p^.Parms.psbuffer.fcenteron=bf_Checked then outputkf((clip.X1+clip.X2) shr 1,clip.Y2,TA_CENTER,TA_BOTTOM,p^.Parms.psbuffer.fmid);
-						if p^.Parms.psbuffer.frighton=bf_Checked then outputkf(clip.X2,clip.Y2,TA_RIGHT,TA_BOTTOM,p^.Parms.psbuffer.fright);
+						if p^.Parms.psbuffer.flefton=bf_Checked then p^.OutputKF(vdiHandle,clip.X1,clip.Y2,TA_LEFT,TA_BOTTOM,pagenum,pages,printtime,p^.Parms.psbuffer.fleft);
+						if p^.Parms.psbuffer.fcenteron=bf_Checked then p^.OutputKF(vdiHandle,(clip.X1+clip.X2) shr 1,clip.Y2,TA_CENTER,TA_BOTTOM,pagenum,pages,printtime,p^.Parms.psbuffer.fmid);
+						if p^.Parms.psbuffer.frighton=bf_Checked then p^.OutputKF(vdiHandle,clip.X2,clip.Y2,TA_RIGHT,TA_BOTTOM,pagenum,pages,printtime,p^.Parms.psbuffer.fright);
 						prcfak:=prctemp
 					end
 			end;
@@ -36793,11 +39557,11 @@ function TPreviewDialog.ExitDlg(AnIndx: integer): boolean;
 				if d<>nil then
 					begin
 						d^.Attr.ExStyle:=(d^.Attr.ExStyle and not(ws_ex_Center2Parent)) or ws_ex_Popup;
-						new(PEdit,Init(d,RTPPINPUT,5,'Die neue Seitennummer'));
-						new(ps,Init(d,RTPPMAX,11,false,'So viele Seiten sind insgesamt vorhanden'));
-						if ps<>nil then ps^.SetText('(von '+ltoa(pages)+')');
+						new(PEdit,Init(d,RTPPINPUT,5,BUBBLE_PAGE_NEW));
+						new(ps,Init(d,RTPPMAX,11,false,BUBBLE_PAGE_MAX));
+						if ps<>nil then ps^.SetText('('+STRING_PAGEOF+' '+ltoa(pages)+')');
 						new(PButton,Init(d,RTPPCANCEL,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
-						new(PButton,Init(d,RTPPOK,id_OK,true,'Zeigt die Seite mit der angegebenen Nummer an'));
+						new(PButton,Init(d,RTPPOK,id_OK,true,BUBBLE_PAGE_OK));
 						dbuf:=ltoa(pagenum+1);
 						d^.TransferBuffer:=@dbuf;
 						if Application^.ExecDialog(d)=RTPPOK then
@@ -36828,6 +39592,8 @@ function TPreviewDialog.ExitDlg(AnIndx: integer): boolean;
 			if p^.paper<>nil then p^.paper^.Work;
 		RTPVFIT:
 			Shrink2Fit;
+		RTPV100:
+			p^.SetPercent(65536.0);
 		RTPVLAYOUT:
 			if p^.pagesetup<>nil then p^.pagesetup^.Work
 		end
@@ -36887,12 +39653,13 @@ procedure TPreviewDialog.Update(ForceOpen: boolean);
 		ScanDriver(true,ForceOpen);
 		if not(pvok) then
 			begin
-				st^.SetText('Treiber?');
+				st^.SetText(STRING_NODRIVER);
 				_error:
 				st^.Disable;
 				pb1^.Disable;
 				pb2^.Disable;
 				pb3^.Disable;
+				pb4^.Disable;
 				scale:=pvscale;
 				ForceVRedraw;
 				exit
@@ -36914,7 +39681,7 @@ procedure TPreviewDialog.Update(ForceOpen: boolean);
 		ymm100fak:=ymmfak*prcfak/100;
 		if (xoffs2<=xoffs) or (yoffs2<=yoffs) then
 			begin
-				st^.SetText('Rand?');
+				st^.SetText(STRING_WRONGMARGINS);
 				goto _error
 			end;
 		if p^.IsNormalPrintArea then
@@ -36924,16 +39691,17 @@ procedure TPreviewDialog.Update(ForceOpen: boolean);
 					for w:=0 to p^.Parms.Columns do
 						begin
 							if cell^.Typ=CTYPE_EMPTY then
-								if cell^.Color=Black then
-									if cell^.Style=8 then
-										if cell^.Interior=FIS_HOLLOW then
-											with cell^.Border do
-												if Left<16 then
-													if Right<16 then
-														if Top<16 then
-															if Bottom<16 then
-																if Hor<16 then
-																	if Vert<16 then goto _leer;
+								if cell^.TxtVal.Flags=0 then
+									if cell^.Color=Black then
+										if cell^.Style=8 then
+											if cell^.Interior=FIS_HOLLOW then
+												with cell^.Border do
+													if Left<16 then
+														if Right<16 then
+															if Top<16 then
+																if Bottom<16 then
+																	if Hor<16 then
+																		if Vert<16 then goto _leer;
 							if q>rec then rec:=q;
 							if w>cec then cec:=w;
 							_leer:
@@ -36947,8 +39715,11 @@ procedure TPreviewDialog.Update(ForceOpen: boolean);
 							pe:=p^.Embedded;
 							while pe<>nil do
 								begin
-									if pe^.XPos_mm100+pe^.Width_mm100>xmm then xmm:=pe^.XPos_mm100+pe^.Width_mm100;
-									if pe^.YPos_mm100+pe^.Height_mm100>ymm then ymm:=pe^.YPos_mm100+pe^.Height_mm100;
+									if pe^.CanPrint then
+										begin
+											if pe^.XPos_mm100+pe^.Width_mm100>xmm then xmm:=pe^.XPos_mm100+pe^.Width_mm100;
+											if pe^.YPos_mm100+pe^.Height_mm100>ymm then ymm:=pe^.YPos_mm100+pe^.Height_mm100
+										end;
 									pe:=pe^.Next
 								end;
 							if xmm>0 then
@@ -36972,7 +39743,7 @@ procedure TPreviewDialog.Update(ForceOpen: boolean);
 						end;
 				if (rec<0) or (cec<0) then
 					begin
-						st^.SetText('Leer!');
+						st^.SetText(STRING_PAGEEMPTY);
 						goto _error
 					end
 			end
@@ -37088,12 +39859,13 @@ procedure TPreviewDialog.CheckButtons;
 			for q:=0 to cs-1 do inc(XPixOffs,GetColWidth(q));
 		if rs>0 then
 			for q:=0 to rs-1 do inc(YPixOffs,GetRowHeight(q));
-		st^.SetText('Seite '+ltoa(pagenum+1));
+		st^.SetText(STRING_PAGE+' '+ltoa(pagenum+1));
 		if pages<1 then
 			begin
 				pb1^.Disable;
 				pb2^.Disable;
-				pb3^.Disable
+				pb3^.Disable;
+				pb4^.Disable
 			end
 		else
 			begin
@@ -37103,7 +39875,8 @@ procedure TPreviewDialog.CheckButtons;
 				if pagenum=pages-1 then pb2^.Disable
 				else
 					pb2^.Enable;
-				pb3^.Enable
+				pb3^.Enable;
+				pb4^.Enable
 			end;
 		scale:=pvscale;
 		ForceVRedraw
@@ -37118,21 +39891,22 @@ procedure TPreview.Work;
 		p:=PCalcWindow(Parent);
 		if p^.pagepreview=nil then
 			begin
-				new(p^.pagepreview,Init(p,TEXELWINDPREFIX+'Seitenansicht','Seitenansicht','PREVIEW',RTPREVIEW));
+				new(p^.pagepreview,Init(p,TEXELWINDPREFIX+TITLE_PREVIEW,STG_PREVIEW,ICNTITLE_PREVIEW,RTPREVIEW));
 				if p^.pagepreview<>nil then
 					begin
-						new(p^.pagepreview^.st,Init(p^.pagepreview,RTPVPAGE,11,false,'Zeigt die aktuelle Seite an bzw. ruft (nach Anklicken) einen Dialog zur Eingabe der gewÅnschten Seitennummer auf'));
+						new(p^.pagepreview^.st,Init(p^.pagepreview,RTPVPAGE,11,false,BUBBLE_PREVIEW_PAGE));
 						if p^.pagepreview^.st<>nil then p^.pagepreview^.st^.Style:=p^.pagepreview^.st^.Style and not(sts_Fill);
-						new(p^.pagepreview^.cb,Init(p^.pagepreview,RTPVMARGINS,true,'Bestimmt, ob Markierungen fÅr die in "Seite einrichten" festgelegten RÑnder angezeigt werden'));
-						new(p^.pagepreview^.pb1,Init(p^.pagepreview,RTPVDEC,id_No,true,'Vermindert die Seitennummer um eins'));
-						new(p^.pagepreview^.pb2,Init(p^.pagepreview,RTPVINC,id_No,true,'Erhîht die Seitennummer um eins'));
-						new(pb,Init(p^.pagepreview,RTPVPAPER,id_No,true,'Ruft den "Papierformat"-Dialog auf. Dies ist nur mîglich, falls der WDIALOG-Druckdialog installiert ist.'));
+						new(p^.pagepreview^.cb,Init(p^.pagepreview,RTPVMARGINS,true,BUBBLE_PREVIEW_MARGINS));
+						new(p^.pagepreview^.pb1,Init(p^.pagepreview,RTPVDEC,id_No,true,BUBBLE_PREVIEW_DEC));
+						new(p^.pagepreview^.pb2,Init(p^.pagepreview,RTPVINC,id_No,true,BUBBLE_PREVIEW_INC));
+						new(pb,Init(p^.pagepreview,RTPVPAPER,id_No,true,BUBBLE_PREVIEW_PAPER));
 						if not(TexelApp.ExtPrnSel(p^.wnd_prnt_set,TexelApp.app_prnt_set)) then
 							if pb<>nil then pb^.Disable;
-						new(PButton,Init(p^.pagepreview,RTPVPRINT,id_No,true,'Ruft den "Drucken"-Dialog auf'));
-						new(PButton,Init(p^.pagepreview,RTPVLAYOUT,id_No,true,'Ruft den "Seite einrichten"-Dialog auf'));
-						new(p^.pagepreview^.pb3,Init(p^.pagepreview,RTPVFIT,id_No,true,'Skaliert das Rechenblatt so, daû es mîglichst gut auf die eingestellte Seitengrîûe paût.'));
-						new(PButton,Init(p^.pagepreview,RTPVOK,id_OK,true,'VerlÑût die Seitenansicht'));
+						new(PButton,Init(p^.pagepreview,RTPVPRINT,id_No,true,BUBBLE_PREVIEW_PRINT));
+						new(PButton,Init(p^.pagepreview,RTPVLAYOUT,id_No,true,BUBBLE_PREVIEW_LAYOUT));
+						new(p^.pagepreview^.pb3,Init(p^.pagepreview,RTPVFIT,id_No,true,BUBBLE_PREVIEW_SCALE));
+						new(p^.pagepreview^.pb4,Init(p^.pagepreview,RTPV100,id_No,true,BUBBLE_PREVIEW_100));
+						new(PButton,Init(p^.pagepreview,RTPVOK,id_OK,true,BUBBLE_PREVIEW_OK));
 						new(pb,Init(p^.pagepreview,RTPVHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
@@ -37178,12 +39952,12 @@ function TInfoDialog.ExitDlg(AnIndx: integer): boolean;
 				new(p,Init(@self,'',RTCHGPASS));
 				if p<>nil then
 					begin
-						new(pe,Init(p,RTCPOLD,21,'')); { ... }
+						new(pe,Init(p,RTCPOLD,21,BUBBLE_CHGPASS_OLD));
 						if pcw^.PassWord.Flag=0 then
 							if pe<>nil then pe^.Disable;
-						new(PEdit,Init(p,RTCPNEW,21,'')); { ... }
-						new(PButton,Init(p,RTCPABBRUCH,id_Cancel,true,'')); { ... }
-						new(PButton,Init(p,RTCPOK,id_OK,true,'')); { ... }
+						new(PEdit,Init(p,RTCPNEW,21,BUBBLE_CHGPASS_NEW));
+						new(PButton,Init(p,RTCPABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
+						new(PButton,Init(p,RTCPOK,id_OK,true,BUBBLE_CHGPASS_OK));
 						tb.oldpw:='';
 						tb.newpw:='';
 						p^.TransferBuffer:=@tb;
@@ -37192,12 +39966,12 @@ function TInfoDialog.ExitDlg(AnIndx: integer): boolean;
 								if pcw^.PassWord.Flag<>0 then
 									if not(CheckPassWord(tb.oldpw,pcw^.PassWord.Code,dummy)) then
 										begin
-											Application^.Alert(@self,1,NOTE,'Altes Paûwort falsch!','  &OK  ');
+											Application^.Alert(@self,1,NOTE,MESSAGE_INFO_PASSWRONG,BUTTON_OK);
 											goto _pagain
 										end;
 								if (length(tb.newpw)>0) and (length(tb.newpw)<6) then
 									begin
-										Application^.Alert(@self,1,NOTE,'Das neue Paûwort muû entweder leer oder aber mind. 6 Zeichen lang sein.','  &OK  ');
+										Application^.Alert(@self,1,NOTE,MESSAGE_INFO_PASSLEN,BUTTON_OK);
 										goto _pagain
 									end;
 								if length(tb.newpw)>0 then
@@ -37210,7 +39984,8 @@ function TInfoDialog.ExitDlg(AnIndx: integer): boolean;
 										pcw^.PassWord.Flag:=0;
 										pcw^.PassWord.Code:=0;
 										pcw^.PassWord.Mask:=0
-									end
+									end;
+								pcw^.SetDirty
 							end
 					end;
 				TexelApp.DeactivateExtResource
@@ -37227,31 +40002,31 @@ procedure TInfo.Work;
 		p:=PCalcWindow(Parent);
 		if ADialog=nil then
 			begin
-				ADialog:=new(PInfoDialog,Init(p,TEXELWINDPREFIX+'Info','Tabellen-Informations-Dialog','INFO',RTINFO));
+				ADialog:=new(PInfoDialog,Init(p,TEXELWINDPREFIX+TITLE_INFO,STG_INFO,ICNTITLE_INFO,RTINFO));
 				if ADialog<>nil then
 					begin
 						new(PGroupBox,Init(ADialog,RTIFILE,GROUP_INFO_FILE,''));
 						new(PGroupBox,Init(ADialog,RTIEDIT,'',''));
 						new(PGroupBox,Init(ADialog,RTITIME,'',''));
 						new(PGroupBox,Init(ADialog,RTIINFO,'',''));
-						new(st0,Init(ADialog,RTIFNAME,64,false,'Zeigt den kompletten Dateinamen des Blattes an'));
-						new(PEdit,Init(ADialog,RTIAUTOR,51,'Hier kann man eintragen, wer dieses Blatt erstellt hat. In "Seite einrichten" kann man darauf in den Kopf- und Fuûzeilen mit #a zugreifen.'));
-						new(PEdit,Init(ADialog,RTISTICHWORT,51,'Hier kînnen - durch Komma getrennte - Stichworte eingetragen werden, nach denen man in STELLA suchen kann'));
-						new(PEdit,Init(ADialog,RTIREM1,51,'beliebige Anmerkungen zum Blatt'));
-						new(PEdit,Init(ADialog,RTIREM2,51,'beliebige Anmerkungen zum Blatt'));
-						new(PEdit,Init(ADialog,RTIREM3,51,'beliebige Anmerkungen zum Blatt'));
-						new(PEdit,Init(ADialog,RTIREM4,51,'beliebige Anmerkungen zum Blatt'));
-						new(PCheckBox,Init(ADialog,RTIENCRYPT,true,'')); { ... }
-						new(st1,Init(ADialog,RTICREATE,33,false,'Zeigt an, wann das Blatt erzeugt wurde'));
-						new(st2,Init(ADialog,RTILAST,32,false,'Zeigt an, wann das Blatt zuletzt geladen wurde'));
-						new(st3,Init(ADialog,RTIUSED,18,false,'Zeigt an, wie oft das Blatt geîffnet wurde'));
-						new(st4,Init(ADialog,RTIPRINTED,18,false,'Zeigt an, wie oft das Blatt ausgedruckt wurde. Dieser Wert ist nur korrekt, wenn das Blatt nach jedem Ausdruck gespeichert wird.'));
-						new(st6,Init(ADialog,RTITEXEL,31,false,'Zeigt an, mit welcher Texel-Version die Datei gespeichert wurde'));
+						new(st0,Init(ADialog,RTIFNAME,64,false,BUBBLE_INFO_FILE));
+						new(PEdit,Init(ADialog,RTIAUTOR,51,BUBBLE_INFO_AUTHOR));
+						new(PEdit,Init(ADialog,RTISTICHWORT,51,BUBBLE_INFO_INDEX));
+						new(PEdit,Init(ADialog,RTIREM1,51,BUBBLE_INFO_REM));
+						new(PEdit,Init(ADialog,RTIREM2,51,BUBBLE_INFO_REM));
+						new(PEdit,Init(ADialog,RTIREM3,51,BUBBLE_INFO_REM));
+						new(PEdit,Init(ADialog,RTIREM4,51,BUBBLE_INFO_REM));
+						new(PCheckBox,Init(ADialog,RTIENCRYPT,true,BUBBLE_INFO_ENCRYPT));
+						new(st1,Init(ADialog,RTICREATE,33,false,BUBBLE_INFO_CREATED));
+						new(st2,Init(ADialog,RTILAST,32,false,BUBBLE_INFO_LATEST));
+						new(st3,Init(ADialog,RTIUSED,18,false,BUBBLE_INFO_USED));
+						new(st4,Init(ADialog,RTIPRINTED,18,false,BUBBLE_INFO_PRINTED));
+						new(st6,Init(ADialog,RTITEXEL,31,false,BUBBLE_INFO_VERSION));
 						new(pb,Init(ADialog,RTIHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
 						new(PButton,Init(ADialog,RTIOK,id_OK,true,BUBBLE_GENERAL_OK));
-						new(PButton,Init(ADialog,RTIPASSWORD,id_No,true,'')); { ... }
+						new(PButton,Init(ADialog,RTIPASSWORD,id_No,true,BUBBLE_INFO_PASSWORD));
 						new(PButton,Init(ADialog,RTIABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
 						ADialog^.TransferBuffer:=@p^.infobuf
 					end
@@ -37261,17 +40036,17 @@ procedure TInfo.Work;
 				t:=p^.GetWindowFilename;
 				if length(t)=0 then t:=p^.GetRawIconTitle;
 				if st0<>nil then st0^.SetText(CompressPath(t,63));
-				if st1<>nil then st1^.SetText('erîffnet am  '+TexelApp.Time2Str(p^.infobuf.Created)+' h');
-				if st2<>nil then st2^.SetText('zuletzt am  '+TexelApp.Time2Str(p^.infobuf.Last)+' h');
-				if st3<>nil then st3^.SetText('benutzt:   '+ltoa(p^.infobuf.Used)+' x');
-				if st4<>nil then st4^.SetText('gedruckt:  '+ltoa(p^.infobuf.Printed)+' x');
+				if st1<>nil then st1^.SetText(STRING_INFO_CREATED+TexelApp.Time2Str(p^.infobuf.Created)+' h');
+				if st2<>nil then st2^.SetText(STRING_INFO_LATEST+TexelApp.Time2Str(p^.infobuf.Last)+' h');
+				if st3<>nil then st3^.SetText(STRING_INFO_USED+ltoa(p^.infobuf.Used)+' x');
+				if st4<>nil then st4^.SetText(STRING_INFO_PRINTED+ltoa(p^.infobuf.Printed)+' x');
 				if st6<>nil then
 					begin
 						if p^.infobuf.Version=0 then st6^.Clear
 						else
-							if p^.infobuf.Release=0 then st6^.SetText('gespeichert mit Texel '+VtoS(p^.infobuf.Version))
+							if p^.infobuf.Release=0 then st6^.SetText(STRING_INFO_SAVEDWITH+' '+TEXELNAME+' '+VtoS(p^.infobuf.Version))
 							else
-								st6^.SetText('gespeichert mit Texel '+VtoS(p^.infobuf.Version)+'r'+ltoa(p^.infobuf.Release))
+								st6^.SetText(STRING_INFO_SAVEDWITH+' '+TEXELNAME+' '+VtoS(p^.infobuf.Version)+'r'+ltoa(p^.infobuf.Release))
 					end;
 				ADialog^.MakeWindow
 			end
@@ -37292,7 +40067,7 @@ procedure TFind.Work;
 	begin
 		if ADialog=nil then
 			begin
-				ADialog:=new(PFindDialog,Init(PCalcWindow(Parent),TEXELWINDPREFIX+'Suchen','Suchen-Dialog','SUCHEN',RTFIND));
+				ADialog:=new(PFindDialog,Init(PCalcWindow(Parent),TEXELWINDPREFIX+TITLE_FIND,STG_FIND,ICNTITLE_FIND,RTFIND));
 				if ADialog<>nil then
 					begin
 						new(PGroupBox,Init(ADialog,RTFIDIRECTION,GROUP_FIND_DIRECTION,''));
@@ -37300,24 +40075,24 @@ procedure TFind.Work;
 						new(PGroupBox,Init(ADialog,RTFIWHAT,GROUP_FIND_SEARCHIN,''));
 						new(PGroupBox,Init(ADialog,RTFIINTERPRETE,GROUP_FIND_SEARCHAS,''));
 						new(PGroupBox,Init(ADialog,RTFIDIR,GROUP_FIND_FORBACKWARD,''));
-						new(PEdit,Init(ADialog,RTFISEARCHEDIT,46,'Der Suchbegriff. Wildcards sind z.Z. noch nicht erlaubt'));
-						new(PRadioButton,Init(ADialog,RTFIROWS,true,'Zeilenweise Suche'));
-						new(PRadioButton,Init(ADialog,RTFICOLUMNS,true,'Spaltenweise Suche'));
-						new(PCheckBox,Init(ADialog,RTFICASE,true,'Wenn dieses KÑstchen markiert ist, wird zwischen Groû- und Kleinschreibung unterschieden.'));
-						new(PCheckBox,Init(ADialog,RTFICOMPLETE,true,'Wenn dieses KÑstchen markiert ist, muû der Textinhalt komplett mit dem Suchbegriff Åbereinstimmen.'));
-						new(PCheckBox,Init(ADialog,RTFIFORMULA,true,'Bestimmt, ob in Formelzellen gesucht wird'));
-						new(PCheckBox,Init(ADialog,RTFIVALUE,true,'Bestimmt, ob in Konstantenzellen gesucht wird'));
-						new(PCheckBox,Init(ADialog,RTFITEXT,true,'Bestimmt, ob in normalen Textzellen gesucht wird'));
-						new(PRadioButton,Init(ADialog,RTFIINTRFORM,true,'Es wird so nach den Zeichenketten gesucht, wie sie in der Eingabezeile eingetragen werden.'));
-						new(PRadioButton,Init(ADialog,RTFIINTRVAL,true,'Es wird so nach den Zeichenketten gesucht, wie sie in den Zellen angezeigt werden.'));
-						new(rb1,Init(ADialog,RTFIVOR,true,'Sucht vom Cursor in Richtung Blattende'));
-						new(rb2,Init(ADialog,RTFIZURUECK,true,'Sucht vom Cursor in Richtung Blattanfang'));
+						new(PEdit,Init(ADialog,RTFISEARCHEDIT,46,BUBBLE_FIND_SEARCHFOR));
+						new(PRadioButton,Init(ADialog,RTFIROWS,true,BUBBLE_FIND_ROWS));
+						new(PRadioButton,Init(ADialog,RTFICOLUMNS,true,BUBBLE_FIND_COLUMNS));
+						new(PCheckBox,Init(ADialog,RTFICASE,true,BUBBLE_FIND_CASE));
+						new(PCheckBox,Init(ADialog,RTFICOMPLETE,true,BUBBLE_FIND_COMPLETE));
+						new(PCheckBox,Init(ADialog,RTFIFORMULA,true,BUBBLE_FIND_FORMULA));
+						new(PCheckBox,Init(ADialog,RTFIVALUE,true,BUBBLE_FIND_VALUE));
+						new(PCheckBox,Init(ADialog,RTFITEXT,true,BUBBLE_FIND_TEXT));
+						new(PRadioButton,Init(ADialog,RTFIINTRFORM,true,BUBBLE_FIND_EDIT));
+						new(PRadioButton,Init(ADialog,RTFIINTRVAL,true,BUBBLE_FIND_DISPLAY));
+						new(rb1,Init(ADialog,RTFIVOR,true,BUBBLE_FIND_TOEND));
+						new(rb2,Init(ADialog,RTFIZURUECK,true,BUBBLE_FIND_TOBEGIN));
 						new(pb,Init(ADialog,RTFIHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
 						new(PButton,Init(ADialog,RTFICANCEL,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
-						new(PButton,Init(ADialog,RTFISEARCH,id_No,true,'Springt zur nÑchsten Zelle, die die Suchkriterien erfÅllt'));
-						new(PButton,Init(ADialog,RTFIOK,id_OK,true,'Springt zur nÑchsten gesuchten Zelle und verlÑût den Dialog'));
+						new(PButton,Init(ADialog,RTFISEARCH,id_No,true,BUBBLE_FIND_FIND));
+						new(PButton,Init(ADialog,RTFIOK,id_OK,true,BUBBLE_FIND_OK));
 						ADialog^.TransferBuffer:=@PCalcWindow(Parent)^.findbuf
 					end
 			end;
@@ -37539,31 +40314,31 @@ procedure TReplace.Work;
 	begin
 		if ADialog=nil then
 			begin
-				ADialog:=new(PReplaceDialog,Init(PCalcWindow(Parent),TEXELWINDPREFIX+'Ersetzen','Ersetzen-Dialog','ERSETZEN',RTREPLACE));
+				ADialog:=new(PReplaceDialog,Init(PCalcWindow(Parent),TEXELWINDPREFIX+TITLE_REPLACE,STG_REPLACE,ICNTITLE_REPLACE,RTREPLACE));
 				if ADialog<>nil then
 					begin
 						new(PGroupBox,Init(ADialog,RTREDIRECTION,GROUP_REPLACE_DIRECTION,''));
 						new(PGroupBox,Init(ADialog,RTREOPTIONS,'',''));
 						new(PGroupBox,Init(ADialog,RTREWHAT,GROUP_REPLACE_REPLIN,''));
 						new(PGroupBox,Init(ADialog,RTREDIR,GROUP_REPLACE_FORBACK,''));
-						new(PEdit,Init(ADialog,RTRESEARCH,46,'Der Suchbegriff. Wildcards sind z.Z. noch nicht erlaubt'));
-						new(PEdit,Init(ADialog,RTREREPLACEWITH,46,'Durch diese Zeichen wird der Suchbegriff in den gefundenen Zellen ersetzt'));
-						new(PRadioButton,Init(ADialog,RTREROWS,true,'Zeilenweises Ersetzen'));
-						new(PRadioButton,Init(ADialog,RTRECOLUMNS,true,'Spaltenweises Ersetzen'));
-						new(PCheckBox,Init(ADialog,RTRECASE,true,'Wenn dieses KÑstchen markiert ist, wird zwischen Groû- und Kleinschreibung unterschieden.'));
-						new(PCheckBox,Init(ADialog,RTRECOMPLETE,true,'Wenn dieses KÑstchen markiert ist, muû der Textinhalt komplett mit dem Suchbegriff Åbereinstimmen.'));
-						new(PCheckBox,Init(ADialog,RTREFORMULA,true,'Bestimmt, ob in Formelzellen ersetzt wird'));
-						new(PCheckBox,Init(ADialog,RTREVALUE,true,'Bestimmt, ob in Konstantenzellen ersetzt wird'));
-						new(PCheckBox,Init(ADialog,RTRETEXT,true,'Bestimmt, ob in normalen Textzellen ersetzt wird'));
-						new(rb1,Init(ADialog,RTREVOR,true,'Ersetzt vom Cursor in Richtung Blattende'));
-						new(rb2,Init(ADialog,RTREZURUECK,true,'Ersetzt vom Cursor in Richtung Blattanfang'));
+						new(PEdit,Init(ADialog,RTRESEARCH,46,BUBBLE_REPL_SEARCHFOR));
+						new(PEdit,Init(ADialog,RTREREPLACEWITH,46,BUBBLE_REPL_REPLWITH));
+						new(PRadioButton,Init(ADialog,RTREROWS,true,BUBBLE_REPL_ROWS));
+						new(PRadioButton,Init(ADialog,RTRECOLUMNS,true,BUBBLE_REPL_COLUMNS));
+						new(PCheckBox,Init(ADialog,RTRECASE,true,BUBBLE_REPL_CASE));
+						new(PCheckBox,Init(ADialog,RTRECOMPLETE,true,BUBBLE_REPL_COMPLETE));
+						new(PCheckBox,Init(ADialog,RTREFORMULA,true,BUBBLE_REPL_FORMULA));
+						new(PCheckBox,Init(ADialog,RTREVALUE,true,BUBBLE_REPL_VALUE));
+						new(PCheckBox,Init(ADialog,RTRETEXT,true,BUBBLE_REPL_TEXT));
+						new(rb1,Init(ADialog,RTREVOR,true,BUBBLE_REPL_TOEND));
+						new(rb2,Init(ADialog,RTREZURUECK,true,BUBBLE_REPL_TOBEGIN));
 						new(pb,Init(ADialog,RTREHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
 						new(PButton,Init(ADialog,RTRECANCEL,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
-						new(PButton,Init(ADialog,RTREALL,id_No,true,'Ersetzt den Suchbegriff vom Cursor an in Suchrichtung in allen Zellen'));
-						new(PButton,Init(ADialog,RTREREPLACE,id_No,true,'Ersetzt den Suchbegriff in der nÑchsten passenden Zelle'));
-						new(PButton,Init(ADialog,RTREOK,id_OK,true,'Ersetzt den Suchbegriff in der nÑchsten passenden Zelle und verlÑût den Dialog'));
+						new(PButton,Init(ADialog,RTREALL,id_No,true,BUBBLE_REPL_ALL));
+						new(PButton,Init(ADialog,RTREREPLACE,id_No,true,BUBBLE_REPL_REPLACE));
+						new(PButton,Init(ADialog,RTREOK,id_OK,true,BUBBLE_REPL_OK));
 						ADialog^.TransferBuffer:=@PCalcWindow(Parent)^.replacebuf
 					end
 			end;
@@ -37835,20 +40610,20 @@ procedure TKonst.Work;
 		p:=PCalcWindow(Parent);
 		if p^.konstanten=nil then
 			begin
-				new(p^.konstanten,Init(p,TEXELWINDPREFIX+'Konstanten','Konstanten-Dialog','KONSTANTEN',RTCONST));
+				new(p^.konstanten,Init(p,TEXELWINDPREFIX+TITLE_CONST,STG_CONST,ICNTITLE_CONST,RTCONST));
 				if p^.konstanten<>nil then
 					begin
-						new(p^.konstanten^.cb,Init(p^.konstanten,RTCNAMEN,true,'Wenn diese Checkbox angekreuzt ist, werden die Konstantennamen im Blatt beim éndern ebenfalls geÑndert'));
-						new(p^.konstanten^.pkb,Init(p^.konstanten,RTCLIST,RTCLISTSLID,RTCLISTDEC,RTCLISTINC,PCalcWindow(Parent)^.Parameter,false,'Zeigt alle fÅr dieses Blatt definierten Konstanten an'));
-						new(p^.konstanten^.ed1,Init(p^.konstanten,RTCNAME,31,'Der Konstantenname muû mit einem Buchstaben oder dem Unterstrich beginnen'));
-						new(p^.konstanten^.ed2,Init(p^.konstanten,RTCVALUE,31,'Der Wert der Konstanten (ohne Einheit o.Ñ.)'));
-						new(p^.konstanten^.ed3,Init(p^.konstanten,RTCREM,41,'Ein beliebiger Kommentar zur Konstanten (sollte z.B. die Einheit enthalten)'));
+						new(p^.konstanten^.cb,Init(p^.konstanten,RTCNAMEN,true,BUBBLE_CONST_CHGNAME));
+						new(p^.konstanten^.pkb,Init(p^.konstanten,RTCLIST,RTCLISTSLID,RTCLISTDEC,RTCLISTINC,PCalcWindow(Parent)^.Parameter,false,BUBBLE_CONST_LIST));
+						new(p^.konstanten^.ed1,Init(p^.konstanten,RTCNAME,31,BUBBLE_CONST_NAME));
+						new(p^.konstanten^.ed2,Init(p^.konstanten,RTCVALUE,31,BUBBLE_CONST_VALUE));
+						new(p^.konstanten^.ed3,Init(p^.konstanten,RTCREM,41,BUBBLE_CONST_DESCR));
 						new(pb,Init(p^.konstanten,RTCHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(p^.konstanten,RTCNEU,id_No,true,'Legt eine neue Konstante mit den eingetragenen Werten an'));
-						new(p^.konstanten^.pb1,Init(p^.konstanten,RTCCHANGE,id_No,true,'éndert die markierte Konstante auf die eingetragenen Werte'));
-						new(p^.konstanten^.pb2,Init(p^.konstanten,RTCDELETE,id_No,true,'Lîscht die markierte Konstante (geht nur, wenn diese benutzerdefiniert ist)'));
+						new(PButton,Init(p^.konstanten,RTCNEU,id_No,true,BUBBLE_CONST_NEW));
+						new(p^.konstanten^.pb1,Init(p^.konstanten,RTCCHANGE,id_No,true,BUBBLE_CONST_CHANGE));
+						new(p^.konstanten^.pb2,Init(p^.konstanten,RTCDELETE,id_No,true,BUBBLE_CONST_DELETE));
 						new(PButton,Init(p^.konstanten,RTCOK,id_OK,true,BUBBLE_GENERAL_OK));
 						fillchar(kbuf,sizeof(kbuf),0);
 						kbuf.chng:=bf_Checked;
@@ -38024,17 +40799,17 @@ function TKonstDialog.ExitDlg(AnIndx: integer): boolean;
 			checkinp:=false;
 			if length(nname)=0 then
 				begin
-					Application^.Alert(@self,1,NOTE,'Bitte geben Sie einen Konstantennamen ein.','  &OK  ');
+					Application^.Alert(@self,1,NOTE,MESSAGE_CONST_EMPTY,BUTTON_OK);
 					exit
 				end;
 			if nname[1] in ['0'..'9'] then
 				begin
-					Application^.Alert(@self,1,NOTE,'Bitte geben Sie einen korrekten Namen ein.','  &OK  ');
+					Application^.Alert(@self,1,NOTE,MESSAGE_CONST_NAME,BUTTON_OK);
 					exit
 				end;
 			for q:=1 to length(nname) do if not(nname[q] in VarNameSet) then
 				begin
-					Application^.Alert(@self,1,NOTE,'Bitte geben Sie einen korrekten Namen ein.','  &OK  ');
+					Application^.Alert(@self,1,NOTE,MESSAGE_CONST_NAME,BUTTON_OK);
 					exit
 				end;
 			if pkb^.List^.Count>0 then
@@ -38042,17 +40817,17 @@ function TKonstDialog.ExitDlg(AnIndx: integer): boolean;
 					if q<>nr then
 						if StrPUpper(nname)=StrPUpper(PParameter(pkb^.List^.At(q))^.Name^) then
 							begin
-								Application^.Alert(@self,1,NOTE,'Der Konstantenname "'+StrPUpper(nname)+'" ist bereits vergeben.','  &OK  ');
+								Application^.Alert(@self,1,NOTE,MESSAGE_CONST_USED1+StrPUpper(nname)+MESSAGE_CONST_USED2,BUTTON_OK);
 								exit
 							end;
 			if length(nval)=0 then
 				begin
-					Application^.Alert(@self,1,NOTE,'Bitte geben Sie den Wert der Konstanten ein.','  &OK  ');
+					Application^.Alert(@self,1,NOTE,MESSAGE_CONST_VALEMPTY,BUTTON_OK);
 					exit
 				end;
 			if not(zahl(nval)) then
 				begin
-					Application^.Alert(@self,1,NOTE,'Bitte geben Sie einen korrekten Wert ein.','  &OK  ');
+					Application^.Alert(@self,1,NOTE,MESSAGE_CONST_VALUE,BUTTON_OK);
 					exit
 				end;
 			checkinp:=true
@@ -38115,18 +40890,18 @@ function TKonstDialog.ExitDlg(AnIndx: integer): boolean;
 				UpdateList(false);
 				pkb^.SetSelection(q);
 				p^.SetDirty;
-				p^.Calculate(true)
+				p^.AutoCalculate(true)
 			end;
 		RTCDELETE:
 			begin
 				oname:=StrPUpper(PParameter(pkb^.List^.At(sel))^.Name^);
-				if Application^.Alert(@self,1,WAIT,'Konstante "'+oname+'" lîschen?','  &Ja  | &Nein ')=1 then
+				if Application^.Alert(@self,1,WAIT,MESSAGE_CONST_DELETE1+oname+MESSAGE_CONST_DELETE2,BUTTON_YESNO)=1 then
 					begin
 						pkb^.List^.AtFree(sel);
 						UpdateList(false);
 						const2zero;
 						p^.SetDirty;
-						p^.Calculate(true)
+						p^.AutoCalculate(true)
 					end
 			end
 		end
@@ -38203,7 +40978,7 @@ function TZielwertDialog.ExitDlg(AnIndx: integer): boolean;
 				v2:=p^.GetBlock(p^.zwbuf.vzelle,false,vrs,vcs,vre,vce,dummy,dummy);
 				if not(v1) or not(v2) or (zrs<>zre) or (zcs<>zce) or (vrs<>vre) or (vcs<>vce) then
 					begin
-						Application^.Alert(p,1,NOTE,'Zielzelle und verÑnderbare Zelle mÅssen eine Zellreferenz sein.','  &OK  ');
+						Application^.Alert(p,1,NOTE,MESSAGE_FINDVAL_CELLREF,BUTTON_OK);
 						exit
 					end;
 				zwert:=atof(p^.zwbuf.wert);
@@ -38211,13 +40986,13 @@ function TZielwertDialog.ExitDlg(AnIndx: integer): boolean;
 				zcell:=p^.GetCell(zrs,zcs);
 				if zcell^.Typ<>CTYPE_FORMULA then
 					begin
-						Application^.Alert(p,1,NOTE,'Die Zielzelle muû eine Formel enthalten.','  &OK  ');
+						Application^.Alert(p,1,NOTE,MESSAGE_FINDVAL_FORMULA,BUTTON_OK);
 						exit
 					end;
 				vcell:=p^.GetCell(vrs,vcs);
 				if (vcell^.Typ=CTYPE_TEXT) or (vcell^.Typ=CTYPE_FORMULA) then
 					begin
-						Application^.Alert(p,1,NOTE,'Die verÑnderbare Zelle muû eine Zahl enthalten oder leer sein.','  &OK  ');
+						Application^.Alert(p,1,NOTE,MESSAGE_FINDVAL_NUMBER,BUTTON_OK);
 						exit
 					end;
 				if vcell^.Typ=CTYPE_CONST then DisposeStr(vcell^.Data.Konst^.Txt)
@@ -38240,7 +41015,7 @@ function TZielwertDialog.ExitDlg(AnIndx: integer): boolean;
 					end;
 				BusyMouse;
 				err:='';
-				if st<>nil then st^.SetText('Status: Suchen... (Abbruch mit <Esc>)');
+				if st<>nil then st^.SetText(STRING_FINDVAL_STATUS+': '+STRING_FINDVAL_SEARCH);
 				x0:=-1.0;
 				x1:=2.0;
 				valid:=false;
@@ -38257,7 +41032,7 @@ function TZielwertDialog.ExitDlg(AnIndx: integer): boolean;
 							end
 						else
 							begin
-								err:='(kein Startintervall)';
+								err:='('+STRING_FINDVAL_INTERVAL+')';
 								goto _fehler
 							end
 					end;
@@ -38271,7 +41046,7 @@ function TZielwertDialog.ExitDlg(AnIndx: integer): boolean;
 								if kstat=K_NORMAL then
 									if key=S_Esc then
 										begin
-											err:='(Abbruch)';
+											err:='('+STRING_FINDVAL_CANCEL+')';
 											valid:=false;
 											break
 										end
@@ -38279,14 +41054,14 @@ function TZielwertDialog.ExitDlg(AnIndx: integer): boolean;
 					inc(itanz);
 					if itanz>itmax then
 						begin
-							err:='(Iterationen?)';
+							err:='('+STRING_FINDVAL_ITERAT+')';
 							valid:=false;
 							break
 						end;
 					nenner:=f1-f0;
 					if abs(nenner)<1e-11 then
 						begin
-							err:='(keine Lîsung)';
+							err:='('+STRING_FINDVAL_NOSOLUTN+')';
 							valid:=false;
 							break
 						end;
@@ -38299,22 +41074,22 @@ function TZielwertDialog.ExitDlg(AnIndx: integer): boolean;
 				_fehler:
 				vcell^.Data.Konst^.Value:=x1;
 				vcell^.Data.Konst^.Txt:=NewStr(ftoa(x1));
-				p^.Calculate(true);
+				p^.AutoCalculate(true);
 				p^.DrawCells(vrs,vcs,vre,vce);
 				ArrowMouse;
 				if not(valid) then
 					begin
-						if st<>nil then st^.SetText('Status: Fehler '+err);
-						Application^.Alert(p,1,NOTE,'Der Zielwert konnte nicht korrekt bestimmt werden.','  &OK  ')
+						if st<>nil then st^.SetText(STRING_FINDVAL_STATUS+': '+STRING_FINDVAL_ERROR+' '+err);
+						Application^.Alert(p,1,NOTE,MESSAGE_FINDVAL_ERROR,BUTTON_OK)
 					end
 				else
 					if abs(f1)>1e-9 then
 						begin
-							if st<>nil then st^.SetText('Status: Fehler');
-							Application^.Alert(p,1,NOTE,'Der Zielwert konnte nicht korrekt bestimmt werden.','  &OK  ')
+							if st<>nil then st^.SetText(STRING_FINDVAL_STATUS+': '+STRING_FINDVAL_ERROR);
+							Application^.Alert(p,1,NOTE,MESSAGE_FINDVAL_ERROR,BUTTON_OK)
 						end
 					else
-						if st<>nil then st^.SetText('Status: OK.')
+						if st<>nil then st^.SetText(STRING_FINDVAL_STATUS+': '+STRING_FINDVAL_OK)
 			end
 		end
 	end;
@@ -38327,27 +41102,27 @@ procedure TZielwert.Work;
 		if ADialog=nil then
 			begin
 				TexelApp.ActivateExtResource;
-				ADialog:=new(PZielwertDialog,Init(PCalcWindow(Parent),TEXELWINDPREFIX+'Zielwertsuche','Zielwertsuche-Dialog','ZIELWERT',RTZIELWERT));
+				ADialog:=new(PZielwertDialog,Init(PCalcWindow(Parent),TEXELWINDPREFIX+TITLE_FINDVAL,STG_FINDVAL,ICNTITLE_FINDVAL,RTZIELWERT));
 				if ADialog<>nil then
 					begin
-						new(PZielwertDialog(ADialog)^.ed1,Init(ADialog,RTZWZZELLE,8,'')); { ... }
-						new(PZielwertDialog(ADialog)^.ed2,Init(ADialog,RTZWVZELLE,8,'')); { ... }
-						new(PEdit,Init(ADialog,RTZWWERT,16,'')); { ... }
-						new(PEdit,Init(ADialog,RTZWITERATIONEN,7,'')); { ... }
-						new(PZielwertDialog(ADialog)^.st,Init(ADialog,RTZWSTATUS,41,false,'')); { ... }
-						new(pb,Init(ADialog,RTZWHELP,id_Help,false,'')); { ... }
+						new(PZielwertDialog(ADialog)^.ed1,Init(ADialog,RTZWZZELLE,8,BUBBLE_FINDVAL_CTARGET));
+						new(PZielwertDialog(ADialog)^.ed2,Init(ADialog,RTZWVZELLE,8,BUBBLE_FINDVAL_CVALUE));
+						new(PEdit,Init(ADialog,RTZWWERT,16,BUBBLE_FINDVAL_TVALUE));
+						new(PEdit,Init(ADialog,RTZWITERATIONEN,7,BUBBLE_FINDVAL_ITERAT));
+						new(PZielwertDialog(ADialog)^.st,Init(ADialog,RTZWSTATUS,41,false,BUBBLE_FINDVAL_STATUS));
+						new(pb,Init(ADialog,RTZWHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(ADialog,RTZWABBRUCH,id_Cancel,true,'')); { ... }
-						new(PButton,Init(ADialog,RTZWSUCHEN,id_No,true,'')); { ... }
-						new(PButton,Init(ADialog,RTZWOK,id_OK,true,'')); { ... }
+						new(PButton,Init(ADialog,RTZWABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
+						new(PButton,Init(ADialog,RTZWSUCHEN,id_No,true,BUBBLE_FINDVAL_FIND));
+						new(PButton,Init(ADialog,RTZWOK,id_OK,true,BUBBLE_FINDVAL_OK));
 						ADialog^.TransferBuffer:=@PCalcWindow(Parent)^.zwbuf
 					end;
 				TexelApp.DeactivateExtResource
 			end;
 		if ADialog<>nil then
 			begin
-				if PZielwertDialog(ADialog)^.st<>nil then PZielwertDialog(ADialog)^.st^.SetText('Status:');
+				if PZielwertDialog(ADialog)^.st<>nil then PZielwertDialog(ADialog)^.st^.SetText(STRING_FINDVAL_STATUS+':');
 				ADialog^.MakeWindow
 			end
 	end;
@@ -38378,7 +41153,7 @@ procedure TSort.Work;
 	begin
 		if ADialog=nil then
 			begin
-				ADialog:=new(PSortDialog,Init(PCalcWindow(Parent),TEXELWINDPREFIX+'Sortieren','Sortieren-Dialog','SORTIEREN',RTSORT));
+				ADialog:=new(PSortDialog,Init(PCalcWindow(Parent),TEXELWINDPREFIX+TITLE_SORT,STG_SORT,ICNTITLE_SORT,RTSORT));
 				if ADialog<>nil then
 					begin
 						new(PGroupBox,Init(ADialog,RTSRSORT1,GROUP_SORT_SORT1,''));
@@ -38389,33 +41164,33 @@ procedure TSort.Work;
 						new(PGroupBox,Init(ADialog,RTSRNUMBERS,GROUP_SORT_NUMBERS,''));
 						new(PGroupBox,Init(ADialog,RTSREMPTY,GROUP_SORT_SPACES,''));
 						psc:=new(PStringCollection,Init(20,10)); 
-						new(PSortDialog(ADialog)^.pcb1,InitCollection(ADialog,RTSR1POPUP,RTSR1CYC,id_No,15,psc,true,false,false,'Legt die Zeile/Spalte fest, nach der zuerst sortiert wird'));
-						new(PRadioButton,Init(ADialog,RTSR1UP,true,'Sortiert den Block nach Kriterium 1 aufsteigend'));
-						new(PRadioButton,Init(ADialog,RTSR1DOWN,true,'Sortiert den Block nach Kriterium 1 absteigend'));
-						new(PSortDialog(ADialog)^.pcb2,InitCollection(ADialog,RTSR2POPUP,RTSR2CYC,id_No,15,psc,false,false,false,'Legt die Zeile/Spalte fest, nach der als zweites sortiert wird'));
-						new(PRadioButton,Init(ADialog,RTSR2UP,true,'Sortiert den Block nach Kriterium 2 aufsteigend'));
-						new(PRadioButton,Init(ADialog,RTSR2DOWN,true,'Sortiert den Block nach Kriterium 2 absteigend'));
-						new(PSortDialog(ADialog)^.pcb3,InitCollection(ADialog,RTSR3POPUP,RTSR3CYC,id_No,15,psc,false,false,false,'Legt die Zeile/Spalte fest, nach der zum Schluû sortiert wird'));
-						new(PRadioButton,Init(ADialog,RTSR3UP,true,'Sortiert den Block nach Kriterium 3 aufsteigend'));
-						new(PRadioButton,Init(ADialog,RTSR3DOWN,true,'Sortiert den Block nach Kriterium 3 absteigend'));
-						new(PSortDialog(ADialog)^.rb1,Init(ADialog,RTSRCOLUMNS,true,'Sortiert wird in den Spalten, die daher auch als Kriterium ausgewÑhlt werden kînnen'));
-						new(PSortButton,Init(ADialog,RTSRROWS,true,'Sortiert wird in den Zeilen, die daher auch als Kriterium ausgewÑhlt werden kînnen'));
-						new(PRadioButton,Init(ADialog,RTSRINSERT,true,'Zahlen werden so zwischen Texten einsortiert, wie es die ASCII-Codierung vorsieht'));
-						new(PRadioButton,Init(ADialog,RTSRPRE,true,'Zahlen werden vor sonstigen Texten einsortiert'));
-						new(PRadioButton,Init(ADialog,RTSRPOST,true,'Zahlen werden nach sonstigen Texten einsortiert'));
-						new(PCheckBox,Init(ADialog,RTSRCASE,true,'Wenn diese Option ausgeschaltet ist, werden Groû- und Kleinbuchstaben beim Sortieren gleichwertig behandelt'));
-						new(PRadioButton,Init(ADialog,RTSRBEGINNING,true,'Komplett leere Zellen werden vor allen anderen Zellen einsortiert'));
-						new(PRadioButton,Init(ADialog,RTSREND,true,'Komplett leere Zellen werden nach allen anderen Zellen einsortiert (das ist meistens am sinnvollsten)'));
-						new(PCheckBox,Init(ADialog,RTSRUMLAUTE,true,'Legt fest, ob Umlaut lexikalisch sortiert werden sollen, d.h. aus Ñ wird ae etc.'));
-						new(PCheckBox,Init(ADialog,RTSRABS,true,'Legt fest, ob Zahlen ohne Beachtung des Vorzeichens sortiert werden sollen'));
-						new(PCheckBox,Init(ADialog,RTSRATTRIBUTE,true,'')); { ... }
+						new(PSortDialog(ADialog)^.pcb1,InitCollection(ADialog,RTSR1POPUP,RTSR1CYC,id_No,15,psc,true,false,false,BUBBLE_SORT_SORT1));
+						new(PRadioButton,Init(ADialog,RTSR1UP,true,BUBBLE_SORT_1UP));
+						new(PRadioButton,Init(ADialog,RTSR1DOWN,true,BUBBLE_SORT_1DOWN));
+						new(PSortDialog(ADialog)^.pcb2,InitCollection(ADialog,RTSR2POPUP,RTSR2CYC,id_No,15,psc,false,false,false,BUBBLE_SORT_SORT2));
+						new(PRadioButton,Init(ADialog,RTSR2UP,true,BUBBLE_SORT_2UP));
+						new(PRadioButton,Init(ADialog,RTSR2DOWN,true,BUBBLE_SORT_2DOWN));
+						new(PSortDialog(ADialog)^.pcb3,InitCollection(ADialog,RTSR3POPUP,RTSR3CYC,id_No,15,psc,false,false,false,BUBBLE_SORT_SORT3));
+						new(PRadioButton,Init(ADialog,RTSR3UP,true,BUBBLE_SORT_3UP));
+						new(PRadioButton,Init(ADialog,RTSR3DOWN,true,BUBBLE_SORT_3DOWN));
+						new(PSortDialog(ADialog)^.rb1,Init(ADialog,RTSRCOLUMNS,true,BUBBLE_SORT_COLUMNS));
+						new(PSortButton,Init(ADialog,RTSRROWS,true,BUBBLE_SORT_ROWS));
+						new(PRadioButton,Init(ADialog,RTSRINSERT,true,BUBBLE_SORT_NUMINS));
+						new(PRadioButton,Init(ADialog,RTSRPRE,true,BUBBLE_SORT_NUMPRE));
+						new(PRadioButton,Init(ADialog,RTSRPOST,true,BUBBLE_SORT_NUMPOST));
+						new(PCheckBox,Init(ADialog,RTSRCASE,true,BUBBLE_SORT_CASE));
+						new(PRadioButton,Init(ADialog,RTSRBEGINNING,true,BUBBLE_SORT_BEGINNING));
+						new(PRadioButton,Init(ADialog,RTSREND,true,BUBBLE_SORT_END));
+						new(PCheckBox,Init(ADialog,RTSRUMLAUTE,true,BUBBLE_SORT_UMLAUTE));
+						new(PCheckBox,Init(ADialog,RTSRABS,true,BUBBLE_SORT_ABS));
+						new(PCheckBox,Init(ADialog,RTSRATTRIBUTE,true,BUBBLE_SORT_ATTR));
 						new(PSortDialog(ADialog)^.bedt,Init(ADialog,RTSRBEDIT,16,false,BUBBLE_GENERAL_RANGE));
 						new(pb,Init(ADialog,RTSRHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
 						new(PButton,Init(ADialog,RTSRABBRUCH,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
-						new(PButton,Init(ADialog,RTSRSORT,id_No,true,'Sortiert den markierten Bereich, ohne den Dialog zu verlassen'));
-						new(PButton,Init(ADialog,RTSROK,id_OK,true,'Sortiert den markierten Bereich und verlÑût anschlieûend den Dialog'));
+						new(PButton,Init(ADialog,RTSRSORT,id_No,true,BUBBLE_SORT_SORT));
+						new(PButton,Init(ADialog,RTSROK,id_OK,true,BUBBLE_SORT_OK));
 						ADialog^.TransferBuffer:=@PCalcWindow(Parent)^.sortbuf
 					end
 			end;
@@ -38442,19 +41217,19 @@ procedure TSortDialog.ScanValues;
 		if pcb1^.Popup^.List=nil then exit;
 		pcb1^.Popup^.List^.FreeAll;
 		pcb1^.Popup^.List^.Sort:=false;
-		pcb1^.Popup^.List^.Insert(NewStr('  (nichts) '#0));
+		pcb1^.Popup^.List^.Insert(NewStr('  ('+STRING_NOTHING+') '#0));
 		pcb1^.ChangeAlways:=true;
 		pcb2^.ChangeAlways:=true;
 		pcb3^.ChangeAlways:=true;
 		p^.GetBlock(bedt^.GetText,false,rs,cs,re,ce,dummy,dummy);
 		if rb1^.GetCheck=bf_Checked then
 			for q:=cs to ce do
-				if p^.pcolnames^[q]=nil then pcb1^.Popup^.List^.Insert(NewStr('  Spalte '+p^.GetColumnName(q)+' '#0))
+				if p^.pcolnames^[q]=nil then pcb1^.Popup^.List^.Insert(NewStr('  '+STRING_COL+' '+p^.GetColumnName(q)+' '#0))
 				else
-					pcb1^.Popup^.List^.Insert(NewStr('  Spalte '+p^.GetColumnIndex(q)+', "'+p^.GetColumnName(q)+'" '#0))
+					pcb1^.Popup^.List^.Insert(NewStr('  '+STRING_COL+' '+p^.GetColumnIndex(q)+', "'+p^.GetColumnName(q)+'" '#0))
 		else
 			for q:=rs to re do
-				pcb1^.Popup^.List^.Insert(NewStr('  Zeile '+p^.GetRowIndex(q)+' '#0));
+				pcb1^.Popup^.List^.Insert(NewStr('  '+STRING_ROW+' '+p^.GetRowIndex(q)+' '#0));
 		pcb1^.Popup^.SetCollection(pcb1^.Popup^.List);
 		pcb2^.Popup^.SetCollection(pcb1^.Popup^.List);
 		pcb3^.Popup^.SetCollection(pcb1^.Popup^.List);
@@ -38589,7 +41364,7 @@ function TSheetDialog.OK: boolean;
 			lcopy,loffs,
 			oloffs     : longint;
 			lossy      : boolean;
-			i,ww       : integer;
+			i,ww,q     : integer;
 
 	begin
 		osb:=PCalcWindow(Parent)^.sheetbuffer;
@@ -38634,7 +41409,7 @@ function TSheetDialog.OK: boolean;
 										end;
 								_weiter:
 								if lossy then
-									if Application^.Alert(@self,1,NOTE,'Bei der Verkleinerung des Blattes gehen Formel-, Text- oder Zahlendaten verloren.',' &Weiter |&Abbruch')<>1 then
+									if Application^.Alert(@self,1,NOTE,MESSAGE_WINDOW_SIZE,BUTTON_GOCANCEL)<>1 then
 										begin
 											sheetbuffer:=osb;
 											goto _raus
@@ -38655,27 +41430,17 @@ function TSheetDialog.OK: boolean;
 										if npcolnames<>nil then freemem(npcolnames,c shl 2);
 										if nsheet<>nil then freemem(nsheet,dummy);
 										sheetbuffer:=osb;
-										Application^.Alert(@self,1,STOP,'Blattgrîûe kann nicht verÑndert werden (Speichermangel).','  &OK  ');
+										Application^.Alert(@self,1,STOP,MESSAGE_WINDOW_SIZEERR,BUTTON_OK);
 										goto _raus
 									end;
 								SetCursorPos(0,0,true);
+								RowsClearOverflow(0,Parms.Rows,q,q);
 								{ Pos/Block beibehalten ... }
 								fillchar(npcolnames^,c shl 2,0);
 								fillchar(npcolflags^,c,0);
 								fillchar(nprowflags^,r,0);
 								fillchar(nsheet^,dummy,0);
-								cell:=nsheet;
-								for y:=0 to r-1 do
-									for x:=0 to c-1 do
-										begin
-											with cell^ do
-												begin
-													Color:=Black;
-													Style:=8;
-													TxtVal.Color:=Black
-												end;
-											inc(longint(cell),CELLSIZE)
-										end;
+								TexelApp.InitCells(nsheet,r,c);
 								if r<ro then
 									begin
 										system.move(PRow^,nprow^,r shl 1);
@@ -38751,7 +41516,8 @@ function TSheetDialog.OK: boolean;
 										for x:=co to c-1 do SetColWidth_mm100(x,y,false)
 									end;
 								SetSystemFont(vdiHandle,Attr.charWidth,Attr.charHeight,Attr.boxWidth,Attr.boxHeight);
-								Calculate(true)
+								SheetCheckOverflow;
+								AutoCalculate(true)
 							end;
 						SetFont(GetStdFontIndex,GetStdFontSize);
 						SetBorderSize;
@@ -38771,7 +41537,7 @@ procedure TSaveAs.Work;
 
 	begin
 		fname:='';
-		if XFileSelect(PCalcWindow(Parent),'TEXEL-BLATT SICHERN ALS...','*.'+TEXELEXTENSION,TexelApp.LastPath[0],fname,1,FSEL_SAVE,false,PCalcWindow(Parent)^.closing) then
+		if XFileSelect(PCalcWindow(Parent),FSELTITLE_SAVEAS,'*.'+TEXELEXTENSION,TexelApp.LastPath[0],fname,1,FSEL_SAVE,false,PCalcWindow(Parent)^.closing) then
 			begin
 				TexelApp.LastFile[0]:=fname;
 				SaveAs(TexelApp.LastPath[0]+TexelApp.LastFile[0],0)
@@ -38790,11 +41556,11 @@ procedure TSaveAs.SaveAs(const fname: string; flag: integer);
 			begin
 				if p^.closing then
 					begin
-						p^.alertret:=Application^.Alert(p,1,WAIT,'Die Datei "'+CompressPath(fname,78)+'" existiert bereits. öberschreiben?','  &Ja  | &Nein |&Abbruch');
+						p^.alertret:=Application^.Alert(p,1,WAIT,MESSAGE_SAVEAS_EXIST1+CompressPath(fname,78)+MESSAGE_SAVEAS_EXIST2,BUTTON_YESNOCANCEL);
 						if p^.alertret<>1 then exit
 					end
 				else
-					if Application^.Alert(p,1,WAIT,'Die Datei "'+CompressPath(fname,78)+'" existiert bereits. öberschreiben?','  &Ja  | &Nein ')<>1 then exit
+					if Application^.Alert(p,1,WAIT,MESSAGE_SAVEAS_EXIST1+CompressPath(fname,78)+MESSAGE_SAVEAS_EXIST2,BUTTON_YESNO)<>1 then exit
 			end;
 		if not(KeyCorrect(regname,regkey)) then
 			begin
@@ -38807,7 +41573,7 @@ procedure TSaveAs.SaveAs(const fname: string; flag: integer);
 				p^.sheetbuffer.vorlage:=bf_Unchecked;
 				if p^.save^.Save(fname) then
 					begin
-						if Application^.Alert(p,1,WAIT,'Neuen Dateinamen "'+CompressPath(fname,78)+'" Åbernehmen?','&Ja|  &Nein  ')=1 then p^.SetWindowFileName(fname)
+						if Application^.Alert(p,1,WAIT,MESSAGE_SAVEAS_NEW1+CompressPath(fname,78)+MESSAGE_SAVEAS_NEW2,BUTTON_YESNO)=1 then p^.SetWindowFileName(fname)
 						else
 							p^.sheetbuffer.vorlage:=bf_Checked
 					end
@@ -38823,10 +41589,10 @@ procedure TSaveAs.SaveAs(const fname: string; flag: integer);
 						end
 					else
 						begin
-							if Application^.Alert(p,2,WAIT,'Das Blatt ist eine Vorlage. Speichern als Vorlage oder als neues Dokument?','&Vorlage|&Dokument')=2 then p^.sheetbuffer.vorlage:=bf_Unchecked;
+							if Application^.Alert(p,2,WAIT,MESSAGE_SAVE_FORMDOC,BUTTON_FORMDOC)=2 then p^.sheetbuffer.vorlage:=bf_Unchecked;
 							if p^.save^.Save(fname) then
 								begin
-									if Application^.Alert(p,1,WAIT,'Neuen Dateinamen "'+CompressPath(fname,78)+'" Åbernehmen?','&Ja|  &Nein  ')=1 then p^.SetWindowFileName(fname)
+									if Application^.Alert(p,1,WAIT,MESSAGE_SAVEAS_NEW1+CompressPath(fname,78)+MESSAGE_SAVEAS_NEW2,BUTTON_YESNO)=1 then p^.SetWindowFileName(fname)
 									else
 										p^.sheetbuffer.vorlage:=bf_Checked
 								end
@@ -38839,8 +41605,24 @@ procedure TSaveAs.SaveAs(const fname: string; flag: integer);
 					begin
 						if length(oldname)=0 then p^.SetWindowFileName(fname)
 						else
-							if Application^.Alert(p,1,WAIT,'Neuen Dateinamen "'+CompressPath(fname,78)+'" Åbernehmen?','&Ja|  &Nein  ')=1 then p^.SetWindowFileName(fname)
+							if Application^.Alert(p,1,WAIT,MESSAGE_SAVEAS_NEW1+CompressPath(fname,78)+MESSAGE_SAVEAS_NEW2,BUTTON_YESNO)=1 then p^.SetWindowFileName(fname)
 					end
+	end;
+
+
+procedure TAbandon.Work;
+	var pipe: ARRAY_8;
+	    p   : PCalcWindow;
+
+	begin
+		p:=PCalcWindow(Parent);
+		pipe[0]:=GO_PRIVATE;
+		pipe[1]:=Application^.apID;
+		pipe[2]:=0;
+		pipe[3]:=GOP_ABANDON;
+		pipe[4]:=integer(HiWord(p));
+		pipe[5]:=integer(LoWord(p));
+		appl_write(Application^.apID,16,@pipe)
 	end;
 
 
@@ -38854,57 +41636,61 @@ procedure TOptions.Work;
 	begin
 		if ADialog=nil then
 			begin
-				ADialog:=new(POptionsDialog,Init(nil,TEXELWINDPREFIX+'Einstellungen','Einstellungen-Dialog','SETUP',RTSETUP));
+				ADialog:=new(POptionsDialog,Init(nil,TEXELWINDPREFIX+TITLE_SETUP,STG_SETUP,ICNTITLE_SETUP,RTSETUP));
 				if ADialog<>nil then
 					begin
 						POptionsDialog(ADialog)^.prnt:=nil;
 						POptionsDialog(ADialog)^.spage:=nil;
-						new(PGroupBox,Init(ADialog,RTSSTANDARD,GROUP_SETUP_DEFDOC,'Legt grundsÑtzliche Werte fÅr alle ArbeitsblÑtter fest, die beim Anlegen eines neuen Dokuments verwendet werden'));
-						new(PGroupBox,Init(ADialog,RTSWINDOW,GROUP_SETUP_WINDOW,'Bestimmt Eigenschaften von allen ArbeitsblÑttern'));
-						new(PGroupBox,Init(ADialog,RTSGENERAL,GROUP_SETUP_GENERAL,'Bestimmt das globale Verhalten der gesamten Applikation'));
-						new(PGroupBox,Init(ADialog,RTSSTART,GROUP_SETUP_STARTUP,'Bestimmt das Programmverhalten beim Start von Texel'));
-						new(pe,Init(ADialog,RTSSTDROWS,6,'Gibt an, wieviele Zeilen ein neues Blatt standardmÑûig hat (max. 16384)'));
+						new(PCard,Init(ADialog,RTSSTANDARD,RTSTSTANDARD,0,crd_First,BUBBLE_SETUP_DEFDOC));
+						new(PCard,Init(ADialog,RTSWINDOW,RTSTWINDOW,0,crd_Normal,BUBBLE_SETUP_WINDOW));
+						new(PCard,Init(ADialog,RTSGENERAL,RTSTGENERAL,0,crd_Normal,BUBBLE_SETUP_GENERAL));
+						new(PCard,Init(ADialog,RTSSTART,RTSTSTART,0,crd_Last,BUBBLE_SETUP_STARTUP));
+						new(pe,Init(ADialog,RTSSTDROWS,6,BUBBLE_SETUP_ROWS));
 						if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(2,16384)));
-						new(pe,Init(ADialog,RTSSTDCOLUMNS,4,'Gibt an, wieviele Spalten ein neues Blatt standardmÑûig hat (max. 702)'));
+						new(pe,Init(ADialog,RTSSTDCOLUMNS,4,BUBBLE_SETUP_COLUMNS));
 						if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(2,702)));
-						new(pe,Init(ADialog,RTSSTDCOLWIDTH,3,'Die Standardspaltenbreite wird in Zeichen angegeben; sie wird abhÑngig vom verwendeten Zeichensatz entsprechend in Pixel umgerechnet'));
+						new(pe,Init(ADialog,RTSSTDCOLWIDTH,3,BUBBLE_SETUP_COLWIDTH));
 						if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(1,25)));
-						new(PCheckBox,Init(ADialog,RTSAUTOCALC,true,'Legt fest, ob bei neuen BlÑttern die automatische Neuberechnung standardmÑûig eingeschaltet ist (das sollte eigentlich immer der Fall sein)'));
-						new(pfb,InitCollection(ADialog,RTSFONTPOP,RTSFONTCYC,RTSFONTTITLE,26,TexelApp.Fonts,false,false,false,'Legt den Standardzeichensatz fest'));
+						new(PCheckBox,Init(ADialog,RTSAUTOCALC,true,BUBBLE_SETUP_AUTOCALC));
+						new(pfb,InitCollection(ADialog,RTSFONTPOP,RTSFONTCYC,RTSFONTTITLE,26,TexelApp.Fonts,false,false,false,BUBBLE_SETUP_FONTID));
 						if pfb<>nil then
 							begin
 								pfb^.newsize:=-1;
 								new(fsizes,Init(130,20));
-								new(pfsb,InitCollection(ADialog,RTSSIZEPOP,RTSSIZECYC,RTSSIZETITLE,6,fsizes,true,false,false,'Bestimmt die Standardzeichenhîhe'));
+								new(pfsb,InitCollection(ADialog,RTSSIZEPOP,RTSSIZECYC,RTSSIZETITLE,6,fsizes,true,false,false,BUBBLE_SETUP_FONTSIZE));
 								pfsb^.setsize:=true;
 								pfb^.fsizebox:=pfsb;
 								pfb^.Work
 							end;
-						new(pe,Init(ADialog,RTSSIZERRANGE,2,'Bestimmt, welcher Bereich um die Spalten- bzw. Reihentrennungslinien verwendet wird, um die Zellenbreite und -hîhe mit der Maus zu Ñndern'));
+						new(pe,Init(ADialog,RTSSIZERRANGE,2,BUBBLE_SETUP_SIZERRANGE));
 						if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(0,5)));
-						new(pe,Init(ADialog,RTSFLOATPOINT,3,'Legt die Standardanzahl von Nachkommastellen fÅr jede neu eingegebene Zahl fest'));
+						new(pe,Init(ADialog,RTSFLOATPOINT,3,BUBBLE_SETUP_FPOINT));
 						if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(0,MAXCIPHERS)));
-						new(pe,Init(ADialog,RTSHISTORY,3,'')); { ... }
+						new(pe,Init(ADialog,RTSHISTORY,3,BUBBLE_SETUP_HISTORY));
 						if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(0,99)));
-						new(PCheckBox,Init(ADialog,RTSCURSORWRAP,true,'Bestimmt, ob der Cursor auf die gegenÅberliegende Seite des Blattes springt, wenn er Åber den Blattrand hinausbewegt wird'));
-						new(PCheckBox,Init(ADialog,RTSXINPUT,true,'Wenn diese Option eingeschaltet ist, werden Tastatureingaben immer an das Fenster unter dem Mauszeiger weitergeleitet (sonst an das oberste Fenster)'));
-						new(PCheckBox,Init(ADialog,RTSCLOSERCANCEL,true,'Wenn dieses KÑstchen angekreuzt ist, entspricht das Schlieûen eines Dialogs dem <Abbruch>-Button, sonst dem <OK>-Button (die Einstellung wird erst beim nÑchsten Start wirksam!)'));
-						new(PRadioButton,Init(ADialog,RTSOPENNEW,true,'Hiermit kann beim Programmstart automatisch ein neues Blatt geîffnet werden'));
-						new(PRadioButton,Init(ADialog,RTSLOADDOC,true,'Wenn dieser Button markiert ist, zeigt Texel beim Programmstart eine Dateiauswahlbox an'));
-						new(PRadioButton,Init(ADialog,RTSNOTHING,true,'Wenn dieser Button markiert ist, passiert nach dem Laden von Texel gar nichts'));
-						new(PCheckBox,Init(ADialog,RTSFULLSIZE,true,'Gibt an, ob BlÑtter nach dem Laden auf volle Bildschirmgrîûe gebracht werden sollen. Bei Groûbildschirmen kann diese Option stîrend sein.'));
-						new(PCheckBox,Init(ADialog,RTSBLOCK,true,'Schalten Sie diesen Button ein, falls Sie auf dem Bildschirm nicht das sehen, was Ihr GDOS ausdruckt (die Einstellung wird erst beim nÑchsten Start wirksam!)'));
-						new(PCheckBox,Init(ADialog,RTSRECALC,true,'Berechnet ein Blatt nach dem Laden neu (wichtig fÅr Datumsrechnungen). Sollte nur auf langsamen Rechnern ausgeschaltet werden.'));
-						new(PCheckBox,Init(ADialog,RTSONLINE,true,'Die Realtime-Blockmarkierung kann auf langsamen Rechnern zu langsam sein, deshalb kann sie hiermit ausgeschaltet werden.'));
-						new(PCheckBox,Init(ADialog,RTSBACKUP,true,'')); { ... }
+						new(PCheckBox,Init(ADialog,RTSCURSORWRAP,true,BUBBLE_SETUP_CRSWRAP));
+						new(PCheckBox,Init(ADialog,RTSXINPUT,true,BUBBLE_SETUP_XINPUT));
+						new(PCheckBox,Init(ADialog,RTSCLOSERCANCEL,true,BUBBLE_SETUP_CLOSER));
+						new(PRadioButton,Init(ADialog,RTSOPENNEW,true,BUBBLE_SETUP_NEW));
+						new(PRadioButton,Init(ADialog,RTSLOADDOC,true,BUBBLE_SETUP_OPEN));
+						new(PRadioButton,Init(ADialog,RTSNOTHING,true,BUBBLE_SETUP_NOTHING));
+						new(PCheckBox,Init(ADialog,RTSFULLSIZE,true,BUBBLE_SETUP_FULLSIZE));
+						new(PCheckBox,Init(ADialog,RTSBLOCK,true,BUBBLE_SETUP_BLOCK));
+						new(PCheckBox,Init(ADialog,RTSRECALC,true,BUBBLE_SETUP_RECALC));
+						new(PCheckBox,Init(ADialog,RTSONLINE,true,BUBBLE_SETUP_RTBLOCK));
+						new(PCheckBox,Init(ADialog,RTSBACKUP,true,BUBBLE_SETUP_BACKUP));
+						new(PCheckBox,Init(ADialog,RTSTOOLBAR,true,BUBBLE_SETUP_TOOLBAR));
+						new(PComboBox,Init(ADialog,RTSCURRENCY,RTSCURRCYC,RTSCURRTITLE,RTPOPUPS,RTPCURRENCY,id_No,true,false,BUBBLE_SETUP_CURRENCY));
+						new(PCheckBox,Init(ADialog,RTSOVERFLOW,true,BUBBLE_SETUP_OVERFLOW));
+						new(PCheckBox,Init(ADialog,RTSBOTTOMLINE,true,BUBBLE_SETUP_BOTTOMLINE));
 						new(pb,Init(ADialog,RTSHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(pb,Init(ADialog,RTSPRINTER,id_No,true,'Konfiguriert den Standard-Druckertreiber'));
+						new(pb,Init(ADialog,RTSPRINTER,id_No,true,BUBBLE_SETUP_PRINTER));
 						if Application^.GDOSActive then pb^.Enable
 						else
 							pb^.Disable;
-						new(PButton,Init(ADialog,RTSOK,id_OK,true,'öbernimmt die Einstellungen'));
+						new(PButton,Init(ADialog,RTSOK,id_OK,true,BUBBLE_GENERAL_OK2));
 						new(PButton,Init(ADialog,RTSCANCEL,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
 						ADialog^.TransferBuffer:=@TexelApp.setupbuffer
 					end
@@ -38915,26 +41701,42 @@ procedure TOptions.Work;
 
 function TOptionsDialog.OK: boolean;
 	var valid: boolean;
+	    oldof: integer;
+	    pw   : PWindow;
 
 	begin
+		oldof:=TexelApp.setupbuffer.overflow;
 		valid:=inherited OK;
 		if valid then
 			with TexelApp do
-				if setupbuffer.xinputmode=bf_Checked then Attr.Style:=Attr.Style or as_XInputMode
-				else
-					Attr.Style:=Attr.Style and not(as_XInputMode);
+				begin
+					if setupbuffer.xinputmode=bf_Checked then Attr.Style:=Attr.Style or as_XInputMode
+					else
+						Attr.Style:=Attr.Style and not(as_XInputMode);
+					if oldof<>setupbuffer.overflow then
+						begin
+							pw:=Application^.MainWindow;
+							while pw<>nil do
+								begin
+									if pw^.GetClassName=TEXELWINDCLASS then pw^.ForceRedraw;
+									pw:=pw^.Next
+								end
+						end
+				end;
 		OK:=valid
 	end;
 
 
 function TOptionsDialog.ExitDlg(AnIndx: integer): boolean;
-	var st     : PStatic;
-	    pe     : PEdit;
-	    pb     : PButton;
-	    drivers: PStringCollection;
-	    pc     : PCheckBox;
-	    pcb    : PPrintPercBox;
-	    docname: string;
+	var st         : PStatic;
+	    pe         : PEdit;
+	    pb         : PButton;
+	    drivers    : PStringCollection;
+	    pc         : PCheckBox;
+	    pcb        : PPrintPercBox;
+	    docname    : string;
+	    sub_dialogs: PPDLG_SUB;
+	    pt         : PTree;
 
 	begin
 		ExitDlg:=false;
@@ -38942,7 +41744,45 @@ function TOptionsDialog.ExitDlg(AnIndx: integer): boolean;
 			begin
 				if TexelApp.ExtPrnSel(TexelApp.app_prnt_set,nil) then
 					begin
-						docname:=TEXELWINDPREFIX+'Einstellungen'#0;
+						getmem(sub_dialogs,sizeof(PDLG_SUB));
+						if sub_dialogs<>nil then
+							begin
+								pt:=Application^.GetAddr(RTICONS);
+								with sub_dialogs^ do
+									begin
+										next:=nil;
+										option_flags:=0;
+										sub_id:=-1;
+										sub_icon:=@pt^[RTIPRINTRANGE];
+										sub_tree:=Application^.GetAddr(RTPRINTSUBDIAL);
+										dialog:=nil;
+										tree:=nil;
+										index_offset:=0;
+										reserved1:=0;
+										reserved2:=0;
+										init_dlg:=pinit_texel;
+										do_dlg:=nil;
+										reset_dlg:=preset_texel;
+										reserved3:=0;
+										private1:=0;
+										private2:=0;
+										private3:=0;
+										private4:=0
+									end;
+								with AES_pb do
+									begin
+										control^[0]:=205;
+										control^[1]:=1;
+										control^[2]:=1;
+										control^[3]:=2;
+										control^[4]:=0;
+										intin^[0]:=3;
+										addrin^[0]:=TexelApp.prnt_dialog;
+										addrin^[1]:=sub_dialogs;
+										_crystal(@AES_pb)
+									end
+							end;
+						docname:=TEXELWINDPREFIX+TITLE_SETUP+#0;
 						with AES_pb do
 							begin
 								control^[0]:=207;
@@ -38956,11 +41796,26 @@ function TOptionsDialog.ExitDlg(AnIndx: integer): boolean;
 								addrin^[2]:=@docname[1];
 								_crystal(@AES_pb)
 							end;
+						if sub_dialogs<>nil then
+							begin
+								with AES_pb do
+									begin
+										control^[0]:=205;
+										control^[1]:=1;
+										control^[2]:=1;
+										control^[3]:=1;
+										control^[4]:=0;
+										intin^[0]:=4;
+										addrin^[0]:=TexelApp.prnt_dialog;
+										_crystal(@AES_pb)
+									end;
+								free_sub_dialogs(sub_dialogs)
+							end;
 						exit
 					end;
 				if prnt=nil then
 					begin
-						new(prnt,Init(@self,TEXELWINDPREFIX+'Einstellungen','Drucken-Dialog','DRUCKER-SETUP',RTPRINT));
+						new(prnt,Init(@self,TEXELWINDPREFIX+TITLE_SETUP,STG_PRINT,ICNTITLE_SETUPPRINTER,RTPRINT));
 						if prnt<>nil then
 							begin
 								prnt^.drvinfo:=nil;
@@ -38968,37 +41823,37 @@ function TOptionsDialog.ExitDlg(AnIndx: integer): boolean;
 								new(st,Init(prnt,RTPSUPTITLE,13,false,''));
 								if st<>nil then st^.Hide(true);
 								new(st,Init(prnt,RTPTITLE,43,true,''));
-								if st<>nil then st^.SetText('Standard-Drucker');
-								new(PCheckBox,Init(prnt,RTPSHEET,true,'Wenn dieses KÑstchen NICHT angekreuzt ist, wird der Benutzer zum Einlegen neuer Seiten aufgefordert'));
-								new(PCheckBox,Init(prnt,RTPFEED,true,'Ist dieses KÑstchen angekreuzt, wird bei Druckern und Metafiles nach dem Ausdruck ein Seitenvorschub durchgefÅhrt'));
-								new(pe,Init(prnt,RTPCOPIES,4,'Bestimmt, wie oft das Dokument ausgedruckt wird'));
+								if st<>nil then st^.SetText(STRING_DEFAULTPRINTER);
+								new(PCheckBox,Init(prnt,RTPSHEET,true,BUBBLE_PRINT_SHEET));
+								new(PCheckBox,Init(prnt,RTPFEED,true,BUBBLE_PRINT_FEED));
+								new(pe,Init(prnt,RTPCOPIES,4,BUBBLE_PRINT_COPIES));
 								if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(1,99)));
-								new(pcb,Init(prnt,RTPPERCSIZE,RTPPSCYC,RTPPSTITLE,RTPOPUPS,RTPPRINTPERC,id_no,false,true,'Stellt den Vergrîûerungs- bzw. Verkleinerungsfaktor ein'));
+								new(pcb,Init(prnt,RTPPERCSIZE,RTPPSCYC,RTPPSTITLE,RTPOPUPS,RTPPRINTPERC,id_no,false,true,BUBBLE_PRINT_SCALE));
 								if pcb<>nil then
 									begin
 										if pcb^.Popup<>nil then pcb^.Popup^.AutoCheck:=false;
 										if pcb^.Edit<>nil then pcb^.Edit^.SetValidator(new(PRangeValidator,Init(MINPERCENT,MAXPERCENT)))
 									end;
 								new(drivers,Init(10,5));
-								new(prnt^.drvbox,InitCollection(prnt,RTPDRIVER,RTPDRIVERCYC,RTPDRIVERTITLE,30,drivers,true,true,false,'Bestimmt einen Treiber fÅr das AusgabegerÑt'));
-								new(prnt^.inf,Init(prnt,RTPINFO,id_No,true,'Zeigt Informationen Åber den GerÑtetreiber an'));
-								new(prnt^.druck,Init(prnt,RTPPRINT,id_No,true,'Druckt das Dokument aus'));
-								new(prnt^.devbox,Init(prnt,RTPDEVICE,RTPDEVCYC,RTPDEVTITLE,RTPOPUPS,RTPDEVICES,id_No,false,false,'Legt das AusgabegerÑt fest'));
-								new(pc,Init(prnt,RTPSW,true,'Wenn diese Option eingeschaltet ist, werden alle Textfarben (auûer weiû) schwarz gedruckt und alle Hintergrundfarben (auûer schwarz) weiû'));
+								new(prnt^.drvbox,InitCollection(prnt,RTPDRIVER,RTPDRIVERCYC,RTPDRIVERTITLE,30,drivers,true,true,false,BUBBLE_PRINT_DRIVER));
+								new(prnt^.inf,Init(prnt,RTPINFO,id_No,true,BUBBLE_PRINT_INFO));
+								new(prnt^.druck,Init(prnt,RTPPRINT,id_No,true,BUBBLE_PRINT_PRINT));
+								new(prnt^.devbox,Init(prnt,RTPDEVICE,RTPDEVCYC,RTPDEVTITLE,RTPOPUPS,RTPDEVICES,id_No,false,false,BUBBLE_PRINT_DEVICE));
+								new(pc,Init(prnt,RTPSW,true,BUBBLE_PRINT_BW));
 								if pc<>nil then pc^.Disable; { ... }
-								new(PRadioButton,Init(prnt,RTPPBLOCK,true,'Wird aus "Seite einrichten" Åbernommen. Ist dort kein Bereich eingetragen, ist dieser Punkt identisch mit "Alles".'));
-								new(PRadioButton,Init(prnt,RTPALL,true,'Druckt das Blatt bis zur am weitesten rechts unten liegenden verwendeten Zellen aus'));
-								new(PRadioButton,Init(prnt,RTPBLOCK,true,'Druckt den aktuell markierten Block aus'));
-								new(prnt^.paper,Init(prnt,RTPPSIZE,RTPPCYC,RTPPTITLE,RTPOPUPS,RTPPAPER,id_No,false,false,'Stellt fÅr Drucker und Images die verwendete Papiergrîûe ein (ab NVDI3)'));
-								new(pe,Init(prnt,RTPVON,4,'Legt fest, ab welcher Seite der gesplitteten Tabelle gedruckt werden soll. Die Numerierung wird in "Seite einrichten" festgelegt.'));
+								new(PRadioButton,Init(prnt,RTPPBLOCK,true,BUBBLE_PRINT_RANGE));
+								new(PRadioButton,Init(prnt,RTPALL,true,BUBBLE_PRINT_ALL));
+								new(PRadioButton,Init(prnt,RTPBLOCK,true,BUBBLE_PRINT_SELECTION));
+								new(prnt^.paper,Init(prnt,RTPPSIZE,RTPPCYC,RTPPTITLE,RTPOPUPS,RTPPAPER,id_No,false,false,BUBBLE_PRINT_PAPER));
+								new(pe,Init(prnt,RTPVON,4,BUBBLE_PRINT_PAGEFROM));
 								if pe<>nil then pe^.SetValidator(new(PRangeValidator,Init(MINPAGES,MAXPAGESOLD)));
-								new(PEdit,Init(prnt,RTPBIS,4,'Bestimmt, bis zu welcher Seite der gesplitteten Tabelle gedruckt werden soll. Bei zu groûen Werten hîrt der Druck nach der letzten Seite auf. Ist hier nichts eingetragen, wird nur eine Seite gedruckt.'));
+								new(PEdit,Init(prnt,RTPBIS,4,BUBBLE_PRINT_PAGETO));
 								new(pb,Init(prnt,RTPHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 								if pb<>nil then
 									if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
 								new(pb,Init(prnt,RTPPREVIEW,id_No,true,''));
 								if pb<>nil then pb^.Hide(false);
-								new(PButton,Init(prnt,RTPPAGESETUP,id_No,true,'Ruft den "Seite einrichten"-Dialog auf'));
+								new(PButton,Init(prnt,RTPPAGESETUP,id_No,true,BUBBLE_PRINT_LAYOUT));
 								new(PButton,Init(prnt,RTPOK,id_OK,true,BUBBLE_GENERAL_OK));
 								new(PButton,Init(prnt,RTPCANCEL,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
 								prnt^.SetDefaultButton(RTPOK);
@@ -39019,7 +41874,7 @@ procedure TOptionsDialog.PageSetup;
 	begin
 		if spage=nil then
 			begin
-				new(spage,Init(@self,TEXELWINDPREFIX+'Einstellungen','Seite einrichten-Dialog','LAYOUT-SETUP',RTPAGESETUP));
+				new(spage,Init(@self,TEXELWINDPREFIX+TITLE_SETUP,STG_LAYOUT,ICNTITLE_SETUPLAYOUT,RTPAGESETUP));
 				if spage<>nil then
 					begin
 						new(PGroupBox,Init(spage,RTPSMARGINS,GROUP_LAYOUT_MARGINS,''));
@@ -39029,38 +41884,38 @@ procedure TOptionsDialog.PageSetup;
 						new(PGroupBox,Init(spage,RTPSHEAD,GROUP_LAYOUT_HEAD,''));
 						new(PGroupBox,Init(spage,RTPSFOOT,GROUP_LAYOUT_FOOT,''));
 						new(PGroupBox,Init(spage,RTPSNUM,GROUP_LAYOUT_NUM,''));
-						new(pe,Init(spage,RTPSTOP,9,'Legt den Seitenrand oberhalb der Kopfzeile fest'));
+						new(pe,Init(spage,RTPSTOP,9,BUBBLE_LAYOUT_TMARGIN));
 						if pe<>nil then pe^.SetValidator(new(PPosRealValidator,Init));
-						new(pe,Init(spage,RTPSBOTTOM,9,'Legt den Seitenrand unterhalb der Fuûzeile fest'));
+						new(pe,Init(spage,RTPSBOTTOM,9,BUBBLE_LAYOUT_BMARGIN));
 						if pe<>nil then pe^.SetValidator(new(PPosRealValidator,Init));
-						new(pe,Init(spage,RTPSLEFT,9,'Legt den linken Seitenrand fest'));
+						new(pe,Init(spage,RTPSLEFT,9,BUBBLE_LAYOUT_LMARGIN));
 						if pe<>nil then pe^.SetValidator(new(PPosRealValidator,Init));
-						new(pe,Init(spage,RTPSRIGHT,9,'Legt den rechten Seitenrand fest'));
+						new(pe,Init(spage,RTPSRIGHT,9,BUBBLE_LAYOUT_RMARGIN));
 						if pe<>nil then pe^.SetValidator(new(PPosRealValidator,Init));
-						new(PCheckBox,Init(spage,RTPSHCENTER,true,'Zentriert die Tabelle bzw. den Tabellenausschnitt horizontal auf der Seite abzgl. der RÑnder'));
-						new(PCheckBox,Init(spage,RTPSVCENTER,true,'Zentriert die Tabelle bzw. den Tabellenausschnitt vertikal auf der Seite abzgl. der RÑnder'));
-						new(PCheckBox,Init(spage,RTPSGITTER,true,'Legt fest, ob bei Zellen ohne expliziten Rahmen ein graues bzw. gepunktetes Gitter gedruckt wird'));
-						new(PCheckBox,Init(spage,RTPSROWS,true,'Legt fest, ob die Zeilennummern ausgedruckt werden'));
-						new(PCheckBox,Init(spage,RTPSCOLUMNS,true,'Legt fest, ob die Spaltennamen ausgedruckt werden'));
-						new(pe,Init(spage,RTPSBEDIT,16,'Hier kann eine Bereichsangabe eingetragen werden. Exakt dieser Druckbereich wird ausgedruckt, wenn im Druckdialog der entsprechende Radiobutton angewÑhlt ist'));
-						new(pe,Init(spage,RTPSHLEFT,42,'LinksbÅndiger Text der Kopfzeile'));
-						new(pe,Init(spage,RTPSHMID,42,'Mittiger Text der Kopfzeile'));
-						new(pe,Init(spage,RTPSHRIGHT,42,'RechtsbÅndiger Text der Kopfzeile'));
-						new(pe,Init(spage,RTPSFLEFT,42,'LinksbÅndiger Text der Fuûzeile'));
-						new(pe,Init(spage,RTPSFMID,42,'Mittiger Text der Fuûzeile'));
-						new(pe,Init(spage,RTPSFRIGHT,42,'RechtsbÅndiger Text der Fuûzeile'));
-						new(PRadioButton,Init(spage,RTPSNUM1,false,'Numeriert die Tabellenausschnitte horizontal durch'));
-						new(PRadioButton,Init(spage,RTPSNUM2,false,'Numeriert die Tabellenausschnitte vertikal durch'));
-						new(pc,Init(spage,RTPSHLEFTON,true,'Legt fest, ob der linksbÅndige Kopfzeilentext gedruckt wird'));
-						new(pc,Init(spage,RTPSHCENTERON,true,'Legt fest, ob der mittige Kopfzeilentext gedruckt wird'));
-						new(pc,Init(spage,RTPSHRIGHTON,true,'Legt fest, ob der rechtsbÅndige Kopfzeilentext gedruckt wird'));
-						new(pc,Init(spage,RTPSFLEFTON,true,'Legt fest, ob der linksbÅndige Fuûzeilentext gedruckt wird'));
-						new(pc,Init(spage,RTPSFCENTERON,true,'Legt fest, ob der mittige Fuûzeilentext gedruckt wird'));
-						new(pc,Init(spage,RTPSFRIGHTON,true,'Legt fest, ob der rechtsbÅndige Fuûzeilentext gedruckt wird'));
-						new(PCheckBox,Init(spage,RTPSOBJECTS,true,'Legt fest, ob eingebettete Objekte ausgedruckt werden'));
-						new(pe,Init(spage,RTPSKOPF,9,'Gibt an, wieviel Platz fÅr die Kopfzeile freigehalten wird'));
+						new(PCheckBox,Init(spage,RTPSHCENTER,true,BUBBLE_LAYOUT_HCENTER));
+						new(PCheckBox,Init(spage,RTPSVCENTER,true,BUBBLE_LAYOUT_VCENTER));
+						new(PCheckBox,Init(spage,RTPSGITTER,true,BUBBLE_LAYOUT_GRID));
+						new(PCheckBox,Init(spage,RTPSROWS,true,BUBBLE_LAYOUT_NUMBERS));
+						new(PCheckBox,Init(spage,RTPSCOLUMNS,true,BUBBLE_LAYOUT_NAMES));
+						new(pe,Init(spage,RTPSBEDIT,16,BUBBLE_LAYOUT_PRNTRANGE));
+						new(pe,Init(spage,RTPSHLEFT,42,BUBBLE_LAYOUT_LHEAD));
+						new(pe,Init(spage,RTPSHMID,42,BUBBLE_LAYOUT_CHEAD));
+						new(pe,Init(spage,RTPSHRIGHT,42,BUBBLE_LAYOUT_RHEAD));
+						new(pe,Init(spage,RTPSFLEFT,42,BUBBLE_LAYOUT_LFOOT));
+						new(pe,Init(spage,RTPSFMID,42,BUBBLE_LAYOUT_CFOOT));
+						new(pe,Init(spage,RTPSFRIGHT,42,BUBBLE_LAYOUT_RFOOT));
+						new(PRadioButton,Init(spage,RTPSNUM1,false,BUBBLE_LAYOUT_NUMHOR));
+						new(PRadioButton,Init(spage,RTPSNUM2,false,BUBBLE_LAYOUT_NUMVERT));
+						new(pc,Init(spage,RTPSHLEFTON,true,BUBBLE_LAYOUT_PLHEAD));
+						new(pc,Init(spage,RTPSHCENTERON,true,BUBBLE_LAYOUT_PCHEAD));
+						new(pc,Init(spage,RTPSHRIGHTON,true,BUBBLE_LAYOUT_PRHEAD));
+						new(pc,Init(spage,RTPSFLEFTON,true,BUBBLE_LAYOUT_PLFOOT));
+						new(pc,Init(spage,RTPSFCENTERON,true,BUBBLE_LAYOUT_PCFOOT));
+						new(pc,Init(spage,RTPSFRIGHTON,true,BUBBLE_LAYOUT_PRFOOT));
+						new(PCheckBox,Init(spage,RTPSOBJECTS,true,BUBBLE_LAYOUT_POBJECTS));
+						new(pe,Init(spage,RTPSKOPF,9,BUBBLE_LAYOUT_MHEAD));
 						if pe<>nil then pe^.SetValidator(new(PPosRealValidator,Init));
-						new(pe,Init(spage,RTPSFUSS,9,'Gibt an, wieviel Platz fÅr die Fuûzeile freigehalten wird'));
+						new(pe,Init(spage,RTPSFUSS,9,BUBBLE_LAYOUT_MFOOT));
 						if pe<>nil then pe^.SetValidator(new(PPosRealValidator,Init));
 						new(pb,Init(spage,RTPSHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
@@ -39175,7 +42030,7 @@ procedure TDeviceBox.Work;
 		_fehler:
 		if pcb^.drvcnt=0 then
 			begin
-				pcb^.SetText('Kein Treiber verfÅgbar!');
+				pcb^.SetText(STRING_NODRIVER2);
 				pcb^.Disable;
 				with PPrintDialog(Parent)^ do
 					begin
@@ -39259,7 +42114,7 @@ procedure TDeviceBox.Work;
 				if drvcnt=0 then
 					begin
 						ClearSelection(true);
-						SetText('Kein Treiber verfÅgbar!');
+						SetText(STRING_NODRIVER2);
 						Disable;
 						with PPrintDialog(Parent)^ do
 							begin
@@ -39323,11 +42178,11 @@ function TPrintDialog.ExitDlg(AnIndx: integer): boolean;
 		if not(OK) then exit;
 		case AnIndx of
 		RTPPRINT:
-			if drvbox=nil then Application^.Alert(@self,1,NOTE,'Es ist kein Drucker definiert.','  &OK  ')
+			if drvbox=nil then Application^.Alert(@self,1,NOTE,MESSAGE_PRINT_PRINTER,BUTTON_OK)
 			else
 				begin
 					num:=drvbox^.drivers[drvbox^.GetSelection];
-					if num<11 then Application^.Alert(@self,1,NOTE,'Es ist kein Druckertreiber installiert.','  &OK  ')
+					if num<11 then Application^.Alert(@self,1,NOTE,MESSAGE_PRINT_DRIVER,BUTTON_OK)
 					else
 						if PCalcWindow(Parent)^.prnt^.PrintSheet(num) then
 							begin
@@ -39371,25 +42226,25 @@ procedure TPrintDialog.ShowInfo;
 	begin
 		if drvinfo=nil then
 			begin
-				new(drvinfo,Init(@self,'Texel','Drucker-Informations-Dialog','DRUCKER-INFO',RTPRINTINFO));
+				new(drvinfo,Init(@self,TEXELNAME,STG_PRINTERINFO,ICNTITLE_PRINTERINFO,RTPRINTINFO));
 				if drvinfo<>nil then
 					begin
-						new(st1,Init(drvinfo,RTPITITLE,33,true,'Das AusgabegerÑt'));
-						new(st2,Init(drvinfo,RTPINAME,27,false,'Der Dateiname des Treibers aus ASSIGN.SYS'));
-						new(st3,Init(drvinfo,RTPIGDOS,17,false,'Die GDOS-Nummer des Treibers aus ASSIGN.SYS'));
-						new(st4,Init(drvinfo,RTPIINFO,43,false,'Zusatzinformationen zum GerÑtetreiber'));
-						new(st5,Init(drvinfo,RTPIIOTYPE,36,false,'Drucker sollten reine AusgabegerÑte sein'));
-						new(st6,Init(drvinfo,RTPICOLORS,41,false,'Anzahl der auf dem AusgabegerÑt darstellbaren Farben'));
-						new(st7,Init(drvinfo,RTPIDEFCOLORS,20,false,'Anzahl der vordefinierten (=verfÅgbaren) Farben'));
-						new(st8,Init(drvinfo,RTPIFONTS,20,false,'Anzahl der auf dem AusgabegerÑt verfÅgbaren ZeichensÑtze'));
-						new(st9,Init(drvinfo,RTPIDPI,33,false,'Auflîsung des AusgabegerÑts (in Punkten pro Zoll)'));
-						new(st10,Init(drvinfo,RTPISIZE,42,false,'Blattgrîûe (entspricht z.B. DIN A4 etc.)'));
-						new(st11,Init(drvinfo,RTPIPRINTSIZE,42,false,'Grîûe des Druckbereichs (=verfÅgbare Grîûe), hier sind hardwarebedingte RÑnder bereits abgezogen'));
-						new(st12,Init(drvinfo,RTPIBEZIER,19,false,'Gibt an, ob das AusgabegerÑt Bezierkurven zeichnen kann'));
+						new(st1,Init(drvinfo,RTPITITLE,33,true,BUBBLE_PRNINFO_DEVICE));
+						new(st2,Init(drvinfo,RTPINAME,27,false,BUBBLE_PRNINFO_FILE));
+						new(st3,Init(drvinfo,RTPIGDOS,17,false,BUBBLE_PRNINFO_NUMBER));
+						new(st4,Init(drvinfo,RTPIINFO,43,false,BUBBLE_PRNINFO_DESCR));
+						new(st5,Init(drvinfo,RTPIIOTYPE,36,false,BUBBLE_PRNINFO_IO));
+						new(st6,Init(drvinfo,RTPICOLORS,41,false,BUBBLE_PRNINFO_COLORS));
+						new(st7,Init(drvinfo,RTPIDEFCOLORS,20,false,BUBBLE_PRNINFO_MAXCOLOR));
+						new(st8,Init(drvinfo,RTPIFONTS,20,false,BUBBLE_PRNINFO_FONTS));
+						new(st9,Init(drvinfo,RTPIDPI,33,false,BUBBLE_PRNINFO_DPI));
+						new(st10,Init(drvinfo,RTPISIZE,42,false,BUBBLE_PRNINFO_PAPRSIZE));
+						new(st11,Init(drvinfo,RTPIPRINTSIZE,42,false,BUBBLE_PRNINFO_PRNTSIZE));
+						new(st12,Init(drvinfo,RTPIBEZIER,19,false,BUBBLE_PRNINFO_BEZIER));
 						new(pb,Init(drvinfo,RTPIHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
-						new(PButton,Init(drvinfo,RTPIOK,id_OK,true,'Schlieût den Dialog'))
+						new(PButton,Init(drvinfo,RTPIOK,id_OK,true,BUBBLE_GENERAL_CLOSE))
 					end
 			end;
 		if drvinfo<>nil then
@@ -39398,7 +42253,7 @@ procedure TPrintDialog.ShowInfo;
 				if devbox<>nil then dummy:=devbox^.GetText
 				else
 					dummy:='???';
-				if st1<>nil then st1^.SetText('Informationen Åber '+dummy);
+				if st1<>nil then st1^.SetText(STRING_PRNINFO_INFOON+' '+dummy);
 				if drvbox<>nil then
 					begin
 						num:=drvbox^.drivers[drvbox^.GetSelection];
@@ -39411,8 +42266,8 @@ procedure TPrintDialog.ShowInfo;
 						txt:='';
 						num:=-1
 					end;
-				if st2<>nil then st2^.SetText('Name:         '+dummy);
-				if st3<>nil then st3^.SetText('GDOS-Nummer:  '+ltoa(num));
+				if st2<>nil then st2^.SetText(STRING_PRNINFO_NAME+dummy);
+				if st3<>nil then st3^.SetText(STRING_PRNINFO_NUMBER+ltoa(num));
 				colr:='';
 				ea:='';
 				defcol:='';
@@ -39431,22 +42286,22 @@ procedure TPrintDialog.ShowInfo;
 								vst_unload_fonts(hndl,0);
 								v_clswk(hndl);
 								case wrkout[44] of
-								0: ea:='reines AusgabegerÑt';
-								1: ea:='reines EingabegerÑt';
-								2: ea:='Ein- und AusgabegerÑt';
-								4: ea:='Metafile-Ausgabe'
+								0: ea:=STRING_PRNINFO_OUT;
+								1: ea:=STRING_PRNINFO_IN;
+								2: ea:=STRING_PRNINFO_IO;
+								4: ea:=STRING_PRNINFO_META
 								else
-									ea:='unbekannt'
+									ea:=STRING_PRNINFO_UNKNOWN
 								end;
-								if wrkout[35]=0 then colr:='Farbdruck nicht mîglich'
+								if wrkout[35]=0 then colr:=STRING_PRNINFO_COLOR1
 								else
-									if wrkout[39]=0 then colr:='kontinuierliche Verteilung'
+									if wrkout[39]=0 then colr:=STRING_PRNINFO_COLOR2
 									else
 										colr:=ltoa(wrkout[39]);
-								if (wrkout[13]=0) or (wrkout[35]=0) then defcol:='keine'
+								if (wrkout[13]=0) or (wrkout[35]=0) then defcol:=STRING_NONE
 								else
 									defcol:=ltoa(wrkout[13]);
-								if wrkout[10]=0 then fonts:='keine'
+								if wrkout[10]=0 then fonts:=STRING_NONE
 								else
 									fonts:=ltoa(wrkout[10]);
 								pw:=longint(wrkout[0])+1.0;
@@ -39495,20 +42350,20 @@ procedure TPrintDialog.ShowInfo;
 								str(rw:0:2,rsize);
 								str(rh:0:2,dummy);
 								rsize:=rsize+' x '+dummy+' cm'#253;
-								if bTst(ewrkout[28],2) then bez:='ja'
+								if bTst(ewrkout[28],2) then bez:=STRING_YES
 								else
-									bez:='nein'
+									bez:=STRING_NO
 							end
 					end;
 				if st4<>nil then st4^.SetText(txt);
-				if st5<>nil then st5^.SetText('E/A-Typ:      '+ea);
-				if st6<>nil then st6^.SetText('Farben:       '+colr);
-				if st7<>nil then st7^.SetText('def. Farben:  '+defcol);
-				if st8<>nil then st8^.SetText('ZeichensÑtze: '+fonts);
-				if st9<>nil then st9^.SetText('Auflîsung:    '+res);
-				if st10<>nil then st10^.SetText('Papiergrîûe:  '+rsize);
-				if st11<>nil then st11^.SetText('Druckbereich: '+psize);
-				if st12<>nil then st12^.SetText('B'#130'ziers:      '+bez);
+				if st5<>nil then st5^.SetText(STRING_PRNINFO_TXT1+ea);
+				if st6<>nil then st6^.SetText(STRING_PRNINFO_TXT2+colr);
+				if st7<>nil then st7^.SetText(STRING_PRNINFO_TXT3+defcol);
+				if st8<>nil then st8^.SetText(STRING_PRNINFO_TXT4+fonts);
+				if st9<>nil then st9^.SetText(STRING_PRNINFO_TXT5+res);
+				if st10<>nil then st10^.SetText(STRING_PRNINFO_TXT6+rsize);
+				if st11<>nil then st11^.SetText(STRING_PRNINFO_TXT7+psize);
+				if st12<>nil then st12^.SetText(STRING_PRNINFO_TXT8+bez);
 				drvinfo^.MakeWindow;
 				ArrowMouse
 			end
@@ -39553,6 +42408,14 @@ procedure TSaveOpt.Work;
 				WritePrivateProfileInt('Setup','Online',TexelApp.setupbuffer.online,TEXELINF);
 				SliceMouseNext;
 				WritePrivateProfileInt('Setup','Backup',TexelApp.setupbuffer.bak,TEXELINF);
+				SliceMouseNext;
+				WritePrivateProfileInt('Setup','Toolbar',TexelApp.setupbuffer.toolbar,TEXELINF);
+				SliceMouseNext;
+				WritePrivateProfileInt('Setup','Currency',TexelApp.setupbuffer.currency,TEXELINF);
+				SliceMouseNext;
+				WritePrivateProfileInt('Setup','Overflow',TexelApp.setupbuffer.overflow,TEXELINF);
+				SliceMouseNext;
+				WritePrivateProfileInt('Setup','BottomLine',TexelApp.setupbuffer.bottomline,TEXELINF);
 				SliceMouseNext;
 				WritePrivateProfileInt('Setup','XInputMode',TexelApp.setupbuffer.xinputmode,TEXELINF);
 				SliceMouseNext;
@@ -39611,6 +42474,8 @@ procedure TSaveOpt.Work;
 				WritePrivateProfileInt('Import','Quote',TexelApp.ascbuf.quote,TEXELINF);
 				SliceMouseNext;
 				WritePrivateProfileInt('Import','Numbers',TexelApp.ascbuf.numbers,TEXELINF);
+				SliceMouseNext;
+				WritePrivateProfileInt('Import','Filter',TexelApp.ascbuf.filter,TEXELINF);
 				SliceMouseNext;
 				WritePrivateProfileString('Page Setup','Oben',TexelApp.stdpsbuffer.oben,TEXELINF);
 				SliceMouseNext;
@@ -39716,12 +42581,51 @@ procedure TSaveOpt.Work;
 	end;
 
 
+procedure TSaveWork.Work;
+	var p  : PWindow;
+	    ret: longint;
+	    hdl,
+	    anz: integer;
+	    s  : string;
+
+	begin
+		BusyMouse;
+		p:=Application^.MainWindow;
+		anz:=0;
+		while p<>nil do
+			begin
+				if p^.GetClassName=TEXELWINDCLASS then
+					if length(PCalcWindow(p)^.GetWindowFilename)>0 then inc(anz);
+				p:=p^.Next
+			end;
+		ret:=fcreate(GetHomeDir(false)+'defaults\'+TEXELWORK,0);
+		if ret<0 then ret:=fcreate(GetHomeDir(false)+TEXELWORK,0);
+		if ret>=0 then
+			begin
+				hdl:=integer(ret);
+				fwrite(hdl,2,@anz);
+				p:=Application^.MainWindow;
+				while p<>nil do
+					begin
+						if p^.GetClassName=TEXELWINDCLASS then
+							begin
+								s:=PCalcWindow(p)^.GetWindowFilename;
+								if length(s)>0 then fwrite(hdl,256,@s[0])
+							end;
+						p:=p^.Next
+					end;
+				fclose(hdl)
+			end;
+		ArrowMouse
+	end;
+
+
 procedure TSpecialChars.Work;
 
 	begin
 		if TexelApp.specialchars=nil then
 			begin
-				new(TexelApp.specialchars,Init(nil,TEXELWINDPREFIX+'Sonderzeichen'));
+				new(TexelApp.specialchars,Init(nil,TEXELWINDPREFIX+TITLE_SPECIALCHARS));
 				if TexelApp.specialchars<>nil then TexelApp.specialchars^.LoadIcon(new(PIcon,Init(TexelApp.specialchars,RTICONS,RTICALC,0,0,false,false,'','')))
 			end;
 		if TexelApp.specialchars<>nil then TexelApp.specialchars^.MakeWindow
@@ -39756,9 +42660,9 @@ procedure TWeb.Work;
 				ret:=fcreate(fname,0);
 				if ret<0 then exit;
 				hdl:=integer(ret);
-				txt:='Hallo ASH-Texel-Support,'#13#10#13#10'ich habe folgende Frage zu Texel '+VtoS(TEXELVER)+'r'+ltoa(RELEASE)+' vom '+TEXELDATE+':'#13#10#13#10#13#10#13#10'Viele Gruesse, ';
+				txt:=STRING_WEB_MAILDEF1+#13#10#13#10+STRING_WEB_MAILDEF2+' '+TEXELNAME+' '+VtoS(TEXELVER)+'r'+ltoa(RELEASE)+' '+STRING_WEB_MAILDATEOF+' '+TEXELDATE+':'#13#10#13#10#13#10#13#10+STRING_WEB_MAILDEF3+' ';
 				{$IFDEF DEMO}
-				txt:=txt+'(Demoversion)';
+				txt:=txt+'('+STRING_DEMOVERSION+')';
 				{$ELSE}
 				{$IFDEF BETA}
 				if length(regname)=0 then txt:=txt+'(unregistrierte Version)'
@@ -39771,7 +42675,7 @@ procedure TWeb.Work;
 				txt:=txt+#13#10;
 				fwrite(hdl,length(txt),@txt[1]);
 				fclose(hdl);
-				StrPCopy(helpbuf,TexelApp.WebMail+'?Frage zu Texel '+VtoS(TEXELVER));
+				StrPCopy(helpbuf,TexelApp.WebMail+'?'+STRING_WEB_MAILSUBJECT+' '+TEXELNAME+' '+VtoS(TEXELVER));
 				StrPCopy(mailbuf,fname);
 				pipe[0]:=CAB_MAIL;
 				pipe[1]:=Application^.apID;
@@ -39809,9 +42713,9 @@ procedure THelp.Work;
 						else
 							if p^.GetClassName='SpecialCharactersWindow' then
 								begin
-									if Exist(TexelApp.DataPath+TEXELHELP) then StrPCopy(helpbuf,TexelApp.DataPath+TEXELHELP+' Sonderzeichen-Fenster')
+									if Exist(TexelApp.DataPath+TEXELHELP) then StrPCopy(helpbuf,TexelApp.DataPath+TEXELHELP+' '+STG_SPECIALCHARS)
 									else
-										StrPCopy(helpbuf,GUIDES+TEXELHELP+' Sonderzeichen-Fenster');
+										StrPCopy(helpbuf,GUIDES+TEXELHELP+' '+STG_SPECIALCHARS);
 									goto _aufruf
 								end
 					end;
@@ -39853,16 +42757,16 @@ procedure THelpItem.Work;
 	begin
 		if ADialog=nil then
 			begin
-				ADialog:=new(PHelpItemDialog,Init(nil,TEXELWINDPREFIX+'Hilfe','Hilfe-Stichwort','HILFE',RTHELPITEM));
+				ADialog:=new(PHelpItemDialog,Init(nil,TEXELWINDPREFIX+TITLE_HELP,STG_HELP,ICNTITLE_HELP,RTHELPITEM));
 				if ADialog<>nil then
 					begin
-						new(PEdit,Init(ADialog,RTHIITEM,41,'Das Stichwort, das der ST-Guide im Texel-Hypertext suchen soll'));
+						new(PEdit,Init(ADialog,RTHIITEM,41,BUBBLE_HELP_ITEM));
 						new(pb,Init(ADialog,RTHIHELP,id_Help,false,BUBBLE_GENERAL_HELP));
 						if pb<>nil then
 							if not(TexelApp.HelpAvailable(false)) then pb^.Disable;
 						new(PButton,Init(ADialog,RTHICANCEL,id_Cancel,true,BUBBLE_GENERAL_CANCEL));
-						new(PButton,Init(ADialog,RTHISEARCH,id_No,true,'Sucht das Stichwort, ohne den Dialog zu verlassen'));
-						new(PButton,Init(ADialog,RTHIOK,id_OK,true,'Sucht das Stichwort und verlÑût anschlieûend den Dialog'));
+						new(PButton,Init(ADialog,RTHISEARCH,id_No,true,BUBBLE_HELP_SEARCH));
+						new(PButton,Init(ADialog,RTHIOK,id_OK,true,BUBBLE_HELP_OK));
 						TexelApp.HelpItem:='';
 						ADialog^.TransferBuffer:=@TexelApp.HelpItem
 					end
@@ -39945,6 +42849,42 @@ procedure TBlock.Work;
 	end;
 
 
+constructor TColorToolbar.Init(AParent: PWindow; AnIndx,AColIndx: integer; Switch: boolean; Hlp: string);
+	var pt: PTree;
+
+	begin
+		if not(inherited Init(AParent,RTWTOOLBAR,AnIndx,id_No,id_No,nil,false,Switch,Hlp)) then fail;
+		used:=false;
+		if Application^.HasColorIcons and (AColIndx>=0) and
+		   (Application^.Attr.Colors>=15) and TexelApp.UseNewToolbar then
+			begin
+				TexelApp.ActivateExtResource;
+				pt:=Application^.GetAddr(RTWCOLORTB);
+				if pt<>nil then
+					begin
+						oldobtype:=ObjAddr^.ob_type;
+						oldobspec:=ObjAddr^.ob_spec.index;
+						ObjAddr^.ob_type:=(oldobtype and $ff00) or G_CICON;
+						ObjAddr^.ob_spec.index:=pt^[AColIndx].ob_spec.index;
+						used:=true
+					end;
+				TexelApp.DeactivateExtResource
+			end
+	end;
+
+
+destructor TColorToolbar.Done;
+
+	begin
+		if used then
+			begin
+				ObjAddr^.ob_type:=oldobtype;
+				ObjAddr^.ob_spec.index:=oldobspec
+			end;
+		inherited Done
+	end;
+
+
 procedure TTCut.Work;
 
 	begin
@@ -39991,24 +42931,12 @@ procedure TTSumme.Work;
 							blk:='';
 							if Parms.Cursor.Row>0 then
 								begin
-									cell:=GetCell(Parms.Cursor.Row-1,Parms.Cursor.Col);
-									loffs:=CELLSIZE*longint(Parms.Columns+1);
-									rvon:=0;
-									ne:=-1;
-									for r:=Parms.Cursor.Row-1 downto 0 do
-										begin
-											if cell^.Typ=CTYPE_TEXT then
-												begin
-													rvon:=r+1;
-													break
-												end
-											else
-												if cell^.Typ<>CTYPE_EMPTY then ne:=r;
-											dec(longint(cell),loffs)
-										end;
-									if rvon<Parms.Cursor.Row then
-										if ne>=0 then
-											blk:=GetColumnIndex(Parms.Cursor.Col)+GetRowIndex(rvon)+':'+GetColumnIndex(Parms.Cursor.Col)+GetRowIndex(Parms.Cursor.Row-1)
+									r:=Parms.Cursor.Row;
+									repeat
+										dec(r);
+										if r>=0 then cell:=GetCell(r,Parms.Cursor.Col)
+									until (cell^.Typ=CTYPE_TEXT) or (cell^.Typ=CTYPE_EMPTY) or (r<0);
+									if r<Parms.Cursor.Row-1 then blk:=GetColumnIndex(Parms.Cursor.Col)+GetRowIndex(r+1)+':'+GetColumnIndex(Parms.Cursor.Col)+GetRowIndex(Parms.Cursor.Row-1)
 								end
 						end;
 				if inpstat then
@@ -40034,6 +42962,7 @@ procedure TTSumme.Work;
 
 procedure TTFett.Work;
 	var x,y,rs,re,
+	    cmin,cmax,
 	    cs,ce    : integer;
 	    cell     : PCell;
 
@@ -40055,6 +42984,9 @@ procedure TTFett.Work;
 							cs:=Col;
 							ce:=Col
 						end;
+				cmin:=cs;
+				cmax:=ce;
+				RowsClearOverflow(rs,re,cmin,cmax);
 				for y:=rs to re do
 					begin
 						cell:=GetCell(y,cs);
@@ -40067,14 +42999,16 @@ procedure TTFett.Work;
 								inc(longint(cell),CELLSIZE)
 							end
 					end;
+				RowsCheckOverflow(rs,re,cmin,cmax);
 				SetDirty;
-				DrawCells(rs,cs,re,ce)
+				DrawCells(rs,cmin,re,cmax)
 			end
 	end;
 
 
 procedure TTKursiv.Work;
 	var x,y,rs,re,
+	    cmin,cmax,
 	    cs,ce    : integer;
 	    cell     : PCell;
 
@@ -40096,6 +43030,9 @@ procedure TTKursiv.Work;
 							cs:=Col;
 							ce:=Col
 						end;
+				cmin:=cs;
+				cmax:=ce;
+				RowsClearOverflow(rs,re,cmin,cmax);
 				for y:=rs to re do
 					begin
 						cell:=GetCell(y,cs);
@@ -40108,14 +43045,16 @@ procedure TTKursiv.Work;
 								inc(longint(cell),CELLSIZE)
 							end
 					end;
+				RowsCheckOverflow(rs,re,cmin,cmax);
 				SetDirty;
-				DrawCells(rs,cs,re,ce)
+				DrawCells(rs,cmin,re,cmax)
 			end
 	end;
 
 
 procedure TTUnter.Work;
 	var x,y,rs,re,
+	    cmin,cmax,
 	    cs,ce    : integer;
 	    cell     : PCell;
 
@@ -40137,6 +43076,9 @@ procedure TTUnter.Work;
 							cs:=Col;
 							ce:=Col
 						end;
+				cmin:=cs;
+				cmax:=ce;
+				RowsClearOverflow(rs,re,cmin,cmax);
 				for y:=rs to re do
 					begin
 						cell:=GetCell(y,cs);
@@ -40149,14 +43091,16 @@ procedure TTUnter.Work;
 								inc(longint(cell),CELLSIZE)
 							end
 					end;
+				RowsCheckOverflow(rs,re,cmin,cmax);
 				SetDirty;
-				DrawCells(rs,cs,re,ce)
+				DrawCells(rs,cmin,re,cmax)
 			end
 	end;
 
 
 procedure TTAlignLeft.Work;
 	var x,y,rs,re,
+	    cmin,cmax,
 	    cs,ce     : integer;
 	    cell,cell2: PCell;
 
@@ -40183,6 +43127,9 @@ procedure TTAlignLeft.Work;
 							ce:=Col;
 							cell2:=GetCell(rs,cs)
 						end;
+				cmin:=cs;
+				cmax:=ce;
+				RowsClearOverflow(rs,re,cmin,cmax);
 				for y:=rs to re do
 					begin
 						cell:=GetCell(y,cs);
@@ -40192,8 +43139,9 @@ procedure TTAlignLeft.Work;
 								inc(longint(cell),CELLSIZE)
 							end
 					end;
+				RowsCheckOverflow(rs,re,cmin,cmax);
 				SetDirty;
-				DrawCells(rs,cs,re,ce);
+				DrawCells(rs,cmin,re,cmax);
 				SetInpline(cell2)
 			end
 	end;
@@ -40201,6 +43149,7 @@ procedure TTAlignLeft.Work;
 
 procedure TTAlignCenter.Work;
 	var x,y,rs,re,
+	    cmin,cmax,
 	    cs,ce     : integer;
 	    cell,cell2: PCell;
 
@@ -40227,6 +43176,9 @@ procedure TTAlignCenter.Work;
 							ce:=Col;
 							cell2:=GetCell(rs,cs)
 						end;
+				cmin:=cs;
+				cmax:=ce;
+				RowsClearOverflow(rs,re,cmin,cmax);
 				for y:=rs to re do
 					begin
 						cell:=GetCell(y,cs);
@@ -40236,8 +43188,9 @@ procedure TTAlignCenter.Work;
 								inc(longint(cell),CELLSIZE)
 							end
 					end;
+				RowsCheckOverflow(rs,re,cmin,cmax);
 				SetDirty;
-				DrawCells(rs,cs,re,ce);
+				DrawCells(rs,cmin,re,cmax);
 				SetInpline(cell2)
 			end
 	end;
@@ -40245,6 +43198,7 @@ procedure TTAlignCenter.Work;
 
 procedure TTAlignRight.Work;
 	var x,y,rs,re,
+	    cmin,cmax,
 	    cs,ce     : integer;
 	    cell,cell2: PCell;
 
@@ -40271,6 +43225,9 @@ procedure TTAlignRight.Work;
 							ce:=Col;
 							cell2:=GetCell(rs,cs)
 						end;
+				cmin:=cs;
+				cmax:=ce;
+				RowsClearOverflow(rs,re,cmin,cmax);
 				for y:=rs to re do
 					begin
 						cell:=GetCell(y,cs);
@@ -40280,8 +43237,9 @@ procedure TTAlignRight.Work;
 								inc(longint(cell),CELLSIZE)
 							end
 					end;
+				RowsCheckOverflow(rs,re,cmin,cmax);
 				SetDirty;
-				DrawCells(rs,cs,re,ce);
+				DrawCells(rs,cmin,re,cmax);
 				SetInpline(cell2)
 			end
 	end;
@@ -40297,7 +43255,11 @@ procedure TTNumber.Work;
 
 	begin
 		vrnd:=false;
+		{$IFDEF ENGLISH}
+		nform:=60;
+		{$ELSE}
 		nform:=TexelApp.FormStart[2];
+		{$ENDIF}
 		with PCalcWindow(Parent)^ do
 			begin
 				with Parms.Cursor do
@@ -40350,7 +43312,15 @@ procedure TTDate.Work;
 
 	begin
 		vrnd:=false;
+		{$IFDEF FRENCH}
+		nform:=72;
+		{$ELSE}
+		{$IFDEF ENGLISH}
+		nform:=73;
+		{$ELSE}
 		nform:=TexelApp.FormStart[3];
+		{$ENDIF}
+		{$ENDIF}
 		with PCalcWindow(Parent)^ do
 			begin
 				with Parms.Cursor do
@@ -40403,7 +43373,24 @@ procedure TTMoney.Work;
 
 	begin
 		vrnd:=false;
-		nform:=TexelApp.FormStart[7];
+		case TexelApp.setupbuffer.currency of
+		1:
+			nform:=52;
+		2:
+			nform:=48;
+		3: 
+			nform:=68;
+		4:
+			nform:=64;
+		5:
+			nform:=75;
+		6:
+			nform:=79;
+		7:
+			nform:=83;
+		else
+			nform:=TexelApp.FormStart[7]
+		end;
 		with PCalcWindow(Parent)^ do
 			begin
 				with Parms.Cursor do
@@ -40714,7 +43701,11 @@ procedure TTDezPlus.Work;
 										begin
 											if t[q-1]='|' then
 												begin
+													{$IFDEF ENGLISH}
+													t:=StrPLeft(t,q-1)+'.0'+StrPRight(t,length(t)+1-q);
+													{$ELSE}
 													t:=StrPLeft(t,q-1)+',0'+StrPRight(t,length(t)+1-q);
+													{$ENDIF}
 													inc(q,2)
 												end
 											else
@@ -40725,7 +43716,11 @@ procedure TTDezPlus.Work;
 										end
 									else
 										begin
+											{$IFDEF ENGLISH}
+											t:=StrPLeft(t,q-1)+'|.0'+StrPRight(t,length(t)+1-q);
+											{$ELSE}
 											t:=StrPLeft(t,q-1)+'|,0'+StrPRight(t,length(t)+1-q);
+											{$ENDIF}
 											inc(q,3)
 										end;
 									DezPlus:=t;
@@ -41048,27 +44043,27 @@ procedure TBorderBox.Work;
 				0:
 					SetBorder(0,White,0,White,0,White,0,White,0,White,0,White,-1,0);
 				1:
-					SetBorder(0,White,0,White,0,White,2,Black,0,White,0,White,-1,0);
+					SetBorder(-1,0,-1,0,-1,0,2,Black,-1,0,-1,0,-1,0);
 				2:
-					SetBorder(2,Black,0,White,0,White,0,White,0,White,0,White,-1,0);
+					SetBorder(2,Black,-1,0,-1,0,-1,0,-1,0,-1,0,-1,0);
 				3:
-					SetBorder(0,White,2,Black,0,White,0,White,0,White,0,White,-1,0);
+					SetBorder(-1,0,2,Black,-1,0,-1,0,-1,0,-1,0,-1,0);
 				4:
-					SetBorder(0,White,0,White,0,White,5,Black,0,White,0,White,-1,0);
+					SetBorder(-1,0,-1,0,-1,0,5,Black,-1,0,-1,0,-1,0);
 				5:
-					SetBorder(0,White,0,White,0,White,3,Black,0,White,0,White,-1,0);
+					SetBorder(-1,0,-1,0,-1,0,3,Black,-1,0,-1,0,-1,0);
 				6:
-					SetBorder(0,White,0,White,2,Black,2,Black,0,White,0,White,-1,0);
+					SetBorder(-1,0,-1,0,2,Black,2,Black,-1,0,-1,0,-1,0);
 				7:
-					SetBorder(0,White,0,White,2,Black,5,Black,0,White,0,White,-1,0);
+					SetBorder(-1,0,-1,0,2,Black,5,Black,-1,0,-1,0,-1,0);
 				8:
-					SetBorder(0,White,0,White,2,Black,3,Black,0,White,0,White,-1,0);
+					SetBorder(-1,0,-1,0,2,Black,3,Black,-1,0,-1,0,-1,0);
 				9:
-					SetBorder(2,Black,2,Black,2,Black,2,Black,0,White,0,White,-1,0);
+					SetBorder(2,Black,2,Black,2,Black,2,Black,-1,0,-1,0,-1,0);
 				10:
-					SetBorder(0,White,0,White,0,White,0,White,0,White,0,White,2,Black);
+					SetBorder(-1,0,-1,0,-1,0,-1,0,-1,0,-1,0,2,Black);
 				11:
-					SetBorder(0,White,0,White,0,White,0,White,0,White,0,White,3,Black)
+					SetBorder(-1,0,-1,0,-1,0,-1,0,-1,0,-1,0,3,Black)
 				end
 			end
 	end;
@@ -41109,84 +44104,17 @@ procedure TColorBox.SetValue(Sel: integer);
 
 
 procedure TColorBox.Work;
-	var x,y,nc: integer;
-	    cell  : PCell;
 
 	begin
-		with PWindow(Parent)^ do
-			begin
-				if GetClassName<>TEXELWINDCLASS then exit;
-				if Attr.Status<>ws_Open then exit
-			end;
-		nc:=GetSelection;
-		with PCalcWindow(Parent)^ do
-			begin
-				with Parms.Cursor do
-					if Block then
-						begin
-							for y:=RowStart to RowEnd do
-								begin
-									cell:=GetCell(y,ColStart);
-									for x:=ColStart to ColEnd do
-										begin
-											cell^.Color:=nc;
-											if cell^.Interior=FIS_HOLLOW then cell^.Interior:=FIS_SOLID;
-											inc(longint(cell),CELLSIZE)
-										end
-								end;
-							DrawCells(RowStart,ColStart,RowEnd,ColEnd)
-						end
-					else
-						begin
-							cell:=GetCell(Row,Col);
-							cell^.Color:=nc;
-							if cell^.Interior=FIS_HOLLOW then cell^.Interior:=FIS_SOLID;
-							DrawCells(Row,Col,Row,Col)
-						end;
-				SetDirty
-			end
+		if PWindow(Parent)^.GetClassName<>TEXELWINDCLASS then exit;
+		PCalcWindow(Parent)^.SetCellColor(GetSelection)
 	end;
 
 
 procedure TTextColorBox.Work;
-	var cell : PCell;
-	    x,y,
-	    rs,cs,
-	    ntc,
-	    re,ce: integer;
 
 	begin
-		ntc:=GetSelection;
-		with PCalcWindow(Parent)^ do
-			begin
-				if Attr.Status<>ws_Open then exit;
-				with Parms.Cursor do
-					if Block then
-						begin
-							rs:=RowStart;
-							re:=RowEnd;
-							cs:=ColStart;
-							ce:=ColEnd
-						end
-					else
-						begin
-							rs:=Row;
-							re:=Row;
-							cs:=Col;
-							ce:=Col
-						end;
-				for y:=rs to re do
-					begin
-						cell:=GetCell(y,cs);
-						for x:=cs to ce do
-							begin
-								cell^.TxtVal.Color:=ntc;
-								inc(longint(cell),CELLSIZE)
-							end
-					end;
-				SetDirty;
-				DrawCells(rs,cs,re,ce)
-			end
+		PCalcWindow(Parent)^.SetTextColor(GetSelection)
 	end;
 
 
@@ -41248,13 +44176,24 @@ procedure TPatternBox.SetValue(Sel: integer);
 
 
 procedure TPatternBox.Work;
-	var x,y,st: integer;
+	var x,y,st,
+	    oldint,
+	    inter : integer;
 	    cell  : PCell;
 
 	begin
 		if Parent^.Attr.Status<>ws_Open then exit;
 		st:=GetSelection;
-		if st=7 then st:=8;
+		if st=0 then
+			begin
+				st:=8;
+				inter:=FIS_HOLLOW
+			end
+		else
+			begin
+				if st=7 then st:=8;
+				inter:=FIS_PATTERN
+			end;
 		with PCalcWindow(Parent)^ do
 			begin
 				with Parms.Cursor do
@@ -41265,8 +44204,9 @@ procedure TPatternBox.Work;
 									cell:=GetCell(y,ColStart);
 									for x:=ColStart to ColEnd do
 										begin
-											cell^.Interior:=FIS_PATTERN;
+											cell^.Interior:=inter;
 											cell^.Style:=st;
+											if inter=FIS_HOLLOW then cell^.Color:=Black;
 											inc(longint(cell),CELLSIZE)
 										end
 								end;
@@ -41275,13 +44215,20 @@ procedure TPatternBox.Work;
 					else
 						begin
 							cell:=GetCell(Row,Col);
-							cell^.Interior:=FIS_PATTERN;
+							oldint:=cell^.Interior;
+							cell^.Interior:=inter;
 							cell^.Style:=st;
-							DrawCells(Row,Col,Row,Col)
+							if inter=FIS_HOLLOW then cell^.Color:=Black;
+							DrawCells(Row,Col,Row,Col);
+							if pcbox<>nil then
+								begin
+									if inter=FIS_HOLLOW then pcbox^.SetSelection(0,false)
+									else
+										if oldint=FIS_HOLLOW then pcbox^.SetSelection(1,false)
+								end
 						end;
 				SetDirty
 			end
-		{ wenn FIS_HOLLOW -> aktuelle Farbe setzen... }
 	end;
 
 
@@ -41372,7 +44319,7 @@ procedure TPercentBox.Work;
 
 
 begin
-  TexelApp.Init(TEXELNAME);
-  TexelApp.Run;
-  TexelApp.Done
+	TexelApp.Init(TEXELNAME);
+	TexelApp.Run;
+	TexelApp.Done
 end.

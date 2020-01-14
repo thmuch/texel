@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  30.01.1995  *
+ *      letztes Update am:  11.09.1997  *
  ****************************************}
 
 {
@@ -54,17 +54,7 @@
 }
 
 
-{$IFDEF DEBUG}
-	{$B+,D+,I-,L+,P-,Q+,R+,S+,T-,V-,X+,Z-}
-{$ELSE}
-	{$B+,D-,I-,L-,P-,Q-,R-,S-,T-,V-,X+,Z-}
-{$ENDIF}
-
-{$IFDEF COPRO}
-	{$G+,N-}
-{$ELSE}
-	{$G-,N-}
-{$ENDIF}
+{$B+,D-,G-,I-,L-,N-,P-,Q-,R-,S-,T-,V-,X+,Z-}
 
 unit OValidat;
 
@@ -153,7 +143,9 @@ procedure TFilterValidator.Error;
 		if Application<>nil then
 			with Application^ do
 				begin
-					if (Attr.Country=FRG) or (Attr.Country=SWG) then
+					if Attr.Country=FRA then
+						Alert(Window,1,NOTE,'Caractäres invalides entrÇs.','  &OK  ')
+					else if (Attr.Country=FRG) or (Attr.Country=SWG) then
 						Alert(Window,1,NOTE,'Die Eingabe enthÑlt ungÅltige Zeichen.','  &OK  ')
 					else
 						Alert(Window,1,NOTE,'Invalid characters in input.','  &OK  ')
@@ -212,7 +204,9 @@ procedure TRangeValidator.Error;
 		if Application<>nil then
 			with Application^ do
 				begin
-					if (Attr.Country=FRG) or (Attr.Country=SWG) then
+					if Attr.Country=FRA then
+						Alert(Window,1,NOTE,' Valeur non comprise entre | '+ltoa(Min)+' et '+ltoa(Max)+'.','  &OK  ')
+					else if (Attr.Country=FRG) or (Attr.Country=SWG) then
 						Alert(Window,1,NOTE,' Wert ist nicht im Bereich | von '+ltoa(Min)+' bis '+ltoa(Max)+'.','  &OK  ')
 					else
 						Alert(Window,1,NOTE,' Value is not in the range | '+ltoa(Min)+' to '+ltoa(Max)+'.','  &OK  ')
@@ -300,7 +294,9 @@ procedure TStringLookupValidator.Error;
 		if Application<>nil then
 			with Application^ do
 				begin
-					if (Attr.Country=FRG) or (Attr.Country=SWG) then
+					if Attr.Country=FRA then
+						Alert(Window,1,NOTE,'L''entrÇe n''est pas dans la liste valide.','  &OK  ')
+					else if (Attr.Country=FRG) or (Attr.Country=SWG) then
 						Alert(Window,1,NOTE,'Die Eingabe ist nicht gÅltig.','  &OK  ')
 					else
 						Alert(Window,1,NOTE,'Input not in valid-list.','  &OK  ')
@@ -358,7 +354,9 @@ procedure TPXPictureValidator.Error;
 		if Application<>nil then
 			with Application^ do
 				begin
-					if (Attr.Country=FRG) or (Attr.Country=SWG) then
+					if Attr.Country=FRA then
+						Alert(Window,1,NOTE,'EntrÇe non conforme Ö|'+Pic^,'  &OK  ')
+					else if (Attr.Country=FRG) or (Attr.Country=SWG) then
 						Alert(Window,1,NOTE,'Die Eingabe paût nicht auf|'+Pic^,'  &OK  ')
 					else
 						Alert(Window,1,NOTE,'Input does not conform to|'+Pic^,'  &OK  ')

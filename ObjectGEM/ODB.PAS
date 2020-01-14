@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        23.05.1994  *
- *      letztes Update am:  03.09.1996  *
+ *      letztes Update am:  26.11.1997  *
  ****************************************}
 
 {
@@ -54,17 +54,7 @@
 }
 
 
-{$IFDEF DEBUG}
-	{$B+,D+,I-,L+,P-,Q+,R+,S+,T-,V-,X+,Z-}
-{$ELSE}
-	{$B+,D-,I-,L-,P-,Q-,R-,S-,T-,V-,X+,Z-}
-{$ENDIF}
-
-{$IFDEF COPRO}
-	{$G+,N-}
-{$ELSE}
-	{$G-,N-}
-{$ENDIF}
+{$B+,D-,G-,I-,L-,N-,P-,Q-,R-,S-,T-,V-,X+,Z-}
 
 unit ODB;
 
@@ -121,6 +111,7 @@ type
 		function GetFilename: string;
 		function GetMaxRecords: longint;
 		function GetMaxFields: integer;
+		function GetFieldByNumber(fNum: longint): PXBField;
 		function GetPosition: longint;
 		function GotoRecord(Nr: longint): boolean;
 		function GotoBeginning: boolean;
@@ -137,6 +128,7 @@ type
 		f0pos,
 		feldanz : longint;
 		hdl     : integer;
+		version : byte;
 		memos,
 		bufvalid,
 		openflag: boolean;
@@ -156,7 +148,14 @@ uses
 
 type
 
-	TDBHEADER = record
+	TDB2HEADER = record
+		version: byte;
+		records: array [0..1] of byte;
+		datum  : array [1..3] of byte;
+		recordb: array [0..1] of byte
+	end;
+
+	TDB34HEADER = record
 		version: byte;
 		datum  : array [1..3] of byte;
 		records: longint;
@@ -165,7 +164,15 @@ type
 		reserve: array [0..19] of byte
 	end;
 
-	TFELD = record
+	TFELD2 = record
+		fname : array [0..10] of char;
+		ftyp  : char;
+		laenge: byte;
+		dummy : array [0..1] of byte;
+		komma : byte
+	end;
+
+	TFELD34 = record
 		fname : array [0..10] of char;
 		ftyp  : char;
 		dummy1: array [0..3] of byte;
@@ -260,7 +267,7 @@ function TXBField.IsString: boolean;
 function TXBField.IsNumber: boolean;
 
 	begin
-		IsNumber:=(GetType='N')
+		IsNumber:=(GetType='N') or (GetType='F')
 	end;
 
 
@@ -297,11 +304,14 @@ function TXBField.GetString: string;
 
 
 function TXBField.GetNumber: real;
+	var i: integer;
 
 	begin
-		if not(IsNumber) or not(Parent^.bufvalid) then GetNumber:=0.0
+		if not(Parent^.bufvalid) then GetNumber:=0.0
 		else
-			GetNumber:=atof(StrLPas(@Parent^.buf^[bufoffs],Getlength))
+			if not(IsNumber) then GetNumber:=0.0
+			else
+				GetNumber:=atof(StrLPas(@Parent^.buf^[bufoffs],GetLength))
 	end;
 
 
@@ -387,11 +397,13 @@ destructor TXBase.Done;
 function TXBase.Open(dbFile: string): boolean;
 	label _error;
 
-	var res : longint;
+	var res   : longint;
 	    bpos,
-	    q   : integer;
-	    kopf: TDBHEADER;
-	    feld: TFELD;
+	    q     : integer;
+	    kopf2 : TDB2HEADER;
+	    kopf34: TDB34HEADER;
+	    feld2 : TFELD2;
+	    feld34: TFELD34;
 
 	begin
 		Open:=false;
@@ -402,22 +414,57 @@ function TXBase.Open(dbFile: string): boolean;
 		hdl:=integer(res);
 		buf:=GetMemBuffer(4096,4096,bufsize);
 		if buf=nil then goto _error;
-		if bread(@kopf,sizeof(kopf)) then goto _error;
-		if (kopf.version<>$03) and (kopf.version<>$83) then goto _error;
-		memos:=(kopf.version=$83);
-		dsanz:=SwapLong(kopf.records);
-		dslen:=swap(kopf.recordb);
-		feldanz:=((swap(kopf.headerb)-1) div 32)-1;
-		if not(Between(feldanz,1,128)) then goto _error;
-		bpos:=1;
-		for q:=1 to feldanz do
+		if bread(@version,1) then goto _error;
+		if (version<>$02) and ((version and $03)<>$03) and ((version and $03)<>$01) then goto _error;
+		if fseek(0,hdl,0)<>0 then goto _error;
+		memos:=bTst(version,$80);
+		version:=version and $03;
+		if version=$02 then
 			begin
-				if bread(@feld,sizeof(feld)) then goto _error;
-				new(PXBField,Init(@self,StrLPas(feld.fname,11),feld.ftyp,feld.laenge,feld.komma,bpos));
-				inc(bpos,feld.laenge)
+				if bread(@kopf2,sizeof(kopf2)) then goto _error;
+				dsanz:=kopf2.records[0] or (kopf2.records[1] shl 8);
+				dslen:=kopf2.recordb[0] or (kopf2.recordb[1] shl 8);
+				feldanz:=0;
+				bpos:=1;
+				if bread(buf,1) then goto _error;
+				while (buf^[0]<>$0d) do
+					begin
+						if fseek(-1,hdl,1)<0 then goto _error;
+						if bread(@feld2,sizeof(feld2)) then goto _error;
+						if feld2.fname[0]<>#0 then
+							new(PXBField,Init(@self,StrLPas(feld2.fname,11),feld2.ftyp,feld2.laenge,feld2.komma,bpos));
+						inc(bpos,feld2.laenge);
+						inc(feldanz);
+						if bread(buf,1) then goto _error
+					end;
+				if not(Between(feldanz,1,32)) then goto _error;
+				if fseek(520,hdl,0)<>520 then goto _error
+			end
+		else
+			begin
+				if bread(@kopf34,sizeof(kopf34)) then goto _error;
+				dsanz:=SwapLong(kopf34.records);
+				dslen:=swap(kopf34.recordb);
+				feldanz:=((swap(kopf34.headerb)-1) div 32)-1;
+				if version=$01 then
+					begin
+						if not(Between(feldanz,1,255)) then goto _error;
+					end
+				else
+					if not(Between(feldanz,1,128)) then goto _error;
+				bpos:=1;
+				for q:=1 to feldanz do
+					begin
+						if bread(@feld34,sizeof(feld34)) then goto _error;
+						new(PXBField,Init(@self,StrLPas(feld34.fname,11),feld34.ftyp,feld34.laenge,feld34.komma,bpos));
+						inc(bpos,feld34.laenge)
+					end
 			end;
 		if bread(buf,1) then goto _error;
 		if buf^[0]<>$0d then goto _error;
+		if bread(buf,1) then goto _error;
+		if buf^[0]<>$00 then
+			if fseek(-1,hdl,1)<0 then goto _error;
 		f0pos:=fseek(0,hdl,1);
 		if f0pos<0 then goto _error;
 		dspos:=0;
@@ -485,6 +532,20 @@ function TXBase.GetMaxFields: integer;
 
 	begin
 		GetMaxFields:=feldanz
+	end;
+
+
+function TXBase.GetFieldByNumber(fNum: longint): PXBField;
+	var pxbf: PXBField;
+
+	begin
+		pxbf:=Fields;
+		while (pxbf<>nil) and (fNum>0) do
+			begin
+				dec(fNum);
+				pxbf:=pxbf^.Next
+			end;
+		GetFieldByNumber:=pxbf
 	end;
 
 
