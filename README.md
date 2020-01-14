@@ -1,6 +1,8 @@
-# Texel
+# Texel ![Texel-Logo](Screenshots/logo.gif)
 
 Over 20 years ago I wrote a spreadsheet application called ["Texel"](https://snailshell.de/Texel/) for Atari/TOS/MagiC systems. From time to time I'm being asked if I could release the Texel source code... Well, here it is.
+
+![Texel main window on Atari Falcon 030](Screenshots/screenshot.gif)
 
 ## Disclaimer
 
@@ -27,3 +29,14 @@ Have fun! :-)
 
 Thomas\
 @thmuch
+
+
+## Screenshots
+
+![settings](Screenshots/scr_einstellungen.gif)
+
+![find/replace](Screenshots/scr_s_und_e.gif)
+
+![context menu](Screenshots/scr_kontextmenue.gif)
+
+![main window](Screenshots/scr_texel.gif)
