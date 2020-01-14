@@ -1,6 +1,7 @@
 # Texel ![Texel-Logo](Screenshots/logo.gif)
 
-Over 20 years ago I wrote a spreadsheet application called ["Texel"](https://snailshell.de/Texel/) for Atari/TOS/MagiC systems. From time to time I'm being asked if I could release the Texel source code... Well, here it is.
+Over 20 years ago I wrote a spreadsheet application called ["Texel"](https://snailshell.de/Texel/) for Atari/TOS/MagiC
+systems. From time to time I'm being asked if I could release the Texel source code... Well, here it is.
 
 ![Texel main window on Atari Falcon 030](Screenshots/screenshot.gif)
 
@@ -19,7 +20,7 @@ that allowed for a larger virtual method table (VMT) than the compiler version t
 I don't think the necessary compiler binary was ever made public &ndash; but please prove me wrong!
 
 Some parts of the code (some class names, some variables) and most of the documentation
-are in Germany only. Sorry for that.
+are in German only. Sorry for that.
 
 And remember, the code you'll see does not represent the way software should be written and built today.
 I would not want to write files with 20000 lines or more nowadays (it was a bad idea even in the last millenium).
@@ -30,6 +31,10 @@ Have fun! :-)
 Thomas\
 @thmuch
 
+
+## Links
+
+- A brief [history](https://68k.computer/atari-st/texel/) of Texel's development (in German) and some b/w screenshots.
 
 ## Screenshots
 
