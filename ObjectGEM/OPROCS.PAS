@@ -1,6 +1,6 @@
 {****************************************
  *   O b j e c t G E M   Version 1.50   *
- *   Copyright 1992-97 by Thomas Much   *
+ *   Copyright 1992-98 by Thomas Much   *
  ****************************************
  *          Unit  O P R O C S           *
  ****************************************
@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  03.11.1997  *
+ *      letztes Update am:  17.04.1998  *
  ****************************************}
 
 {
@@ -124,10 +124,13 @@ procedure CorrectPath(var PathName: string);
 function GetPath(const FileName: string): string;
 function GetRawPath(const FileName: string): string;
 function GetFilename(FileName: string; Ext: boolean): string;
+function GetFileSize(FileName: string; FileHdl: integer): longint;
 function GetQuotedName(var p: PChar): string;
 function GetExtension(const FileName: string): string;
 function GetDrives: longint;
+function CopyFile(oldname,newname: string): boolean;
 
+function NVDIVersion: word;
 function MagiCVersion: word;
 function MagiCDate: longint;
 function MiNTVersion: word;
@@ -187,6 +190,12 @@ type
 		release    : integer
 	end;
 
+	PNVDIStruct = ^TNVDIStruct;
+	TNVDIStruct = record
+		version,
+		datum  : word
+	end;
+
 	PMAGX_COOKIE = ^MAGX_COOKIE;
 	MAGX_COOKIE  = record
 		config_status: longint;
@@ -197,12 +206,14 @@ type
 var
 
 	kt     : KEYTABPtr;
+	nvdiver,
 	mxver  : word;
 	mxdate,
 	oldct  : longint;
 	krcount: integer;
 	conterm: byte absolute $484;
 	pmagx  : PMAGX_COOKIE;
+	pnvdi  : PNVDIStruct;
 
 
 
@@ -966,6 +977,13 @@ function BootDevice: char;
 	end;
 
 
+function NVDIVersion: word;
+
+	begin
+		NVDIVersion:=nvdiver
+	end;
+
+
 function MagiCVersion: word;
 
 	begin
@@ -1378,6 +1396,42 @@ function GetFilename(FileName: string; Ext: boolean): string;
 	end;
 
 
+function GetFileSize(FileName: string; FileHdl: integer): longint;
+	var xa : XATTR;
+	    ret: longint;
+
+	function hdllen(hdl: integer): longint;
+		var oldpos: longint;
+	
+		begin
+			oldpos:=fseek(0,hdl,1);
+			hdllen:=fseek(0,hdl,2);
+			fseek(oldpos,hdl,0);
+		end;
+
+	begin
+		GetFileSize:=-1;
+		if length(FileName)>0 then
+			if fxattr(0,FileName,xa)=0 then
+				begin
+					GetFileSize:=xa.size;
+					exit
+				end;
+		if FileHdl<>0 then GetFileSize:=hdllen(FileHdl)
+		else
+			if length(FileName)>0 then
+				begin
+					ret:=fopen(FileName,FO_READ);
+					if ret>=0 then
+						begin
+							FileHdl:=integer(ret);
+							GetFileSize:=hdllen(FileHdl);
+							fclose(FileHdl)
+						end
+				end
+	end;
+
+
 function GetExtension(const FileName: string): string;
 
 	begin
@@ -1392,6 +1446,44 @@ function GetDrives: longint;
 
 	begin
 		GetDrives:=dsetdrv(dgetdrv)
+	end;
+
+
+function CopyFile(oldname,newname: string): boolean;
+	label _raus,_fehler;
+
+	var buf    : pointer;
+	    res,
+	    bufsize: longint;
+	    oldhdl,
+	    newhdl : integer;
+
+	begin
+		CopyFile:=false;
+		if (length(oldname)=0) or (length(newname)=0) then exit;
+		buf:=GetMemBuffer(131072,512,bufsize);
+		if buf=nil then goto _raus;
+		res:=fopen(oldname,FO_READ);
+		if res>=0 then
+			begin
+				oldhdl:=integer(res);
+				res:=fcreate(newname,0);
+				if res>=0 then
+					begin
+						newhdl:=integer(res);
+						repeat
+							res:=fread(oldhdl,bufsize,buf);
+							if res<=0 then goto _fehler;
+							if fwrite(newhdl,res,buf)<>res then goto _fehler;
+						until res<bufsize;
+						CopyFile:=true;
+						_fehler:
+						fclose(newhdl)
+					end;
+				fclose(oldhdl)
+			end;
+		_raus:
+		if buf<>nil then freemem(buf,bufsize)
 	end;
 
 
@@ -1480,4 +1572,8 @@ begin
 									mxver:=version;
 									mxdate:=(date shl 16) or (date shr 24) or ((date shr 8) and $0000ff00)
 								end;
+	nvdiver:=0;
+	if GetCookie('NVDI',longint(pnvdi)) then
+		if pnvdi<>nil then
+			nvdiver:=pnvdi^.version;
 end.

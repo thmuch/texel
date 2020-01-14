@@ -1,6 +1,6 @@
 {****************************************
  *   O b j e c t G E M   Version 1.50   *
- *   Copyright 1992-97 by Thomas Much   *
+ *   Copyright 1992-98 by Thomas Much   *
  ****************************************
  *             Unit  O D B              *
  ****************************************
@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        23.05.1994  *
- *      letztes Update am:  26.11.1997  *
+ *      letztes Update am:  19.03.1998  *
  ****************************************}
 
 {
@@ -137,6 +137,35 @@ type
 		function bread(buffer: pointer; count: longint): boolean;
 		function SwapLong(l: longint): longint;
 	end;
+	
+	PCompoundFile = ^TCompoundFile;
+	TCompoundFile = object(TObject)
+		public
+		constructor Init;
+		constructor InitFile(comFile: string);
+		constructor InitHandle(comFile: string; comHnd: integer);
+		destructor Done; virtual;
+		function Open(comFile:string): boolean;
+		procedure Close;
+		function IsOpen: boolean;
+		private
+		comfname: string;
+		byfile,
+		openflag: boolean;
+		comhdl  : integer;
+		maxblock,
+		num_of_bbd_blocks,
+		root_startblock,
+		sbd_startblock,
+		blocknr,
+		comsize          : longint;
+		bbd_list         : PLongintArray;
+		block            : array [0..511] of byte;
+		function GetLong(idx: integer): longint;
+		function ReadBlock(bnr: longint): boolean;
+		function GetNextBlockNr(bnr: longint): longint;
+		function ReadHeader: boolean;
+	end;
 
 
 
@@ -145,6 +174,10 @@ implementation
 uses
 
 	Tos,OProcs;
+
+const
+
+	CF_ENDOFCHAIN = -2;
 
 type
 
@@ -462,10 +495,19 @@ function TXBase.Open(dbFile: string): boolean;
 			end;
 		if bread(buf,1) then goto _error;
 		if buf^[0]<>$0d then goto _error;
-		if bread(buf,1) then goto _error;
-		if buf^[0]<>$00 then
-			if fseek(-1,hdl,1)<0 then goto _error;
-		f0pos:=fseek(0,hdl,1);
+		if version=$02 then
+			begin
+				if bread(buf,1) then goto _error;
+				if buf^[0]<>$00 then
+					if fseek(-1,hdl,1)<0 then goto _error;
+				f0pos:=fseek(0,hdl,1)
+			end
+		else
+			begin
+				if fseek(0,hdl,1)>swap(kopf34.headerb) then goto _error
+				else
+					f0pos:=fseek(swap(kopf34.headerb),hdl,0)
+			end;
 		if f0pos<0 then goto _error;
 		dspos:=0;
 		filename:=dbFile;
@@ -650,5 +692,173 @@ function TXBase.SwapLong(l: longint): longint;
 	end;
 
 { *** TXBASE *** }
+
+
+
+{ *** Objekt TCOMPOUNDFILE *** }
+
+constructor TCompoundFile.Init;
+
+	begin
+		if not(inherited Init) then fail;
+		openflag:=false;
+		byfile:=false
+	end;
+
+
+constructor TCompoundFile.InitFile(comFile: string);
+
+	begin
+		if not(Init) then fail;
+		if not(Open(comFile)) then fail
+	end;
+
+
+constructor TCompoundFile.InitHandle(comFile: string; comHnd: integer);
+
+	begin
+		if not(Init) then fail;
+		comfname:=comFile;
+		comhdl:=comHnd;
+		if not(ReadHeader) then fail;
+	end;
+
+
+destructor TCompoundFile.Done;
+
+	begin
+		Close;
+		inherited Done
+	end;
+
+
+function TCompoundFile.Open(comFile:string): boolean;
+	var ret: longint;
+
+	begin
+		Open:=false;
+		if IsOpen then exit;
+		comfname:=comFile;
+		ret:=fopen(comfname,FO_READ);
+		if ret<0 then exit;
+		comhdl:=integer(ret);
+		if not(ReadHeader) then
+			begin
+				fclose(comhdl);
+				exit
+			end;
+		byfile:=true;
+		Open:=true
+	end;
+
+
+procedure TCompoundFile.Close;
+
+	begin
+		if not(IsOpen) then exit;
+		if byfile then
+			begin
+				fclose(comhdl);
+				byfile:=false
+			end;
+		if num_of_bbd_blocks>0 then freemem(bbd_list,num_of_bbd_blocks shl 2);
+		openflag:=false
+	end;
+
+
+function TCompoundFile.IsOpen: boolean;
+
+	begin
+		IsOpen:=openflag
+	end;
+
+
+	{ private }
+
+
+function TCompoundFile.GetLong(idx: integer): longint;
+
+	begin
+		GetLong:=(longint(block[idx+3]) shl 24)+(longint(block[idx+2]) shl 16)+(longint(block[idx+1]) shl 8)+longint(block[idx])
+	end;
+
+
+function TCompoundFile.ReadBlock(bnr: longint): boolean;
+
+	begin
+		if bnr<>blocknr then
+			begin
+				ReadBlock:=false;
+				if fseek(bnr*512+512,comhdl,0)<0 then exit;
+				if fread(comhdl,512,@block)<>512 then exit;
+				blocknr:=bnr
+			end;
+		ReadBlock:=true
+	end;
+
+
+function TCompoundFile.GetNextBlockNr(bnr: longint): longint;
+	var bidx: longint;
+
+	begin
+		GetNextBlockNr:=CF_ENDOFCHAIN;
+		if bnr=CF_ENDOFCHAIN then exit;
+		bidx:=bnr div 128;
+		if (bidx<0) or (bidx>=num_of_bbd_blocks) then exit;
+		if not(ReadBlock(bbd_list^[bidx])) then exit;
+		GetNextBlockNr:=GetLong((bnr mod 128)*4)
+	end;
+
+
+function TCompoundFile.ReadHeader: boolean;
+	label _fehler;
+
+	var q: longint;
+
+	begin
+		ReadHeader:=false;
+		comsize:=GetFileSize(comfname,comhdl);
+		if (comsize mod 512)<>0 then exit;
+		blocknr:=-2;
+		if not(ReadBlock(-1)) then exit;
+		if (block[0]<>$d0) or (block[1]<>$cf) or (block[2]<>$11) or
+		   (block[3]<>$e0) or (block[4]<>$a1) or (block[5]<>$b1) or
+		   (block[6]<>$1a) or (block[7]<>$e1) then exit;
+		maxblock:=((comsize-1) div 512)-1;
+		num_of_bbd_blocks:=GetLong($2c);
+		root_startblock:=GetLong($30);
+		sbd_startblock:=GetLong($3c);
+		if num_of_bbd_blocks>0 then
+			begin
+				getmem(bbd_list,num_of_bbd_blocks shl 2);
+				if bbd_list=nil then exit;
+				for q:=0 to num_of_bbd_blocks-1 do bbd_list^[q]:=GetLong($4c+q);
+			end;
+
+		writeln('maxblock:          ',maxblock); { !!! }
+		writeln('num_of_bbd_blocks: ',num_of_bbd_blocks); { !!! }
+		writeln('root_startblock:   ',root_startblock); { !!! }
+		writeln('sbd_startblock:    ',sbd_startblock); { !!! }
+		for q:=0 to num_of_bbd_blocks-1 do
+			writeln('bbd_list[',q,']:       ',bbd_list^[q]); { !!! }
+		q:=root_startblock;
+		write('Root-Chain:        ',q,' ');
+		while q<>CF_ENDOFCHAIN do
+			begin
+				q:=GetNextBlockNr(q);
+				write(q,' ')
+			end;
+		writeln;
+
+		{ !!! }
+
+		openflag:=true;
+		ReadHeader:=true;
+		exit;
+		_fehler:
+		{ bbd_list[] freigeben !!! }
+	end;
+
+{ *** TCOMPOUNDFILE *** }
 
 end.

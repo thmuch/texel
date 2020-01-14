@@ -1,0 +1,86 @@
+Einen Seitenumbruch k”nnen Sie wieder ausschalten,
+indem Sie auf den betreffenden Zeilen- bzw.
+Spaltentitel mit der rechten Maustaste klicken und
+im erscheinenden Popup den markierten Eintrag
+"Seitenumbruch" anw„hlen.
+
+Der Zeichensatz der Zeilen- und Spaltenbeschrif-
+tungen wird im Dialog "Format - Blatt" festgelegt.
+
+Damit beim Import und Export die Sonderzeichen
+(Umlaute etc.) anderer Rechner und Betriebssysteme
+korrekt behandelt werden, sollten Sie das Programm
+KEYTAB in Ihrem AUTO-Ordner installieren.
+
+Mit dem kleinen grauen (oder schwarzen) Dreieck in
+der Werkzeugleiste k”nnen Sie den oberen Teil der
+Leiste ausblenden, um zus„tzlichen Platz fr
+Ihre Daten auch auf kleinen Monitoren zu gewinnen.
+
+Um schnellen Zugriff auf den oberen Teil der Werk-
+zeugleiste zu haben, k”nnen Sie die Funktions-
+tasten verwenden: F1 ist Hilfe, F2 fett, F3
+kursiv, F4 unterstrichen, F5 linksbndig, F6
+zentriert, F7 rechtsbndig ...
+
+Benutzen Sie Zellvariablen, um sich h„ufig wieder-
+kehrende Referenzen auf bestimmte Zellen nicht
+merken zu mssen. '=Betrag*Mwst' klingt doch viel
+eing„ngiger als '=A12*C3'. Lesen Sie dazu in der
+Onlinehilfe nach.
+
+Sind im Hilfe-Men die untersten vier Menpunkte
+nicht w„hlbar, so ist das Zusatzprogramm
+'ST-Guide' nicht installiert. Holen Sie dies nach,
+um die ausfhrliche Onlinehilfe von Texel nutzen
+zu k”nnen.
+
+Sie haben Kopf- und Fuzeilen eingetragen, diese
+werden jedoch nicht gedruckt? Wahrscheinlich haben
+Sie vergessen, im 'Seite einrichten'-Dialog den
+Button 'Minimale Gr”e' anzuklicken, um einen Rand
+fr die Zeilen zu definieren.
+
+Wenn Sie den Schrifttyp, der in der Kopf- und
+Fuzeile verwendet wird, „ndern wollen, so k”nnen
+Sie dies im Men unter 'Format' - 'Blatt' tun.
+
+Falls Texel nicht die Zeichens„tze in einem
+geladenen Dokument anzeigt, die es sollte, dann
+fehlen diese Zeichens„tze dem System. Texel
+verwendet dann den Systemzeichensatz.
+
+Wenn Ihr Hades-Rechner beim ™ffnen eines Dokument-
+fensters abstrzt, so ist wahrscheinlich kein oder
+ein fehlerhafter (zu neuer!) FPU-Emulator
+installiert.
+
+Die Finanzfunktionen wurden umbenannt, bitte
+schlagen Sie dies in der Online-Hilfe unter 'Was
+ist neu... in Version 2.10' nach.
+
+Die Eingabe von Dezimalzahlen ('Kommazahlen') kann
+nun auch mit dem Komma erfolgen, also z.B.
+'3,1415' sowie '3.1415'. Damit ist nur noch das
+Semikolon (Strichpunkt) als Argumenttrenner
+erlaubt: '=Summe(B1:B12;C1:C9)'
+
+Texel kann nun auch die Formate „lterer Texel-
+Versionen speichern, um Daten mit den Benutzern
+von Texel 1.6 und 2.0 austauschen zu k”nnen.
+
+Installieren Sie die Sprechblasenhilfe, die ihnen
+weitere Tips verraten wird. Legen Sie dazu
+BUBBLEGEM.APP in den START-Ordner von MagiC oder
+installieren Sie es als Accessory. BubbleGEM liegt
+Texel bei.
+
+Texel beherrscht eine Reihe neuer Exportformate:
+RTF (Textverarbeitung), Excel, HTML 4.0 mit CSS1,
+Texel 1.6 und Texel 2.0.
+
+Texel ist ber GEMScript fernsteuerbar, das
+heit, Sie k”nnen sich Makros fr Ihre t„gliche
+Arbeit schreiben und Texel damit ablaufgesteuert
+benutzen. Lesen Sie dazu in der Onlinehilfe nach.
+Ben”tigt wird z.B. noch das Programm 'Scripter'.

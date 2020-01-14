@@ -1,6 +1,6 @@
 {****************************************
  *   O b j e c t G E M   Version 1.50   *
- *   Copyright 1992-97 by Thomas Much   *
+ *   Copyright 1992-98 by Thomas Much   *
  ****************************************
  *            Build-Programm            *
  ****************************************
@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        03.03.1994  *
- *      letztes Update am:  23.05.1994  *
+ *      letztes Update am:  03.01.1998  *
  ****************************************}
 
 {
@@ -65,7 +65,6 @@ program Build;
 				OValidat,
 				ODialogs,
 				OStdWnds,
-				OStdDlgs,
 				ODB;
 
 begin

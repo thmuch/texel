@@ -1,6 +1,6 @@
 {****************************************
  *   O b j e c t G E M   Version 1.50   *
- *   Copyright 1992-97 by Thomas Much   *
+ *   Copyright 1992-98 by Thomas Much   *
  ****************************************
  *          Unit  O T Y P E S           *
  ****************************************
@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  28.11.1997  *
+ *      letztes Update am:  19.05.1998  *
  ****************************************}
 
 {
@@ -67,7 +67,7 @@ uses
 const
 
 	GOVersion             = $0150;
-	GODate                = $11281997;
+	GODate                = $05191998;
 
 	em_OK                 =     0;
 	em_OutOfMemory        =    -1;
@@ -168,6 +168,7 @@ const
 	es_ASCIIOnly          =  2048;
 	es_Undo               =  4096;
 	es_MultiLine          =  8192;  { ... }
+	es_Password           = 16384;
 
 	bs_DefPushButton      =  2048;
 
@@ -415,6 +416,7 @@ const
 	WF_OWNER              =    20;  { Achtung: Die Konstanten in diesem Block }
 	WF_BEVENT             =    24;  {          sollten irgendwann mal in der  }
 	WF_BOTTOM             =    25;  {          Unit GEM zu finden sein...     }
+	WF_MINXYWH            =   103;
 	AP_DRAGDROP           =    63;
 	CT_KEY                =    53;
 	RESCH_COMPLETED       =    61;
@@ -662,19 +664,26 @@ const
 	OLGA_ID4UPDATE           = $1257;
 	OLGA_GETEXTENSION        = $1258;
 	OLGA_EXTENSION           = $1259;
+	OLGA_GETSERVERPATH       = $125a;
+	OLGA_SERVERPATH          = $125b;
+	OLGA_IE_BUTTON           = $125c;
+	OLGA_IE_KEY              = $125d;
 
-	OL_SERVER             = $0001;
-	OL_CLIENT             = $0002;
-	OL_PEER               = OL_SERVER or OL_CLIENT;
-	OL_IDLE               = $0800;
-	OL_PIPES              = $1000;
-	OL_START              = $2000;
-	OL_MANAGER            = $4000;
-	OL_OEP                = $0001;
+	OL_SERVER                = $0001;
+	OL_CLIENT                = $0002;
+	OL_PEER                  = OL_SERVER or OL_CLIENT;
+	OL_CONF                  = $0400;
+	OL_IDLE                  = $0800;
+	OL_PIPES                 = $1000;
+	OL_START                 = $2000;
+	OL_MANAGER               = $4000;
+	OL_OEP                   = $0001;
 
-	OLS_TYPE              =     1;
-	OLS_EXTENSION         =     2;
-	OLS_NAME              =     3;
+	OLS_TYPE                 =     1;
+	OLS_EXTENSION            =     2;
+	OLS_NAME                 =     3;
+
+	OL_SRV_ID4               = $0001;
 
 	GS_REQUEST            = $1350;
 	GS_REPLY              = $1351;
@@ -703,11 +712,17 @@ const
 	GOP_VERSION           =  $3ff;
 	GOP_USERDEF           =  $400;
 
+	BUBBLEGEM_REQUEST     = integer($baba);
 	BUBBLEGEM_SHOW        = integer($babb);
 	BUBBLEGEM_ACK         = integer($babc);
 	BUBBLEGEM_ASKFONT     = integer($babd);
 	BUBBLEGEM_FONT        = integer($babe);
 	BUBBLEGEM_HIDE        = integer($babf);
+
+	BGS7_USRHIDE          = $0001;
+	BGS7_MFDB             = $0002;
+	BGS7_MOUSE            = $0004;
+	BGS7_ERROR            = $8000;
 
 	CAB_CCHANGED          = integer($cab0);
 	CAB_EXIT              = integer($cab1);
@@ -821,18 +836,22 @@ type
 
 	PKEYT = ^TKEYT;
 	TKEYT = record
-		Magic          : TCookieID;
-		Size           : longint;
-		GetExportCount : function: integer;
-		GetExportName  : function(d1,d2: pointer; d3,d4,d5: longint; enr: integer): PChar;
-		GetExportFilter: function(d1,d2: pointer; d3,d4,d5: longint; eid: integer): integer;
-		ExportChar     : function(d1,d2: pointer; d3,d4,d5: longint; enr: integer; echr: char): char;
-		GetImportCount : function: integer;
-		GetImportName  : function(d1,d2: pointer; d3,d4,d5: longint; inr: integer): PChar;
-		GetImportFilter: function(d1,d2: pointer; d3,d4,d5: longint; iid: integer): integer;
-		ImportChar     : function(d1,d2: pointer; d3,d4,d5: longint; inr: integer; ichr: char): char;
-		ExportString   : procedure(d1,d2: pointer; d3,d4,d5: longint; enr: integer; elen: longint; echrs: PChar);
-		ImportString   : procedure(d1,d2: pointer; d3,d4,d5: longint; inr: integer; ilen: longint; ichrs: PChar);
+		Magic             : TCookieID;
+		Size              : longint;
+		GetExportCount    : function: integer;
+		pasGetExportName  : function(d1,d2: pointer; d3,d4,d5: longint; enr: integer): PChar;
+		GetExportFilter   : function(d1,d2: pointer; d3,d4,d5: longint; eid: integer): integer;
+		ExportChar        : function(d1,d2: pointer; d3,d4,d5: longint; enr: integer; echr: char): char;
+		GetImportCount    : function: integer;
+		pasGetImportName  : function(d1,d2: pointer; d3,d4,d5: longint; inr: integer): PChar;
+		GetImportFilter   : function(d1,d2: pointer; d3,d4,d5: longint; iid: integer): integer;
+		ImportChar        : function(d1,d2: pointer; d3,d4,d5: longint; inr: integer; ichr: char): char;
+		ExportString      : procedure(d1,d2: pointer; d3,d4,d5: longint; enr: integer; elen: longint; echrs: PChar);
+		ImportString      : procedure(d1,d2: pointer; d3,d4,d5: longint; inr: integer; ilen: longint; ichrs: PChar);
+		GetExportName     : function(d1,d2: pointer; d3,d4,d5: longint; enr: integer): longint;
+		GetImportName     : function(d1,d2: pointer; d3,d4,d5: longint; inr: integer): longint;
+		GetExportShortName: function(d1,d2: pointer; d3,d4,d5: longint; enr: integer): longint;
+		GetImportShortName: function(d1,d2: pointer; d3,d4,d5: longint; inr: integer): longint;
 	end;
 
 	PMetaInfo             = ^TMetaInfo;
@@ -1051,18 +1070,29 @@ type
 
 	POLGAObjectInfo       = ^TOLGAObjectInfo;
 	TOLGAObjectInfo       = record
-		Filename    : PChar;
-		ClientGEMPB : AESPBPtr;
+		Filename      : PChar;
+		ClientGEMPB   : AESPBPtr;
 		ClientData,
-		ServerData  : longint;
+		ServerData    : longint;
 		CBLock,
-		CBCount     : integer;
-		CBDraw      : procedure(d1,d2: pointer; d3,d4,d5: longint; objectinfo: POLGAObjectInfo; outScreen,outHandle,outDevID: integer; Size,Clip: PGRECT);
-		CBUnembed   : procedure(d1,d2: pointer; d3,d4,d5: longint; objectinfo: POLGAObjectInfo);
-		CBXDraw     : procedure(d1,d2: pointer; d3,d4,d5: longint; objectinfo: POLGAObjectInfo; outScreen,outHandle,outDevID: integer; Size,Clip: PGRECT; Width_mm1000, Height_mm1000, Scale: longint);
-		cbColorTable: POLGAColorTable;
+		CBCount       : integer;
+		CBDraw        : procedure(d1,d2: pointer; d3,d4,d5: longint; objectinfo: POLGAObjectInfo; outScreen,outHandle,outDevID: integer; Size,Clip: PGRECT);
+		CBUnembed     : procedure(d1,d2: pointer; d3,d4,d5: longint; objectinfo: POLGAObjectInfo);
+		CBXDraw       : procedure(d1,d2: pointer; d3,d4,d5: longint; objectinfo: POLGAObjectInfo; outScreen,outHandle,outDevID: integer; Size,Clip: PGRECT; Width_mm1000, Height_mm1000, Scale: longint);
+		cbColorTable  : POLGAColorTable;
 		cbClientID,
-		cbServerID  : integer
+		cbServerID    : integer;
+		CBIEActivate  : procedure(d1,d2: pointer; d3,d4,d5: longint; objectinfo: POLGAObjectInfo);
+		CBIEDeactivate: procedure(d1,d2: pointer; d3,d4,d5: longint; objectinfo: POLGAObjectInfo);
+	end;
+	
+	POLGAIEInfo           = ^TOLGAIEInfo;
+	TOLGAIEInfo           = record
+		len       : longint;
+		wHandle,
+		kShift    : integer;
+		Size      : PGRECT;
+		objectinfo: POLGAObjectInfo;
 	end;
 
 	PXAccAttr             = ^TXAccAttr;

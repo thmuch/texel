@@ -1,6 +1,6 @@
 {****************************************
  *   O b j e c t G E M   Version 1.50   *
- *   Copyright 1992-97 by Thomas Much   *
+ *   Copyright 1992-98 by Thomas Much   *
  ****************************************
  *        Unit  O W I N D O W S         *
  ****************************************
@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  12.11.1997  *
+ *      letztes Update am:  19.05.1998  *
  ****************************************}
 
 {
@@ -277,6 +277,7 @@ type
 		Clipboard: PClipboard;
 		constructor Init(AParent: PDialog; AnIndx,ATextLen: integer; Hlp: string);
 		destructor Done; virtual;
+		function GetState: integer; virtual;
 		procedure SetState(StateFlag: integer); virtual;
 		procedure SetText(ATextString: string); virtual;
 		procedure SetColor(Color: integer); virtual;
@@ -301,7 +302,9 @@ type
 		Uptr,
 		TPtr     : PChar;
 		modified : boolean;
-		EdIdx    : integer
+		EdIdx    : integer;
+		procedure colEnable;
+		procedure colDisable;
 	end;
 
 	PPopup       = ^TPopup;
@@ -439,6 +442,7 @@ type
 		procedure DisableAutoCreate;
 		procedure GetFull; virtual;
 		procedure GetCurr;
+		procedure GetRealCurr(var r: GRECT);
 		procedure GetWork; virtual;
 		procedure GetVWork(var r: GRECT); virtual;
 		procedure SetCurr(r: GRECT); virtual;
@@ -533,6 +537,8 @@ type
 		procedure Delete; virtual;
 		procedure SelectAll; virtual;
 		procedure Print; virtual;
+		function IsHelpAvailable(mX,mY: integer): boolean; virtual;
+		function GetHelp(mX,mY: integer): string; virtual;
 		function Previous: PWindow;
 		function Next: PWindow;
 		function At(Index: integer): PWindow;
@@ -733,7 +739,7 @@ type
 		function NextIcon: PIcon; virtual;
 		procedure IconSelect(OnOff: boolean; OffExc: integer); virtual;
 		procedure IconPaint(Work: GRECT; var PaintInfo: TPaintStruct); virtual;
-		procedure BubbleHelp(mX,mY: integer; Hlp: string); virtual;
+		procedure BubbleHelp(mX,mY: integer; Hlp: string; mouse: boolean); virtual;
 		function ExecDialog(ADialog: PDialog): integer; virtual;
 		function Alert(AParent: PWindow; DefBtn: integer; Sign: longint; Txt,Btn: string): integer; virtual;
 		function Popup(APopup: PPopup; x,y,Flag: integer): integer; virtual;
@@ -835,6 +841,7 @@ type
 		function Help: boolean; virtual;
 		function Undo: boolean; virtual;
 		function Esc: boolean; virtual;
+		function TestFKey(fNum: integer): integer; virtual;
 		procedure Cut; virtual;
 		procedure Copy; virtual;
 		procedure Paste; virtual;
@@ -849,7 +856,11 @@ type
 		function GetFocus: integer;
 		procedure SetExtFocus(Obj: integer); virtual;
 		function GetExtFocus: integer;
+		function HasActiveFocus(obj: integer): boolean;
 		procedure CallChanged(Indx: integer; dclk,edt,push: boolean); virtual;
+		function GetHelp(mX,mY: integer): string; virtual;
+		function GetModalTimer: longint; virtual;
+		procedure HandleModalTimer; virtual;
 		private
 		edit_obj,
 		next_obj,
@@ -870,7 +881,6 @@ type
 		kbdh    : PEvent;
 		pedt    : PEdit;
 		pxfocus : PControl;
-		function HasActiveFocus(obj: integer): boolean;
 		procedure MoveDial(mX,mY: integer);
 		procedure SaveBackground;
 		procedure RestoreBackground;
@@ -1089,8 +1099,8 @@ const
 
 type
 
-	INFOVSCRPtr        = ^INFOVSCR;
-	INFOVSCR           = record
+	INFOVSCRPtr = ^INFOVSCR;
+	INFOVSCR    = record
 		cookie,
 		product: longint;
 		version: word;
@@ -1183,6 +1193,13 @@ type
 	TMenuPopup = object(TPopup)
 		function ExitPop(Indx,mX,mY: integer): integer; virtual;
 		function KeyExit(Stat,Key: integer): integer; virtual;
+	end;
+
+	PAlrtDialog = ^TAlrtDialog;
+	TAlrtDialog = object(TDialog)
+		cntbutton,
+		firstbutton: integer;
+		function TestFKey(fNum: integer): integer; virtual;
 	end;
 
 	PIcnWnd            = ^TIcnWnd;
@@ -1570,7 +1587,7 @@ function TIcon.TestButton(mX,mY,BStat,KStat,Clicks: integer): boolean;
 				else
 					if (BStat=2) and (Clicks=1) then
 						begin
-							if IsHelpAvailable then Application^.BubbleHelp(mX,mY,GetHelp);
+							if IsHelpAvailable then Application^.BubbleHelp(mX,mY,GetHelp,false);
 							TestButton:=true
 						end
 			end
@@ -1828,7 +1845,7 @@ function TIcon.IsHelpAvailable: boolean;
 	begin
 		if BHelp=nil then IsHelpAvailable:=false
 		else
-			IsHelpAvailable:=(length(StrPTrimF(BHelp^))<>0)
+			IsHelpAvailable:=(length(StrPTrimF(BHelp^))>0)
 	end;
 
 
@@ -2445,7 +2462,7 @@ function TControl.IsHelpAvailable: boolean;
 	begin
 		if BHelp=nil then IsHelpAvailable:=false
 		else
-			IsHelpAvailable:=(length(StrPTrimF(BHelp^))<>0)
+			IsHelpAvailable:=(length(StrPTrimF(BHelp^))>0)
 	end;
 
 
@@ -2898,7 +2915,11 @@ constructor TEdit.Init(AParent: PDialog; AnIndx,ATextLen: integer; Hlp: string);
 			end;
 		with ObjAddr^ do
 			begin
-				ob_flags:=ob_flags or EDITABLE;
+				if Application^.Attr.Colors<LBlack then ob_flags:=ob_flags or EDITABLE
+				else
+					if bTst(ob_state,DISABLED) then colDisable
+					else
+						colEnable;
 				if bTst(Application^.Attr.Style,as_3DFlags) then ob_flags:=ob_flags or FL3DBAK
 				else
 					ob_flags:=ob_flags and not(FL3DBAK)
@@ -2924,6 +2945,15 @@ destructor TEdit.Done;
 	end;
 
 
+function TEdit.GetState: integer;
+
+	begin
+		if bTst(ObjAddr^.ob_state,DISABLED) or not(bTst(ObjAddr^.ob_flags,EDITABLE)) then GetState:=bf_Disabled
+		else
+			GetState:=bf_Enabled
+	end;
+
+
 procedure TEdit.SetState(StateFlag: integer);
 	var dummy       : integer;
 	    valid,valid2: boolean;
@@ -2936,7 +2966,15 @@ procedure TEdit.SetState(StateFlag: integer);
 				Parent^.objc_edit(dummy,EDEND,K_NORMAL,Parent^.Work.A2,true);
 				Parent^.edit_obj:=0
 			end;
-		inherited SetState(StateFlag);
+		if Application^.Attr.Colors<LBlack then inherited SetState(StateFlag)
+		else
+			if GetState<>StateFlag then
+				begin
+					if StateFlag=bf_Disabled then colDisable
+					else
+						colEnable;
+					Paint
+				end;
 		if valid or valid2 then Parent^.InitFocus
 	end;
 
@@ -3060,7 +3098,7 @@ function TEdit.CanUndo: boolean;
 procedure TEdit.Undo;
 
 	begin
-		if UPtr<>nil then SetText(StrLPas(UPtr,TextLen-1))
+		if CanUndo then SetText(StrLPas(UPtr,TextLen-1))
 	end;
 
 
@@ -3222,6 +3260,33 @@ function TEdit.GetClipboard: PClipboard;
 
 	begin
 		GetClipboard:=Parent^.Clipboard
+	end;
+
+
+	{ private }
+
+
+procedure TEdit.colEnable;
+
+	begin
+		with ObjAddr^ do
+			begin
+				ob_state:=ob_state and not(DISABLED);
+				ob_flags:=ob_flags or EDITABLE;
+				ob_spec.ted_info^.te_color:=(ob_spec.ted_info^.te_color and $f000) or (Black shl 8) or 128
+			end
+	end;
+
+
+procedure TEdit.colDisable;
+
+	begin
+		with ObjAddr^ do
+			begin
+				ob_state:=ob_state and not(DISABLED);
+				ob_flags:=ob_flags and not(EDITABLE);
+				ob_spec.ted_info^.te_color:=(ob_spec.ted_info^.te_color and $f000) or (LBlack shl 8) or (7 shl 4) or LWhite
+			end
 	end;
 
 { *** TEDIT *** }
@@ -5116,6 +5181,16 @@ procedure TWindow.GetCurr;
 	end;
 
 
+procedure TWindow.GetRealCurr(var r: GRECT);
+
+	begin
+		GetCurr;
+		if IsIconified then r:=icfcurr
+		else
+			r:=Curr
+	end;
+
+
 procedure TWindow.GetWork;
 
 	begin
@@ -6191,8 +6266,18 @@ procedure TWindow.ChkSize(var r: GRECT);
 
 	begin
 		Calc(WC_WORK,r,ro);
-		GetWorkMin(mix,miy);
-		GetWorkMax(mxx,mxy);
+		if IsIconified then
+			begin
+				mix:=21;
+				miy:=1;
+				mxx:=maxint;
+				mxy:=maxint
+			end
+		else
+			begin
+				GetWorkMin(mix,miy);
+				GetWorkMax(mxx,mxy)
+			end;
 		if (ro.W>mxx) or (ro.H>mxy) then
 			begin
 				if ro.W>mxx then ro.W:=mxx;
@@ -6210,10 +6295,19 @@ procedure TWindow.ChkSize(var r: GRECT);
 
 
 procedure TWindow.GetWorkMin(var minX,minY: integer);
+	var r,ro: GRECT;
 
 	begin
 		minX:=21;
-		minY:=1
+		minY:=1;
+		if Attr.gemHandle>=0 then
+			if Application^.MagiCActive then
+				if wind_get(Attr.gemHandle,WF_MINXYWH,r.X,r.Y,r.W,r.H)<>0 then
+					begin
+						Calc(WC_WORK,r,ro);
+						minX:=max(minX,ro.W);
+						minY:=max(minY,ro.H)
+					end
 	end;
 
 
@@ -6710,7 +6804,7 @@ procedure TWindow.WMToolbar(Indx,BStat,KStat,Clicks: integer);
 	    onbtn,inrect  : boolean;
 
 	procedure CheckAndDraw(CheckFlag: integer);
-		var box: GRECT;
+		var box,obox: GRECT;
 
 		begin
 			with oadr^ do
@@ -6718,12 +6812,16 @@ procedure TWindow.WMToolbar(Indx,BStat,KStat,Clicks: integer);
 				else
 					ob_state:=ob_state or SELECTED;
 			wind_update(BEG_UPDATE);
+			objc_offset(Class.ToolbarTree,Indx,obox.X,obox.Y);
+			obox.W:=oadr^.ob_width;
+			obox.H:=oadr^.ob_height;
 			HideMouse;
 			wind_get(Attr.gemHandle,WF_FIRSTXYWH,box.X,box.Y,box.W,box.H);
 			while (box.W>0) and (box.H>0) do
 				begin
 					if rc_intersect(SysInfo.Desktop,box) then
-						with box do objc_draw(Class.ToolbarTree,Indx,MAX_DEPTH,X,Y,W,H);
+						if rc_intersect(obox,box) then
+							with obox do objc_draw(Class.ToolbarTree,ROOT,MAX_DEPTH,X,Y,W,H);
 					wind_get(Attr.gemHandle,WF_NEXTXYWH,box.X,box.Y,box.W,box.H)
 				end;
 			ShowMouse;
@@ -6759,7 +6857,7 @@ procedure TWindow.WMToolbar(Indx,BStat,KStat,Clicks: integer);
 					if pe^.IsHelpAvailable then
 						begin
 							graf_mkstate(bx,by,dummy,dummy);
-							Application^.BubbleHelp(bx,by,pe^.GetHelp)
+							Application^.BubbleHelp(bx,by,pe^.GetHelp,false)
 						end;
 				exit
 			end;
@@ -7183,6 +7281,49 @@ procedure TWindow.SelectAll;
 procedure TWindow.Print;
 
 	begin
+	end;
+
+
+function TWindow.IsHelpAvailable(mX,mY: integer): boolean;
+
+	begin
+		IsHelpAvailable:=(length(StrPTrimF(GetHelp(mX,mY)))>0)
+	end;
+
+
+function TWindow.GetHelp(mX,mY: integer): string;
+	var pipe: Pipearray;
+	    indx: integer;
+	    pe  : PEvent;
+
+	begin
+		GetHelp:='';
+		if IsIconified then exit;
+		if Class.ToolbarTree<>nil then
+			begin
+				indx:=objc_find(Class.ToolbarTree,ROOT,MAX_DEPTH,mX,mY);
+				if indx>=0 then
+					begin
+						pipe[0]:=GO_PRIVATE;
+						pipe[1]:=Application^.apID;
+						pipe[2]:=0;
+						pipe[3]:=GOP_TOOLBAR;
+						pipe[4]:=tbtree;
+						pipe[5]:=indx;
+						pipe[6]:=K_NORMAL;
+						pipe[7]:=1;
+						pe:=EventList;
+						while pe<>nil do
+							begin
+								if pe^.TestMessage(pipe) then
+									begin
+										if PToolbar(pe)^.IsHelpAvailable then GetHelp:=PToolbar(pe)^.GetHelp;
+										exit
+									end;
+								pe:=pe^.Next
+							end
+					end
+			end
 	end;
 
 
@@ -8054,20 +8195,28 @@ function TApplication.IsIconified: boolean;
 procedure TApplication.LoadResource(FileHiRes,FileLoRes: string);
 	var vald: boolean;
 
+	procedure loadrsc(const s: string);
+	
+		begin
+			if length(s)=0 then exit;
+			if rsrc_load(s)<>0 then vald:=true
+			else
+				if rsrc_load(GetFilename(s,true))<>0 then vald:=true
+		end;
+
 	begin
 		if RscPtr=nil then
 			begin
+				vald:=false;
 				if hwratio<=1 then
 					begin
-						if rsrc_load(FileHiRes)=0 then vald:=(rsrc_load(FileLoRes)<>0)
-						else
-							vald:=true
+						loadrsc(FileHiRes);
+						if not(vald) then loadrsc(FileLoRes)
 					end
 				else
 					begin
-						if rsrc_load(FileLoRes)=0 then vald:=(rsrc_load(FileHiRes)<>0)
-						else
-							vald:=true
+						loadrsc(FileLoRes);
+						if not(vald) then loadrsc(FileHiRes)
 					end;
 				if vald then
 					begin
@@ -9952,6 +10101,19 @@ procedure TApplication.MUMesag(data: TEventData);
 			AVExit(data.Pipe[3]);
 		AV_GETSTATUS..VA_SETSTATUS,AV_ASKFILEFONT..VA_WINDOPEN,VA_PROGSTART..VA_DRAG_COMPLETE,AV_STARTED..VA_XOPEN:
 			HandleAV(data.Pipe);
+		BUBBLEGEM_REQUEST:
+			begin
+				if DlgTop<0 then
+					begin
+						p:=GetGPWindow(data.Pipe[3]);
+						if p<>nil then
+							if p^.Attr.Status=ws_Open then
+								if p^.Attr.gemHandle>=0 then
+									if not(p^.IsShaded) then
+										if p^.IsHelpAvailable(data.Pipe[4],data.Pipe[5]) then
+											BubbleHelp(data.Pipe[4],data.Pipe[5],p^.GetHelp(data.Pipe[4],data.Pipe[5]),false)
+					end
+			end;
 		GO_PRIVATE:
 			case data.Pipe[3] of
 			GOP_SETQUIT:
@@ -10942,9 +11104,9 @@ function TApplication.StartApp(Path,Cmd: string): integer;
 						if Path[2]=':' then dsetdrv(ord(upcase(Path[1]))-65);
 					dsetpath(dpath);
 					Path:=Path+#0;
-					if MultiTOS then ShelWrite(0,1)
+					if MagiCActive then ShelWrite(1,100)
 					else
-						ShelWrite(1,100);
+						ShelWrite(0,1);
 					if ret<0 then
 						begin
 							dsetdrv(drv);
@@ -11367,13 +11529,28 @@ procedure TApplication.IconPaint(Work: GRECT; var PaintInfo: TPaintStruct);
 	end;
 
 
-procedure TApplication.BubbleHelp(mX,mY: integer; Hlp: string);
-	var bubblegem: integer;
+procedure TApplication.BubbleHelp(mX,mY: integer; Hlp: string; mouse: boolean);
+	var bubblegem,
+	    bclicks,
+	    bmask,
+	    bstate,
+	    dummy,ms : integer;
+	    delay    : longint;
 	    pipe     : Pipearray;
+	    bgs      : string;
 
 	begin
 		if (length(Hlp)=0) or not(BubbleHelpActive) or (bubblebuf=nil) then exit;
 		bubblegem:=appl_find('BUBBLE  ');
+		if bubblegem<0 then
+			begin
+				bgs:=GetEnv('BUBBLEGEM');
+				if length(bgs)>0 then
+					begin
+						bubblegem:=StartApp(bgs,'');
+						if bubblegem>=0 then evnt_timer(500,0)
+					end
+			end;
 		if bubblegem<0 then exit;
 		StrPCopy(bubblebuf,Hlp);
 		pipe[0]:=BUBBLEGEM_SHOW;
@@ -11384,8 +11561,54 @@ procedure TApplication.BubbleHelp(mX,mY: integer; Hlp: string);
 		pipe[5]:=integer(HiWord(bubblebuf));
 		pipe[6]:=integer(LoWord(bubblebuf));
 		pipe[7]:=0;
-		appl_write(bubblegem,16,@pipe);
-		evnt_timer(100,0)
+		if mouse then pipe[7]:=pipe[7] or BGS7_MOUSE;
+		if DlgTop<0 then
+			begin
+				appl_write(bubblegem,16,@pipe);
+				evnt_timer(100,0)
+			end
+		else
+			begin
+				if not(GetCookie('BGEM',delay)) then Bing
+				else
+					begin
+						pipe[7]:=pipe[7] or BGS7_USRHIDE;
+						appl_write(bubblegem,16,@pipe);
+						evnt_timer(10,0);
+						graf_mkstate(dummy,dummy,ms,dummy);
+						if (ms and 3)=0 then
+							begin
+								bclicks:=258;
+								bmask:=3;
+								bstate:=0
+							end
+						else
+							begin
+								bclicks:=0;
+								bmask:=3;
+								bstate:=0
+							end;
+						if not(GetCookie('BHLP',delay)) then delay:=200
+						else
+							delay:=(delay shr 16) and $0000ffff;
+						SetMouse(IDC_HELP,nil);
+						evnt_timer(delay,0);
+						evnt_multi(MU_KEYBD or MU_BUTTON or MU_M1,bclicks,bmask,bstate,1,mX-6,mY-6,13,13,0,0,0,0,0,pipe,0,0,dummy,dummy,ms,dummy,dummy,dummy);
+						pipe[0]:=BUBBLEGEM_HIDE;
+						pipe[1]:=apID;
+						pipe[2]:=0;
+						pipe[3]:=0;
+						pipe[4]:=0;
+						pipe[5]:=0;
+						pipe[6]:=0;
+						pipe[7]:=0;
+						appl_write(bubblegem,16,@pipe);
+						SetMouse(ARROW,nil)
+					end;
+				repeat
+					graf_mkstate(dummy,dummy,ms,dummy)
+				until (ms and 3)=0
+			end
 	end;
 
 
@@ -11455,7 +11678,7 @@ function TApplication.Alert(AParent: PWindow; DefBtn: integer; Sign: longint; Tx
 	    firstbutton,maxbutton,maxtext: integer;
 	    firsttext,obj,i,treecnt      : integer;
 	    tree                         : PTree;
-	    adlg                         : PDialog;
+	    adlg                         : PAlrtDialog;
 	    pbitblk                      : pointer;
 	    bbcalc                       : BITBLK;
 	    smfdb                        : MFDB;
@@ -11766,6 +11989,8 @@ function TApplication.Alert(AParent: PWindow; DefBtn: integer; Sign: longint; Tx
 				smfdb.fd_stand:=FF_DEVSPEC
 			end;
 		Attr.Style:=Attr.Style and not(as_GrowShrink);
+		adlg^.cntbutton:=cntbutton;
+		adlg^.firstbutton:=firstbutton;
 		with adlg^ do
 			begin
 				Attr.ExStyle:=(Attr.ExStyle and not(ws_ex_TryModeless)) or ws_ex_Center2Parent;
@@ -11805,7 +12030,7 @@ function TApplication.Popup(APopup: PPopup; x,y,Flag: integer): integer;
 function TApplication.Rubbox(WHnd,x,y,xmin,ymin,xmax,ymax: integer; IconSel: boolean; var r: GRECT): boolean;
 	var x2,y2,mx,my,mk,dummy: integer;
 	    box,cl              : GRECT;
-	    pxy2,pxy3,pxy4      : ptsin_ARRAY;
+	    pxy2,pxy3,pxy4      : ARRAY_4;
 	    wnd                 : PWindow;
 	    visible             : boolean;
 	    pe,pevnt            : PEvent;
@@ -13698,12 +13923,11 @@ procedure TDialog.WMClosed;
 procedure TDialog.WMButton(mX,mY,BStat,KStat,Clicks: integer);
 	label _fly;
 
-	var nx,dummy,d2: integer;
-	    valid      : boolean;
-	    pct        : PControl;
-	    pinfo      : TPaintStruct;
-	    kbh        : PEvent;
-	    ltmove     : function(d1,d2: pointer; d3,d4,d5: longint; tree: PTree; x,y: integer): integer;
+	var nx,dummy,
+	    d2,oldtype: integer;
+	    pinfo     : TPaintStruct;
+	    kbh       : PEvent;
+	    ltmove    : function(d1,d2: pointer; d3,d4,d5: longint; tree: PTree; x,y: integer): integer;
 
 	begin
 		kbh:=GetKBHandler;
@@ -13718,17 +13942,7 @@ procedure TDialog.WMButton(mX,mY,BStat,KStat,Clicks: integer);
 				else
 					if nx>=0 then
 						begin
-							valid:=false;
-							pct:=CtrlList;
-							while (pct<>nil) do
-								with pct^ do
-									begin
-										if TestIndex(nx) then
-											if IsHelpAvailable then valid:=true;
-										pct:=Nxt
-									end;
-							if valid then
-								if kbh<>nil then kbh^.TestKey(0,F1);
+							if IsHelpAvailable(mX,mY) then Application^.BubbleHelp(mX,mY,GetHelp(mX,mY),false);
 							exit
 						end
 			end;
@@ -13782,6 +13996,9 @@ procedure TDialog.WMButton(mX,mY,BStat,KStat,Clicks: integer);
 		if BStat<>1 then exit;
 		if DlgTree^[nx].ob_flags and (SELECTABLE or DEFAULT or F_EXIT or EDITABLE or RBUTTON or TOUCHEXIT)=0 then
 			begin
+				oldtype:=DlgTree^[nx].ob_type and $00ff;
+				if (oldtype=G_FTEXT) or (oldtype=G_FBOXTEXT) then
+					if SelectDisabled(nx,KStat,Clicks) then exit;
 				_fly:
 				if not(IsModal) then Top
 				else
@@ -13830,12 +14047,15 @@ function TDialog.SelectDisabled(AnIndx,KStat,Clicks: integer): boolean;
 
 
 procedure TDialog.Execute;
-	var evnt,mx,my,mb,ks,kr,br: integer;
-	    pipe                  : Pipearray;
-	    gmnr                  : HCursor;
-	    gmform                : MFORM;
-	    kbh                   : PEvent;
-	    valid                 : boolean;
+	var evnt,mx,my,
+	    mb,ks,kr,br,
+	    eventmask  : integer;
+	    modtimer   : longint;
+	    pipe       : Pipearray;
+	    gmnr       : HCursor;
+	    gmform     : MFORM;
+	    kbh        : PEvent;
+	    valid      : boolean;
 
 	begin
 		if not(IsModal) then exit;
@@ -13850,6 +14070,7 @@ procedure TDialog.Execute;
 		else
 			SetMouse(ARROW,nil);
 		if bTst(Attr.ExStyle,ws_ex_MoveDial) then d0fly:=true;
+		eventmask:=MU_KEYBD or MU_BUTTON;
 		while Cont do
 			begin
 				if (next_obj>0) and (edit_obj<>next_obj) then
@@ -13859,7 +14080,11 @@ procedure TDialog.Execute;
 						CallChanged(edit_obj,false,true,false);
 						objc_edit(evnt,EDINIT,K_NORMAL,Work.A2,false)
 					end;
-				evnt:=evnt_multi(MU_KEYBD or MU_BUTTON,258,3,0,0,0,0,0,0,0,0,0,0,0,pipe,0,0,mx,my,mb,ks,kr,br);
+				modtimer:=GetModalTimer;
+				if modtimer>0 then eventmask:=eventmask or MU_TIMER
+				else
+					eventmask:=eventmask and not(MU_TIMER);
+				evnt:=evnt_multi(eventmask,258,3,0,0,0,0,0,0,0,0,0,0,0,pipe,modtimer mod 65536,modtimer div 65536,mx,my,mb,ks,kr,br);
 				if bTst(evnt,MU_KEYBD) then
 					begin
 						valid:=true;
@@ -13885,6 +14110,7 @@ procedure TDialog.Execute;
 							if kbh<>nil then kbh^.TestKey(ks,kr)
 					end;
 				if bTst(evnt,MU_BUTTON) then WMButton(mx,my,mb,ks,br);
+				if bTst(evnt,MU_TIMER) then HandleModalTimer;
 				if (next_obj>0) and (next_obj<>edit_obj) then objc_edit(evnt,EDEND,K_NORMAL,Work.A2,false)
 			end;
 		d0fly:=false;
@@ -14029,6 +14255,13 @@ function TDialog.Esc: boolean;
 
 	begin
 		Esc:=false
+	end;
+
+
+function TDialog.TestFKey(fNum: integer): integer;
+
+	begin
+		TestFKey:=id_No
 	end;
 
 
@@ -14295,6 +14528,13 @@ function TDialog.GetExtFocus: integer;
 	end;
 
 
+function TDialog.HasActiveFocus(obj: integer): boolean;
+
+	begin
+		HasActiveFocus:=not(obedflag) and obedinit and (GetFocus=obj)
+	end;
+
+
 procedure TDialog.CallChanged(Indx: integer; dclk,edt,push: boolean);
 	var p: PControl;
 
@@ -14317,14 +14557,45 @@ procedure TDialog.CallChanged(Indx: integer; dclk,edt,push: boolean);
 	end;
 
 
-	{ private }
-
-
-function TDialog.HasActiveFocus(obj: integer): boolean;
+function TDialog.GetHelp(mX,mY: integer): string;
+	var indx: integer;
+	    pc  : PControl;
 
 	begin
-		HasActiveFocus:=not(obedflag) and obedinit and (GetFocus=obj)
+		GetHelp:='';
+		if IsIconified then exit;
+		indx:=objc_find(DlgTree,ROOT,MAX_DEPTH,mX,mY);
+		if indx>=0 then
+			begin
+				pc:=CtrlList;
+				while pc<>nil do
+					begin
+						if pc^.TestIndex(indx) then
+							begin
+								if pc^.IsHelpAvailable then GetHelp:=pc^.GetHelp;
+								exit
+							end;
+						pc:=pc^.Next
+					end
+			end;
+		GetHelp:=inherited GetHelp(mX,mY)
 	end;
+
+
+function TDialog.GetModalTimer: longint;
+
+	begin
+		GetModalTimer:=0
+	end;
+
+
+procedure TDialog.HandleModalTimer;
+
+	begin
+	end;
+
+
+	{ private }
 
 
 procedure TDialog.MoveDial(mX,mY: integer);
@@ -14567,6 +14838,9 @@ function TDialog.objc_edit(var ob_edchar: integer; ob_edkind,ob_kstat: integer; 
 		begin
 			if ce then if pedt<>nil then pedt^.Edit;
 			if idx>getmaxidx then scrolltoend;
+			if pedt<>nil then
+				if bTst(pedt^.Style,es_Password) then
+					StrPCopy(pted^.te_ptext,StrPFill(StrLen(pted^.te_ptext),'*'));
 			ot:=DlgTree^[edit_obj].ob_type;
 			DlgTree^[edit_obj].ob_type:=G_FTEXT;
 			ObjcPaint(edit_obj,false);
@@ -14655,6 +14929,8 @@ function TDialog.objc_edit(var ob_edchar: integer; ob_edkind,ob_kstat: integer; 
 						case ob_edchar of
 						S_Esc,BackSpace,S_Delete:
 							begin
+								if pedt<>nil then
+									if bTst(pedt^.Style,es_Password) then ob_edchar:=S_Esc;
 								mgvalid:=true;
 								doedit:=true
 							end;
@@ -14690,8 +14966,19 @@ function TDialog.objc_edit(var ob_edchar: integer; ob_edkind,ob_kstat: integer; 
 									objc_edit:=objc_wedit(DlgTree,edit_obj,ob_edchar,idx,EDCHAR,Attr.gemHandle);
 								if pedt<>nil then
 									begin
-										if doedit then pedt^.Edit;
-										pedt^.EdIdx:=idx
+										pedt^.EdIdx:=idx;
+										if doedit then
+											begin
+												pedt^.Edit;
+												if bTst(pedt^.Style,es_Password) then
+													begin
+														pted:=DlgTree^[edit_obj].ob_spec.ted_info;
+														magxcursor;
+														StrPCopy(pted^.te_ptext,StrPFill(StrLen(pted^.te_ptext),'*'));
+														ObjcPaint(edit_obj,bTst(pedt^.Flags,wb_Lazy));
+														magxcursor
+													end
+											end
 									end;
 								ob_edchar:=0
 							end
@@ -14783,6 +15070,12 @@ function TDialog.objc_edit(var ob_edchar: integer; ob_edkind,ob_kstat: integer; 
 														 eprint(true)
 													 end;
 										BackSpace: begin
+			                           if pedt<>nil then
+			                             if bTst(pedt^.Style,es_Password) then
+			                               begin
+			                                 ob_edchar:=S_Esc;
+			                                 goto _delline
+			                               end;
 																 if idx>0 then
 																	 begin
 																	   decscroll;
@@ -14796,6 +15089,12 @@ function TDialog.objc_edit(var ob_edchar: integer; ob_edkind,ob_kstat: integer; 
 																 ob_edchar:=0
 															 end;
 										S_Delete: begin
+			                          if pedt<>nil then
+			                            if bTst(pedt^.Style,es_Password) then
+			                              begin
+			                                ob_edchar:=S_Esc;
+			                                goto _delline
+			                              end;
 																if (Kbshift(-1) and K_SHIFT)>0 then
 																	begin
 																		ob_edchar:=S_Esc;
@@ -14970,12 +15269,23 @@ constructor TToolbar.Init(AParent: PWindow; ATree,AnIndx,Stat,Key: integer; Msg:
 		with ObjAddr^ do
 			begin
 				ob_flags:=ob_flags or SELECTABLE;
-				if (ob_type and $ff) in [G_BOX,G_BOXTEXT,G_BUTTON,G_BOXCHAR,G_FBOXTEXT] then
+				case (ob_type and $00ff) of
+				G_BOX,
+				G_BOXTEXT,
+				G_BUTTON,
+				G_BOXCHAR,
+				G_FBOXTEXT:
 					begin
 						if IsSwitch then ob_flags:=(ob_flags and not(FL3DMASK)) or FL3DIND
 						else
 							ob_flags:=(ob_flags and not(FL3DMASK)) or FL3DACT
 					end;
+				G_ICON,
+				G_CICON:
+					begin
+						{ Zeichen verstecken }
+					end
+				end;
 				if (GEMVersion>=$0340) and (GEMVersion<>MAGIX) then
 					begin
 						if (ob_type and $ff) in [G_BOXTEXT,G_FBOXTEXT] then ob_state:=ob_state and not(SHADOWED or OUTLINED)
@@ -15176,7 +15486,7 @@ procedure TToolbar.Toggle;
 
 
 procedure TToolbar.Paint;
-	var box: GRECT;
+	var box,obox: GRECT;
 
 	begin
 		with PWindow(Parent)^ do
@@ -15185,12 +15495,16 @@ procedure TToolbar.Paint;
 				if IsIconified then exit;
 				if (Class.ToolbarTree=nil) or (tbtree<>ObjTree) then exit;
 				wind_update(BEG_UPDATE);
+				objc_offset(Class.ToolbarTree,ObjIndx,obox.X,obox.Y);
+				obox.W:=ObjAddr^.ob_width;
+				obox.H:=ObjAddr^.ob_height;
 				HideMouse;
 				wind_get(Attr.gemHandle,WF_FIRSTXYWH,box.X,box.Y,box.W,box.H);
 				while (box.W>0) and (box.H>0) do
 					begin
 						if rc_intersect(SysInfo.Desktop,box) then
-							with box do objc_draw(Class.ToolbarTree,ObjIndx,MAX_DEPTH,X,Y,W,H);
+							if rc_intersect(obox,box) then
+								with obox do objc_draw(Class.ToolbarTree,ROOT,MAX_DEPTH,X,Y,W,H);
 						wind_get(Attr.gemHandle,WF_NEXTXYWH,box.X,box.Y,box.W,box.H)
 					end;
 				ShowMouse;
@@ -15676,11 +15990,12 @@ function TMenu.TestKey(Stat,Key: integer): boolean;
 function TDKey.TestKey(Stat,Key: integer): boolean;
 	label _weiter;
 
-	var nx,dummy,tx,robj,
-	    mx,my,oldkey    : integer;
-	    valid,found     : boolean;
-	    kpc,pcte        : PControl;
-	    pd              : PDialog;
+	var nx,dummy,
+	    tx,robj,
+	    mx,my,oldkey: integer;
+	    valid,found : boolean;
+	    kpc         : PControl;
+	    pd          : PDialog;
 
 	function invrt(tid: integer): boolean;
 		var p: PControl;
@@ -15829,6 +16144,41 @@ function TDKey.TestKey(Stat,Key: integer): boolean;
 						end;
 					if Key<>0 then
 						begin
+							case Key of
+							F1:
+								dummy:=1;
+							F2:
+								dummy:=2;
+							F3:
+								dummy:=3;
+							F4:
+								dummy:=4;
+							F5:
+								dummy:=5;
+							F6:
+								dummy:=6;
+							F7:
+								dummy:=7;
+							F8:
+								dummy:=8;
+							F9:
+								dummy:=9;
+							F10:
+								dummy:=10;
+							else
+								dummy:=0;
+							end;
+							if dummy>0 then
+								begin
+									dummy:=TestFKey(dummy);
+									if dummy>ROOT then
+										begin
+											Result:=dummy;
+											Cont:=false;
+											Destroy;
+											exit
+										end
+								end;
 							found:=false;
 							valid:=false;
 							case Key of
@@ -15839,21 +16189,10 @@ function TDKey.TestKey(Stat,Key: integer): boolean;
 										if Key=F1 then
 											begin
 												graf_mkstate(mx,my,dummy,dummy);
-												tx:=objc_find(DlgTree,ROOT,MAX_DEPTH,mx,my);
-												if tx>-1 then
+												if IsHelpAvailable(mx,my) then
 													begin
-														pcte:=CtrlList;
-														while (pcte<>nil) do
-															with pcte^ do
-																begin
-																	if TestIndex(tx) then
-																		if IsHelpAvailable then
-																			begin
-																				Application^.BubbleHelp(mx,my,GetHelp);
-																				valid:=true
-																			end;
-																	pcte:=Nxt
-																end
+														Application^.BubbleHelp(mx,my,GetHelp(mx,my),false);
+														valid:=true
 													end
 											end;
 										if not(valid) then
@@ -15923,6 +16262,15 @@ function TDKey.TestKey(Stat,Key: integer): boolean;
 							objc_edit(dummy,EDINIT,K_NORMAL,Work.A2,true)
 						end
 				end
+	end;
+
+
+function TAlrtDialog.TestFKey(fNum: integer): integer;
+
+	begin
+		if Between(fNum,1,cntbutton) then TestFKey:=firstbutton+fNum-1
+		else
+			TestFKey:=id_No
 	end;
 
 
@@ -16690,6 +17038,7 @@ function FileSelect(AParent: PWindow; ATitle,AMask: string; var APath,AFile: str
 		else
 			fname:=StrPUpper(AFile);
 		_again:
+		{ fslx_do()? }
 		if ((GEMVersion>=$0140) and (GEMVersion<$0200)) or (GEMVersion>=$0300) or fsel then
 			ret:=fsel_exinput(fpath,fname,exitButton,ATitle)
 		else

@@ -1,6 +1,6 @@
 { texel_g.inc }
-{ German include file for Texel 2.0 }
-{ 23.11.1997 tm }
+{ German include file for Texel 2.1 }
+{ 1998-05-19 tm }
 
 const
 
@@ -8,10 +8,17 @@ const
 
 	GROUP_GENERAL_RANGE     = 'Bereich';
 	GROUP_GENERAL_ROWS      = 'Zeilen';
+	
+	GROUP_SETUP_START       = 'Programmstart';
+	GROUP_SETUP_END         = 'Programmende';
+
+	GROUP_TIP_TITLE         = 'Wuûten Sie schon?';
 
 	GROUP_EXPORT_SAVEWITH   = 'Speichern mit';
 	GROUP_EXPORT_TYPE       = 'Typ';
 	GROUP_EXPORT_DOCTYPE    = 'Dokumenttyp';
+	GROUP_EXPORT_XLSVER     = 'Version';
+	GROUP_EXPORT_TEXELVER   = 'Version';
 
 	GROUP_LAYOUT_MARGINS    = 'RÑnder';
 	GROUP_LAYOUT_CENTER     = 'Zentrierung';
@@ -66,6 +73,8 @@ const
 	GROUP_OBJECT_BACKGR     = 'Hintergrund';
 	GROUP_OBJECT_TEXT       = 'Text';
 	GROUP_OBJECT_IMAGE      = 'Grafik';
+	
+	GROUP_ELEMENT_CHECKBOX  = 'KontrollkÑstchen';
 
 { texel.hlp }
 
@@ -86,7 +95,9 @@ const
 	BUBBLE_SETUP_DEFDOC     = 'Legt grundsÑtzliche Werte fÅr alle ArbeitsblÑtter fest, die beim Anlegen eines neuen Dokuments verwendet werden';
 	BUBBLE_SETUP_WINDOW     = 'Bestimmt Eigenschaften von allen ArbeitsblÑttern';
 	BUBBLE_SETUP_GENERAL    = 'Bestimmt das globale Verhalten der gesamten Applikation';
-	BUBBLE_SETUP_STARTUP    = 'Bestimmt das Programmverhalten beim Start von Texel';
+	BUBBLE_SETUP_STARTEND   = 'Bestimmt das Programmverhalten beim Start bzw. Beenden von Texel';
+	BUBBLE_SETUP_START      = 'Bestimmt das Programmverhalten beim Start von Texel';
+	BUBBLE_SETUP_END        = 'Bestimmt das Programmverhalten beim Beenden von Texel';
 	BUBBLE_SETUP_ROWS       = 'Gibt an, wieviele Zeilen ein neues Blatt standardmÑûig hat (max. 16384)';
 	BUBBLE_SETUP_COLUMNS    = 'Gibt an, wieviele Spalten ein neues Blatt standardmÑûig hat (max. 702)';
 	BUBBLE_SETUP_COLWIDTH   = 'Die Standardspaltenbreite wird in Zeichen angegeben; sie wird abhÑngig vom verwendeten Zeichensatz entsprechend in Pixel umgerechnet';
@@ -112,6 +123,10 @@ const
 	BUBBLE_SETUP_CURRENCY   = 'Bestimmt, welches WÑhrungsformat der entsprechende Toolbar-Button einstellt';
 	BUBBLE_SETUP_OVERFLOW   = 'Bestimmt, ob bei Zahlzellen getestet wird, ob die Zahl aus der Zelle herausragt und die Zahl daher durch Doppelkreuze (###) ersetzt wird. Ausschalten bringt fÅr langsame Rechner Geschwindigkeitsvorteile!';
 	BUBBLE_SETUP_BOTTOMLINE = 'Wenn diese Option eingeschaltet ist, lassen auch Fenster mit voller Grîûe am unteren Bildschirmrand Platz fÅr z.B. SMU oder AppLine';
+	BUBBLE_SETUP_SAVEOPT    = 'Bestimmt, ob die Einstellungen dieses Dialogs bei jedem Beenden von Texel automatisch gespeichert werden';
+	BUBBLE_SETUP_SAVEWORK   = 'Legt fest, ob die Arbeitsumgebung (d.h. welche Texel-RechenblÑtter gerade geîffnet sind) bei jedem Beenden von Texel automatisch gesichert wird';
+	BUBBLE_SETUP_EXCELDATE  = 'Legt fest, ob neue RechenblÑtter Datumsangaben im Excel-Format berechnen';
+	BUBBLE_SETUP_FORMERR    = 'Wenn diese Option eingeschaltet ist, werden Fehler bei der Eingabe von Formeln per BubbleHelp angezeigt.';
 
 	BUBBLE_INPUT_EMPTY      = 'Die Eingabezeile ist z.Z. leer.';
 
@@ -282,6 +297,10 @@ const
 	BUBBLE_TXTOBJ_BORDER    = 'Legt fest, ob die Objektumrandung (schwarze Linie) gezeichnet wird';
 	BUBBLE_TXTOBJ_FONTID    = 'Bestimmt die Schriftart';
 	BUBBLE_TXTOBJ_FONTSIZE  = 'Bestimmt die Schriftgrîûe';
+	
+	BUBBLE_ELM_CHECKBOX     = 'Hier werden die Eigenschaften des Dialogelements festgelegt';
+	BUBBLE_ELM_TITLE        = 'Die Beschriftung des KontrollkÑstchens';
+	BUBBLE_ELM_CELL         = 'Die Zelle, in die der Wert 0 oder 1 (bzw. FALSCH/WAHR) geschrieben wird.';
 
 	BUBBLE_INSOBJ_SERVER    = 'Startet alle nîtigen Server nach, falls diese zwischenzeitlich terminiert haben.';
 	BUBBLE_INSOBJ_LIST      = 'In dieser Liste sind alle Objekttypen aufgefÅhrt, die eingebettet werden kînnen';
@@ -323,6 +342,7 @@ const
 	BUBBLE_EXPORT_DIF       = 'Die Optionen fÅr den DIF-Export';
 	BUBBLE_EXPORT_CSV       = 'Die Optionen fÅr den CSV-Export';
 	BUBBLE_EXPORT_ASCII     = 'Die Optionen fÅr den ASCII-Export';
+	BUBBLE_EXPORT_XLS       = 'Die Optionen fÅr den Excel-Export';
 	BUBBLE_EXPORT_RTITLE    = 'Wenn dieser Button markiert ist, wird der angegebene Bereich exportiert, sonst das ganze Blatt';
 	BUBBLE_EXPORT_FORMATS   = 'Mit diesem Popup kann das Exportformat festgelegt werden';
 	BUBBLE_EXPORT_CLIPBOARD = 'Wenn dieser Button markiert ist, erfolgt der Export automatisch ins Klemmbrett';
@@ -330,9 +350,8 @@ const
 	BUBBLE_EXPORT_FILENAME  = 'Zeigt die ausgewÑhlte Exportdatei an (falls eine solche festgelegt wurde)';
 	BUBBLE_EXPORT_EXPORT    = 'Exportiert das Blatt';
 	BUBBLE_EXPORT_OK        = 'Exportiert das Blatt und schlieût den Dialog';
-	BUBBLE_EXPORT_DOCTYPE   = 'Stellt den HTML-Dokumenttyp ein';
 	BUBBLE_EXPORT_SAVEWITH  = 'Bestimmt, welche Teile bzw. welche Attribute des Blattes exportiert werden';
-	BUBBLE_EXPORT_DTPOPUP   = 'Legt den HTML-Dokumenttyp fest. "3.0" ist Netscape-Standard, "3.2" offizieller W3C-Standard. Im Zweifel sollte man dennoch "3.0" wÑhlen.';
+	BUBBLE_EXPORT_DOCTYPE   = 'Legt den HTML-Dokumenttyp fest. "3.0" ist Netscape-Standard, "3.2" und "4.0" sind offizieller W3C-Standard. Derzeit ist "3.2" die beste Wahl.';
 	BUBBLE_EXPORT_SAVEDT    = 'Bestimmt, ob der Dokumenttyp Åberhaupt in der Exportdatei gespeichert wird. Wenn die Tabelle in eine andere HTML-Datei eingebunden wird, ist dies unnîtig.';
 	BUBBLE_EXPORT_COLORS    = 'Legt fest, ob die (nicht standardisierten) Farb- und Zeichensatzinformationen in die HTML-Tabelle exportiert werden';
 	BUBBLE_EXPORT_DIFTYPE   = 'Wird zur Festlegung des DIF-Typs benîtigt, da M$-Produkte eine andere Zeilen/Spalten-Codierung verwenden als Åblich...';
@@ -344,6 +363,12 @@ const
 	BUBBLE_EXPORT_ASCIIFORM = 'Legt fest, ob beim Speichern von Werten das Zahlenformat beachtet wird';
 	BUBBLE_EXPORT_EMBED     = 'Legt fest, ob die eingebetteten Objekte als <EMBED>-Tags exportiert werden. Die meisten Objekte kînnen allerdings nur mit CAB korrekt angezeigt werden, nicht aber mit dem Netscape Navigator oder M$ Internet Explorer.';
 	BUBBLE_EXPORT_FILTER    = 'Legt fest, fÅr welches Betriebssystem die Datei exportiert werden soll, um u.a. die Umlaute korrekt exportieren zu kînnen. Damit mehr als der "Atari"-Filter zur VerfÅgung steht, muû KEYTAB installiert sein.';
+	BUBBLE_EXPORT_ESCAPES   = 'ACHTUNG, NUR FöR HTML-EXPERTEN!!! Wenn diese Option aktiv ist, werden die vier HTML-Steuerzeichen <>&" nicht in ihre HTML-Namen umgewandelt, so daû man in den Zellen direkt HTML kodieren kann.';
+	BUBBLE_EXPORT_XLSVER    = 'Bestimmt, fÅr welche Excel-Version das Texel-Dokument exportiert werden soll. Excel 2.0 (BIFF2) kann von allen Excel-Versionen ohne EinschrÑnkungen importiert werden.';
+	BUBBLE_EXPORT_CSS       = 'Legt ab HTML 4.0 die Stufe der "Cascading Style Sheets" fest; mit CSS werden diverse Attribute (Textfarbe etc.) gespeichert. Derzeit ist CSS1 (CSS Level 1) Standard.';
+	BUBBLE_EXPORT_KEYTAB    = 'KEYTAB.PRG muû in den AUTO-Ordner kopiert werden. Nach einem Neustart des Rechners stehen dann diverse Zeichenfilter zu VerfÅgung, die vom RTF- und Excel-Export automatisch genutzt werden.';
+	BUBBLE_EXPORT_TEXEL     = 'Die Optionen fÅr den Export alter Texel-Dateien';
+	BUBBLE_EXPORT_TEXELVER  = 'Bestimmt, fÅr welche alte Texel-Version das Dokument exportiert werden soll.';
 
 	BUBBLE_CLEAR_FILL       = 'FÅllt den gelîschten Bereich mit leeren Zellen auf (identisch mit "Alles lîschen")';
 	BUBBLE_CLEAR_LEFT       = 'Verschiebt die Zellen rechts vom ursprÅnglichen Block nach links';
@@ -415,7 +440,8 @@ const
 	BUBBLE_SHFORM_BREAK     = 'Legt fest, ob bei manuellen (harten) SeitenumbrÅchen Markierungen angezeigt werden';
 	BUBBLE_SHFORM_CURRENT   = 'TrÑgt in den Eingabefeldern die aktuelle Grîûe des Blatts ein';
 	BUBBLE_SHFORM_MINIMAL   = 'Berechnet eine minimale Blattgrîûe (bis zur am weitesten rechts unten liegenden verwendeten Zelle)';
-	
+	BUBBLE_SHFORM_EXCELDATE = 'Legt fest, ob Datumsberechnungen im Texel- oder Excelformat vorgenommen werden.';
+
 	BUBBLE_PAGE_NEW         = 'Die neue Seitennummer';
 	BUBBLE_PAGE_MAX         = 'So viele Seiten sind insgesamt vorhanden';
 	BUBBLE_PAGE_OK          = 'Zeigt die Seite mit der angegebenen Nummer an';
@@ -605,6 +631,7 @@ const
 	
 	BUBBLE_CHGPASS_OLD      = 'Hier muû das alte Paûwort korrekt eingegeben werden, wenn ein solches bereits festgelegt wurde und man dieses Ñndern mîchte. Groû-/Kleinschreibung wird berÅcksichtigt!';
 	BUBBLE_CHGPASS_NEW      = 'Hier wird das neue Paûwort eingetragen. Groû-/Kleinschreibung wird berÅcksichtigt!';
+	BUBBLE_CHGPASS_CHECK    = 'Das neue Paûwort wird nur akzeptiert, wenn in dieses Feld exakt dasselbe Paûwort eingetragen wurde';
 	BUBBLE_CHGPASS_OK       = 'éndert das Paûwort bzw. Åbernimmt das neue Paûwort';
 	
 	BUBBLE_FILL_ROWS        = 'Die Reihe wird in einer Zeile berechnet';
@@ -637,6 +664,10 @@ const
 	BUBBLE_FINDVAL_FIND     = 'Sucht den Zielwert';
 	BUBBLE_FINDVAL_OK       = 'Sucht den Zielwert und schlieût den Dialog';
 	
+	BUBBLE_TIP_TEXTS        = 'Hier werden nÅtzliche Tips zu Texel angezeigt';
+	BUBBLE_TIP_NEXT         = 'Zeigt den nÑchsten Tip an';
+	BUBBLE_TIP_START        = 'Hiermit wird festgelegt, ob dieser Dialog bei jedem Texel-Start erscheint. Der Dialog kann ansonsten auch Åber das globale "Hilfe"-MenÅ aufgerufen werden.';
+	
 { texel.msg }
 
 	BUTTON_OK               = '  &OK  ';
@@ -656,8 +687,10 @@ const
 
 	MESSAGE_DEMO_DEMO       = 'Dies ist die Demoversion von Texel. Jegliches Speichern ist nicht mîglich.';
 	MESSAGE_DEMO_UNREG      = 'Diese Texel-Version ist nicht registriert, das Speichern ist daher nicht mîglich.';
+	MESSAGE_DEMO_MILAN      = 'Texel/Home lÑuft nur auf einem Milan korrekt, das Speichern ist daher nicht mîglich.';
 	
 	MESSAGE_STARTUP_UNREG   = 'TEXEL:|Texel wurde nicht korrekt installiert/registriert.';
+	MESSAGE_STARTUP_MILAN   = 'TEXEL:|Texel/Home kann nur auf einem Milan eingesetzt werden.';
 	MESSAGE_STARTUP_SCREEN  = 'Texel benîtigt eine Auflîsung von mind. 80x25 Zeichen. Bitte wÑhlen sie eine hîhere Auflîsung oder einen kleineren Systemfont.';
 	MESSAGE_STARTUP_BETA    = 'TEXEL:|Diese Betaversion ist zu alt.';
 	MESSAGE_STARTUP_FOUND1  = 'TEXEL:|Datei "';
@@ -666,6 +699,7 @@ const
 	MESSAGE_STARTUP_LOAD2   = '" konnte nicht geladen werden.';
 	MESSAGE_STARTUP_FRM1    = 'TEXEL:|Datei "';
 	MESSAGE_STARTUP_FRM2    = '" fehlerhaft';
+	MESSAGE_STARTUP_RSCERR  = 'TEXEL:|Resource-Dateien fehlerhaft.';
 
 	MESSAGE_WINDOW_MEMORY   = 'Texel:|Nicht genÅgend Speicher fÅr neues Fenster frei!';
 	MESSAGE_WINDOW_WINDOWS  = 'Kein Fenster mehr verfÅgbar.';
@@ -761,6 +795,8 @@ const
 	MESSAGE_IMPORT_WKPASS2  = '" ist verschlÅsselt und kann deshalb nicht importiert werden.';
 	MESSAGE_IMPORT_WKEMPTY1 = '"';
 	MESSAGE_IMPORT_WKEMPTY2 = '" enthÑlt keine Daten.';
+	MESSAGE_IMPORT_OLE1     = 'OLE/COM-Datei "';
+	MESSAGE_IMPORT_OLE2     = '" konnte nicht geladen werden.';
 	MESSAGE_IMPORT_EXCEL1   = '"';
 	MESSAGE_IMPORT_EXCEL2   = '"|ist keine MS-Excel-2.0/3.0/4.0-Datei.';
 	MESSAGE_IMPORT_XLS1     = '"';
@@ -769,6 +805,8 @@ const
 	MESSAGE_IMPORT_XLPASS2  = '" ist passwortgeschÅtzt und kann daher nicht geladen werden.';
 	MESSAGE_IMPORT_XLDATE1  = 'Achtung:|"';
 	MESSAGE_IMPORT_XLDATE2  = '" enthÑlt Datumsangaben im 1904-Format, das Texel nicht unterstÅtzt.';
+	MESSAGE_IMPORT_LDP1     = '"';
+	MESSAGE_IMPORT_LDP2     = '" ist keine LDW/LDP-Ausspuldatei.';
 
 	MESSAGE_EXPORT_EXIST1   = 'Die Datei "';
 	MESSAGE_EXPORT_EXIST2   = '" existiert bereits. öberschreiben?';
@@ -784,6 +822,7 @@ const
 
 	MESSAGE_INFO_PASSWRONG  = 'Altes Paûwort falsch!';
 	MESSAGE_INFO_PASSLEN    = 'Das neue Paûwort muû entweder leer oder aber mind. 6 Zeichen lang sein.';
+	MESSAGE_INFO_PASSNEQ    = 'Das Kontrollfeld stimmt nicht mit dem neuen Paûwort Åberein.';
 	
 	MESSAGE_CONST_EMPTY     = 'Bitte geben Sie einen Konstantennamen ein.';
 	MESSAGE_CONST_NAME      = 'Bitte geben Sie einen korrekten Namen ein.';
@@ -842,6 +881,7 @@ const
 	TITLE_OBJATTR           = 'Objektattribute';
 	TITLE_IMGOBJ            = 'Grafikobjektattribute';
 	TITLE_TXTOBJ            = 'Textobjektattribute';
+	TITLE_ELEMENTCB         = 'Elementattribute';
 	TITLE_INSOBJ            = 'Objekt einfÅgen';
 	TITLE_URL               = 'URL îffnen';
 	TITLE_OPEN              = 'Lade Datei';
@@ -867,6 +907,7 @@ const
 	TITLE_SETUP             = 'Einstellungen';
 	TITLE_SPECIALCHARS      = 'Sonderzeichen';
 	TITLE_HELP              = 'Hilfe';
+	TITLE_TIPS              = 'Tips und Tricks';
 
 { icon window titles }
 
@@ -885,6 +926,7 @@ const
 	ICNTITLE_OBJATTR        = 'OBJEKTATTRIBUTE';
 	ICNTITLE_IMGOBJ         = 'GRAFIKOBJEKTATTRIBUTE';
 	ICNTITLE_TXTOBJ         = 'TEXTOBJEKTATTRIBUTE';
+	ICNTITLE_ELEMENT        = 'ELEMENT';
 	ICNTITLE_INSOBJ         = 'OBJEKT';
 	ICNTITLE_URL            = 'URL';
 	ICNTITLE_IMPORTASCII    = 'IMPORT';
@@ -909,6 +951,7 @@ const
 	ICNTITLE_SETUPLAYOUT    = 'LAYOUT-SETUP';
 	ICNTITLE_PRINTERINFO    = 'DRUCKER-INFO';
 	ICNTITLE_HELP           = 'HILFE';
+	ICNTITLE_TIPS           = 'TIPS';
 
 { ST-Guide nodes }
 
@@ -929,6 +972,7 @@ const
 	STG_OBJATTR             = 'Objektattribute-Dialog';
 	STG_IMGOBJ              = 'Grafikobjektattribute-Dialog';
 	STG_TXTOBJ              = 'Textobjektattribute-Dialog';
+	STG_ELEMENTCB           = 'Element-KontrollkÑstchen-Dialog';
 	STG_INSOBJ              = 'Objekt einfÅgen-Dialog';
 	STG_URL                 = 'URL îffnen-Dialog';
 	STG_IMPORTASCII         = 'ASCII-Import-Dialog';
@@ -951,8 +995,9 @@ const
 	STG_SETUP               = 'Einstellungen-Dialog';
 	STG_PRINTERINFO         = 'Drucker-Informations-Dialog';
 	STG_HELP                = 'Hilfe-Stichwort';
+	STG_TIPS                = 'Tips-Dialog';
 
-{ startup}
+{ startup }
 
 	STARTUP_INF             = 'DATEI "TEXEL.INF" LADEN';
 	STARTUP_PATHS           = 'ZUGRIFFSPFADE LADEN';
@@ -965,6 +1010,29 @@ const
 	STARTUP_USRFRM          = 'DATEI "TEXELUSR.FRM" LADEN';
 	STARTUP_PRINTDIAL       = 'DRUCKDIALOG INITIALISIEREN';
 	STARTUP_FINISH          = 'ARBEITSUMGEBUNG EINRICHTEN';
+
+{ parse errors }
+
+	PARSERR_ERROR             = 'Fehler in Formel';
+	PARSERR_NOMEM             = 'Kein Speicher mehr frei';
+	PARSERR_INCOMPLETE        = 'Formel unvollstÑndig';
+	PARSERR_INCOMPCHARS       = 'UngÅltige Zeichen am Ende der Formel';
+	PARSERR_COMPINCOMPLETE    = 'Vergleich unvollstÑndig (zweites Argument fehlt)';
+	PARSERR_SUMMANDMISSING    = 'Summe unvollstÑndig (zweiter Summand fehlt)';
+	PARSERR_SUBTRAHENDMISSING = 'Differenz unvollstÑndig (Subtrahend fehlt)';
+	PARSERR_FAKTORMISSING     = 'Produkt unvollstÑndig (zweiter Faktor fehlt)';
+	PARSERR_DIVISORMISSING    = 'Quotient unvollstÑndig (Divisor fehlt)';
+	PARSERR_POWERMISSING      = 'Potenz unvollstÑndig (Exponent fehlt)';
+	PARSERR_FACTORINVALID     = 'Fehlendes oder ungÅltiges Argument (Funktion, Zelle, Zahl, Konstante oder Variable erwartet)';
+	PARSERR_BRACESWRONG       = 'Klammerung falsch';
+	PARSERR_ARGSMISSING       = 'Funktionsargumente fehlen (leere Klammer)';
+	PARSERR_MANYARGINVALID    = 'Zu viele Funktionsargumente oder ungÅltige Zeichen am Ende eines Arguments';
+	PARSERR_ARGCELLRANGE      = 'Argument muû Bereichs- oder Zellangabe sein';
+	PARSERR_ARGSINVALIDCHARS  = 'UngÅltige Zeichen am Ende der Argumentsliste (Argumente korrekt durch Semikolon getrennt?)';
+	PARSERR_TOOFEWARGS        = 'Zu wenig Funktionsargumente (Argumente korrekt durch Semikolon getrennt?)';
+	PARSERR_ARGEMPTY          = 'Leeres Funktionsargument';
+	PARSERR_ARGINVALID        = 'UngÅltige Zeichen am Ende eines Funktionsarguments';
+	PARSERR_TOOMANYARGS       = 'Zu viele Funktionsargumente';
 
 { misc }
 
@@ -999,7 +1067,12 @@ const
 	STRING_NONE             = 'keine';
 	STRING_YES              = 'ja';
 	STRING_NO               = 'nein';
+
 	STRING_DEMOVERSION      = 'Demoversion';
+	STRING_DEMO_STILL       = 'noch ';
+	STRING_DEMO_SECONDS     = ' Sekunden';
+	STRING_DEMO_START       = 'Texel-Demoversion starten';
+	STRING_DEMO_QUIT        = 'Texel-Demoversion beenden';
 
 	STRING_DB_SOURCE        = 'Quelle';
 	STRING_DB_RECORDS       = 'DatensÑtze';
@@ -1050,3 +1123,5 @@ const
 	STRING_WEB_MAILDATEOF   = 'vom';
 	STRING_WEB_MAILDEF3     = 'Viele Gruesse,';
 	STRING_WEB_MAILSUBJECT  = 'Frage zu';
+	
+	STRING_ELM_CHECKBOX     = 'KontrollkÑstchen';

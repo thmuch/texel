@@ -1,6 +1,6 @@
 {****************************************
  *   O b j e c t G E M   Version 1.50   *
- *   Copyright 1992-97 by Thomas Much   *
+ *   Copyright 1992-98 by Thomas Much   *
  ****************************************
  *        Unit  O D I A L O G S         *
  ****************************************
@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  26.11.1997  *
+ *      letztes Update am:  15.04.1998  *
  ****************************************}
 
 {
@@ -163,6 +163,22 @@ type
 		function MagiCScrollEditLength: integer;
 	end;
 
+	PPasswordEdit = ^TPasswordEdit;
+	TPasswordEdit = object(TEdit)
+		public
+		constructor Init(AParent: PDialog; AnIndx,ATextLen: integer; Hlp: string);
+		function GetText: string; virtual;
+		procedure SetText(ATextString: string); virtual;
+		procedure Clear; virtual;
+		procedure Edit; virtual;
+		procedure Undo; virtual;
+		procedure Paste; virtual;
+		procedure Copy; virtual;
+		procedure Cut; virtual;
+		private
+		password: string;
+	end;
+
 	PComboBox    = ^TComboBox;
 	TComboBox    = object(TControl)
 		public
@@ -289,6 +305,7 @@ const
 	crdFlags    = crdFirst or crdLast;
 	POP_MAXROWS = 19;
 	CARD_OFFS   =  2;
+	COMBOCOL    = Black;
 
 type
 
@@ -1103,6 +1120,88 @@ function TScrollEdit.MagiCScrollEditLength: integer;
 
 
 
+{ *** Objekt TPASSWORDEDIT *** }
+
+constructor TPasswordEdit.Init(AParent: PDialog; AnIndx,ATextLen: integer; Hlp: string);
+
+	begin
+		password:='';
+		if not(inherited Init(AParent,AnIndx,ATextLen,Hlp)) then fail;
+		Style:=(Style and not(es_Undo)) or es_Password;
+		SetText('')
+	end;
+
+
+function TPasswordEdit.GetText: string;
+
+	begin
+		GetText:=password
+	end;
+
+
+procedure TPasswordEdit.SetText(ATextString: string);
+
+	begin
+		password:=ATextString;
+		inherited SetText(StrPFill(length(password),'*'))
+	end;
+
+
+procedure TPasswordEdit.Clear;
+
+	begin
+		inherited Clear;
+		password:=''
+	end;
+
+
+procedure TPasswordEdit.Edit;
+	var txt: string;
+	    q  : integer;
+
+	begin
+		txt:=inherited GetText;
+		if length(txt)=0 then password:=''
+		else
+			if length(txt)>length(password) then
+				begin
+					q:=Max(GetCursor-1,0);
+					password:=StrPLeft(password,q)+txt[q+1]+StrPRight(password,length(password)-q)
+				end
+	end;
+
+
+procedure TPasswordEdit.Undo;
+
+	begin
+		Application^.Bing
+	end;
+
+
+procedure TPasswordEdit.Paste;
+
+	begin
+		Application^.Bing
+	end;
+
+
+procedure TPasswordEdit.Copy;
+
+	begin
+		Application^.Bing
+	end;
+
+
+procedure TPasswordEdit.Cut;
+
+	begin
+		Application^.Bing
+	end;
+
+{ *** TPASSWORDEDIT *** }
+
+
+
 { *** Objekt TCOMBOBOX *** }
 
 constructor TComboBox.Init(AParent: PDialog; AnIndx,CycleIndx,TitleIndx,ptIndx,popIndx,StartIndx: integer; Cycle,Editable: boolean; Hlp: string);
@@ -1651,7 +1750,7 @@ procedure TComboBox.commoninit(cycleindx,titleindx: integer; cycle,editable: boo
 						begin
 							ob_flags:=(ob_flags and not(TOUCHEXIT)) or SELECTABLE or F_EXIT;
 							if (ob_type and $ff)=G_BOXCHAR then
-								ob_spec.index:=(ob_spec.index and $00fff0ff) or (longint(ord(Application^.Attr.PopChar)) shl 24) or (LBlack shl 8)
+								ob_spec.index:=(ob_spec.index and $00fff0ff) or (longint(ord(Application^.Attr.PopChar)) shl 24) or (COMBOCOL shl 8)
 						end
 				end
 	end;
@@ -2270,7 +2369,7 @@ function DrawCycleBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 				pxya[6]:=pxya[0];
 				pxya[7]:=pxya[5];
 				vPline(vdiHandle,4,pxya);
-				vsf_color(vdiHandle,LBlack);
+				vsf_color(vdiHandle,COMBOCOL);
 				d_br:=d_clip[2]-d_clip[0]-5;
 				pxya[0]:=d_clip[0]+3;
 				pxya[1]:=((d_clip[1]+d_clip[3]) shr 1)-1;
@@ -2494,21 +2593,37 @@ function DrawCheckBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 									end
 							end
 						else
-							if Attr.Colors>=LWhite then
-								begin
-									pxya[0]:=d_clip[0];
-									pxya[1]:=d_clip[1];
-									pxya[2]:=d_clip[2];
-									pxya[3]:=d_clip[1];
-									pxya[4]:=d_clip[2];
-									pxya[5]:=d_clip[3];
-									pxya[6]:=d_clip[0];
-									pxya[7]:=d_clip[3];
-									pxya[8]:=d_clip[0];
-									pxya[9]:=d_clip[1];
-									vsl_color(vdiHandle,Black);
-									vPline(vdiHandle,5,pxya)
-								end
+							begin
+								vsl_color(vdiHandle,Black);
+								if Attr.Colors>=LWhite then
+									begin
+										pxya[0]:=d_clip[0];
+										pxya[1]:=d_clip[1];
+										pxya[2]:=d_clip[2];
+										pxya[3]:=d_clip[1];
+										pxya[4]:=d_clip[2];
+										pxya[5]:=d_clip[3];
+										pxya[6]:=d_clip[0];
+										pxya[7]:=d_clip[3];
+										pxya[8]:=d_clip[0];
+										pxya[9]:=d_clip[1];
+										vPline(vdiHandle,5,pxya)
+									end;
+								if d_stat=bf_Grayed then
+									begin
+										pxya[0]:=d_clip[0]+3;
+										pxya[1]:=d_clip[1]+6;
+										pxya[2]:=d_clip[2]-3;
+										pxya[3]:=pxya[1];
+										pxya[4]:=pxya[2];
+										pxya[5]:=d_clip[1]+7;
+										pxya[6]:=pxya[0];
+										pxya[7]:=pxya[5];
+										pxya[8]:=pxya[0];
+										pxya[9]:=pxya[1];
+										vPline(vdiHandle,5,pxya)
+									end
+							end
 					end
 				else
 					if not(bTst(parm^.pr_currstate,CROSSED)) then
@@ -3085,7 +3200,6 @@ function DrawCardTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						inc(ypos,2)
 					end;
 				vswr_mode(vdiHandle,MD_TRANS);
-				vst_color(vdiHandle,Black);
 				if bTst(parm^.pr_currstate,DISABLED) then teff:=TF_LIGHTENED
 				else
 					teff:=TF_NORMAL;
@@ -3108,6 +3222,7 @@ function DrawCardTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						vgText(vdiHandle,xpos+extent[2],ypos,d_btn)
 					end;
 				vst_effects(vdiHandle,teff);
+				vst_color(vdiHandle,Black);
 				vgText(vdiHandle,xpos,ypos,d_str);
 				vsf_interior(vdiHandle,FIS_HOLLOW);
 				vsf_color(vdiHandle,Black);
