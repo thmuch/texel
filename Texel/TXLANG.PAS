@@ -1,6 +1,23 @@
-{ texel_g.inc }
-{ German include file for Texel 2.1 }
-{ 1998-05-19 tm }
+unit txlang;
+
+interface
+
+{$IFDEF FRENCH}
+
+{ ############################################################################## }
+{ ############################################################################## }
+
+{$ELSE}{$IFDEF ENGLISH}
+
+{ ############################################################################## }
+{ ############################################################################## }
+
+{$ELSE}
+
+{ ############################################################################## }
+
+{ German include file for Texel 2.2 }
+{ 1999-03-03 tm }
 
 const
 
@@ -74,6 +91,9 @@ const
 	GROUP_OBJECT_TEXT       = 'Text';
 	GROUP_OBJECT_IMAGE      = 'Grafik';
 	
+	GROUP_PATHS_OBJECTS     = 'Objekte';
+	GROUP_PATHS_IMPORT      = 'Import';
+	
 	GROUP_ELEMENT_CHECKBOX  = 'KontrollkÑstchen';
 
 { texel.hlp }
@@ -98,8 +118,13 @@ const
 	BUBBLE_SETUP_STARTEND   = 'Bestimmt das Programmverhalten beim Start bzw. Beenden von Texel';
 	BUBBLE_SETUP_START      = 'Bestimmt das Programmverhalten beim Start von Texel';
 	BUBBLE_SETUP_END        = 'Bestimmt das Programmverhalten beim Beenden von Texel';
+	{$IFDEF LITE}
+	BUBBLE_SETUP_ROWS       = 'Gibt an, wieviele Zeilen ein neues Blatt standardmÑûig hat (max. 64)';
+	BUBBLE_SETUP_COLUMNS    = 'Gibt an, wieviele Spalten ein neues Blatt standardmÑûig hat (max. 32)';
+	{$ELSE}
 	BUBBLE_SETUP_ROWS       = 'Gibt an, wieviele Zeilen ein neues Blatt standardmÑûig hat (max. 16384)';
 	BUBBLE_SETUP_COLUMNS    = 'Gibt an, wieviele Spalten ein neues Blatt standardmÑûig hat (max. 702)';
+	{$ENDIF}
 	BUBBLE_SETUP_COLWIDTH   = 'Die Standardspaltenbreite wird in Zeichen angegeben; sie wird abhÑngig vom verwendeten Zeichensatz entsprechend in Pixel umgerechnet';
 	BUBBLE_SETUP_AUTOCALC   = 'Legt fest, ob bei neuen BlÑttern die automatische Neuberechnung standardmÑûig eingeschaltet ist (das sollte eigentlich immer der Fall sein)';
 	BUBBLE_SETUP_FONTID     = 'Legt den Standardzeichensatz fest';
@@ -114,7 +139,11 @@ const
 	BUBBLE_SETUP_OPEN       = 'Wenn dieser Button markiert ist, zeigt Texel beim Programmstart eine Dateiauswahlbox an';
 	BUBBLE_SETUP_NOTHING    = 'Wenn dieser Button markiert ist, passiert nach dem Laden von Texel gar nichts';
 	BUBBLE_SETUP_FULLSIZE   = 'Gibt an, ob BlÑtter nach dem Laden auf volle Bildschirmgrîûe gebracht werden sollen. Bei Groûbildschirmen kann diese Option stîrend sein.';
+	{$IFDEF NVDI5}
+	BUBBLE_SETUP_BLOCK      = 'Diese Option wird mit NVDI5 nicht benîtigt.';
+	{$ELSE}
 	BUBBLE_SETUP_BLOCK      = 'Schalten Sie diesen Button ein, falls Sie auf dem Bildschirm nicht das sehen, was Ihr GDOS ausdruckt (die Einstellung wird erst beim nÑchsten Start wirksam!)';
+	{$ENDIF}
 	BUBBLE_SETUP_RECALC     = 'Berechnet ein Blatt nach dem Laden neu (wichtig fÅr Datumsrechnungen). Sollte nur auf langsamen Rechnern ausgeschaltet werden.';
 	BUBBLE_SETUP_RTBLOCK    = 'Die Realtime-Blockmarkierung kann auf langsamen Rechnern zu langsam sein, deshalb kann sie hiermit ausgeschaltet werden.';
 	BUBBLE_SETUP_BACKUP     = 'Wenn dieser Button markiert ist, wird beim Speichern einer .TXL-Datei eine evtl. schon vorhandene Datei in .BAK umbenannt';
@@ -127,6 +156,9 @@ const
 	BUBBLE_SETUP_SAVEWORK   = 'Legt fest, ob die Arbeitsumgebung (d.h. welche Texel-RechenblÑtter gerade geîffnet sind) bei jedem Beenden von Texel automatisch gesichert wird';
 	BUBBLE_SETUP_EXCELDATE  = 'Legt fest, ob neue RechenblÑtter Datumsangaben im Excel-Format berechnen';
 	BUBBLE_SETUP_FORMERR    = 'Wenn diese Option eingeschaltet ist, werden Fehler bei der Eingabe von Formeln per BubbleHelp angezeigt.';
+	BUBBLE_SETUP_FORMCELL   = 'Wenn diese Option zusÑtzlich zu der darÅber eingeschaltet ist, wird die Eingabezeile mit dem fehlerhaften Formeltext aktiviert.';
+	BUBBLE_SETUP_INFODIAL   = 'Wenn diese Option eingeschaltet ist, wird vor dem ôffnen eines neuen Dokuments ein kleiner Info-Dialog angezeigt, in dem man Angaben zum Autor, Inhalt des Blattes etc. machen kann.';
+	BUBBLE_SETUP_PATHS      = 'Legt die Standardpfade fest, die beim Aufruf der Dateiauswahl erscheinen.';
 
 	BUBBLE_INPUT_EMPTY      = 'Die Eingabezeile ist z.Z. leer.';
 
@@ -136,40 +168,40 @@ const
 	BUBBLE_BLOCK_LIST       = 'Zeigt die bisher markierten Blîcke sowie die Zellvariablen an';
 	BUBBLE_BLOCK_OK         = 'VerlÑût den Blockeingabedialog. Wenn der neue Wert eine gÅltige Blockangabe ist, wird die Markierung entsprechend aktualisiert';
 
-	BUBBLE_FNBAR_FONTID     = 'Stellt den in den Zellen verwendeten Zeichensatz ein';
-	BUBBLE_FNBAR_FONTSIZE   = 'Bestimmt die Zeichenhîhe';
-	BUBBLE_FNBAR_PERCENT    = 'éndert die Darstellungsgrîûe des Blattes';
+	BUBBLE_FNBAR_FONTID     = 'Stellt den in den Zellen verwendeten Zeichensatz ein (Alt+F)';
+	BUBBLE_FNBAR_FONTSIZE   = 'Bestimmt die Zeichenhîhe (Alt+R)';
+	BUBBLE_FNBAR_PERCENT    = 'éndert die Darstellungsgrîûe des Blattes (Alt+Z)';
 	BUBBLE_FNBAR_BACKCOLOR  = 'éndert die Farbe des Hintergrundmusters der aktuellen Zelle(n)';
 	BUBBLE_FNBAR_PATTERN    = 'éndert das Hintergrundmuster der aktuellen Zelle(n)';
 	BUBBLE_FNBAR_AUTOCURSOR = 'Gibt die Richtung des Cursors nach <Return> an (AutoCursor)';
-	BUBBLE_FNBAR_BLOCK      = 'Zeigt die aktuelle Markierung (Cursor/Block) an bzw. erlaubt die manuelle Eingabe derselben';
-	BUBBLE_FNBAR_CANCEL     = 'Bricht die Texteingabe bei Zellen ab';
-	BUBBLE_FNBAR_OK         = 'öbernimmt den Text in die Zelle';
+	BUBBLE_FNBAR_BLOCK      = 'Zeigt die aktuelle Markierung (Cursor/Block) an bzw. erlaubt die manuelle Eingabe derselben (Control+B)';
+	BUBBLE_FNBAR_CANCEL     = 'Bricht die Texteingabe bei Zellen ab (Tab)';
+	BUBBLE_FNBAR_OK         = 'öbernimmt den Text in die Zelle (Return)';
 	BUBBLE_FNBAR_TEXTCOLOR  = 'éndert die Textfarbe im aktuellen Block';
 	BUBBLE_FNBAR_BORDER     = 'Versieht den aktuellen Block/die aktuelle Zelle mit einem Rahmen';
 	BUBBLE_FNBAR_TBONOFF    = 'Schaltet die Toolbar an bzw. aus';
 	
-	BUBBLE_TOOLBAR_SAVE     = 'Speichert das Kalkulationsblatt';
-	BUBBLE_TOOLBAR_PRINT    = 'Druckt das Kalkulationsblatt aus';
-	BUBBLE_TOOLBAR_CUT      = 'Schneidet die aktuelle Markierung aus';
-	BUBBLE_TOOLBAR_COPY     = 'Kopiert die aktuelle Markierung ins Klemmbrett';
-	BUBBLE_TOOLBAR_PASTE    = 'FÅgt den Inhalt des Klemmbretts an der aktuellen Position ein';
-	BUBBLE_TOOLBAR_SUM      = 'Aktiviert die zuletzt aktive Zelle und trÑgt in der Eingabezeile die Summenfunktion ein. Wenn ein Block markiert ist, wird dieser Bereich in die Summe eingefÅgt.';
-	BUBBLE_TOOLBAR_FN       = 'Ruft den Funktionsmanager auf';
-	BUBBLE_TOOLBAR_BOLD     = 'Schaltet bei der aktuellen Markierung Fettschrift ein bzw. aus';
-	BUBBLE_TOOLBAR_ITALIC   = 'Schaltet bei der aktuellen Markierung kursive Schrift ein bzw. aus';
-	BUBBLE_TOOLBAR_UNDERL   = 'Schaltet bei der aktuellen Markierung Unterstreichung ein bzw. aus';
-	BUBBLE_TOOLBAR_LEFT     = 'Richtet den Text im aktuellen Block linksbÅndig aus';
-	BUBBLE_TOOLBAR_CENTER   = 'Richtet den Text im aktuellen Block mittig aus';
-	BUBBLE_TOOLBAR_RIGHT    = 'Richtet den Text im aktuellen Block rechtsbÅndig aus';
+	BUBBLE_TOOLBAR_SAVE     = 'Speichert das Kalkulationsblatt (Control+S)';
+	BUBBLE_TOOLBAR_PRINT    = 'Druckt das Kalkulationsblatt aus (Control+P)';
+	BUBBLE_TOOLBAR_CUT      = 'Schneidet die aktuelle Markierung aus (Control+X)';
+	BUBBLE_TOOLBAR_COPY     = 'Kopiert die aktuelle Markierung ins Klemmbrett (Control+C)';
+	BUBBLE_TOOLBAR_PASTE    = 'FÅgt den Inhalt des Klemmbretts an der aktuellen Position ein (Control+V)';
+	BUBBLE_TOOLBAR_SUM      = 'Aktiviert die zuletzt aktive Zelle und trÑgt in der Eingabezeile die Summenfunktion ein. Wenn ein Block markiert ist, wird dieser Bereich in die Summe eingefÅgt. (F10)';
+	BUBBLE_TOOLBAR_FN       = 'Ruft den Funktionsmanager auf (Shift+Control+F)';
+	BUBBLE_TOOLBAR_BOLD     = 'Schaltet bei der aktuellen Markierung Fettschrift ein bzw. aus (F2)';
+	BUBBLE_TOOLBAR_ITALIC   = 'Schaltet bei der aktuellen Markierung kursive Schrift ein bzw. aus (F3)';
+	BUBBLE_TOOLBAR_UNDERL   = 'Schaltet bei der aktuellen Markierung Unterstreichung ein bzw. aus (F4)';
+	BUBBLE_TOOLBAR_LEFT     = 'Richtet den Text im aktuellen Block linksbÅndig aus (F5)';
+	BUBBLE_TOOLBAR_CENTER   = 'Richtet den Text im aktuellen Block mittig aus (F6)';
+	BUBBLE_TOOLBAR_RIGHT    = 'Richtet den Text im aktuellen Block rechtsbÅndig aus (F7)';
 	BUBBLE_TOOLBAR_NUMBER   = 'Setzt im aktuellen Block das Zahlenformat {0,00}';
 	BUBBLE_TOOLBAR_DATE     = 'Setzt im aktuellen Block das Zahlenformat [TT].[MM].[JJJJ]';
 	BUBBLE_TOOLBAR_MONEY    = 'Setzt im aktuellen Block das in "Optionen - Einstellungen" gewÑhlte WÑhrungs-Zahlenformat';
 	BUBBLE_TOOLBAR_PERCENT  = 'Setzt im aktuellen Block das Zahlenformat (100){0}%';
 	BUBBLE_TOOLBAR_SORTUP   = 'Sortiert den aktuellen Block nach den (bis zu) ersten drei Spalten aufsteigend';
 	BUBBLE_TOOLBAR_SORTDOWN = 'Sortiert den aktuellen Block nach den (bis zu) ersten drei Spalten absteigend';
-	BUBBLE_TOOLBAR_FPLUS    = 'Erhîht die Anzahl der Nachkommastellen einer Formel- bzw. Konstantenzelle um eins';
-	BUBBLE_TOOLBAR_FMINUS   = 'Vermindert die Anzahl der Nachkommastellen einer Formel- bzw. Konstantenzelle um eins';
+	BUBBLE_TOOLBAR_FPLUS    = 'Erhîht die Anzahl der Nachkommastellen einer Formel- bzw. Konstantenzelle um eins (F8)';
+	BUBBLE_TOOLBAR_FMINUS   = 'Vermindert die Anzahl der Nachkommastellen einer Formel- bzw. Konstantenzelle um eins (F9)';
 	BUBBLE_TOOLBAR_DIAGRAM  = 'Erzeugt aus dem aktuell markierten Block ein Balkendiagramm. <Shift> kehrt Datenzeilen/-spalten um.';
 	BUBBLE_TOOLBAR_HOME     = 'Bringt den Cursor zur Zelle A1 (Home)';
 
@@ -180,7 +212,7 @@ const
 	BUBBLE_TEXTATTR_OUTL    = 'Schriftstil umrandet (Outline)';
 	BUBBLE_TEXTATTR_SHADOW  = 'Schriftstil schattiert (wird nicht von allen GDOS-Versionen und Bildschirmtreibern unterstÅtzt)';
 	BUBBLE_TEXTATTR_ROTAT   = 'Bestimmt den Rotationswinkel des Textes. Bei Bitmapfonts kann dies nur in 90-Grad-Schritten geschehen.';
-	BUBBLE_TEXTATTR_SKEW    = 'Legt die SchrÑgstellung (Skew) der Schrift fest (nur mit Vektorfont-GDOS)';
+	BUBBLE_TEXTATTR_SKEW    = 'Legt die SchrÑgstellung (Skew) der Schrift fest'{$IFNDEF NVDI5}+' (nur mit Vektorfont-GDOS)'{$ENDIF};
 	BUBBLE_TEXTATTR_CLIP    = 'Legt fest, ob Textausgaben am Rand einer Zelle abgeschnitten werden';
 	BUBBLE_TEXTATTR_LEFT    = 'LinksbÅndiger Text';
 	BUBBLE_TEXTATTR_CENTER  = 'Horizontal zentrierter Text';
@@ -239,6 +271,7 @@ const
 	BUBBLE_CLIP_OK          = 'LÑdt eine DIF- oder CSV-Datei aus dem Klemmbrett';
 	
 	BUBBLE_ABOUT_OK         = 'Schlieût den "öber..."-Dialog';
+	BUBBLE_ABOUT_UPDATE     = 'ôffnet einen Dialog, in dem Sie erfahren, wie und wo sie auf die Texel-Vollversion aufsteigen kînnen!';
 	
 	BUBBLE_LAYOUT_TMARGIN   = 'Legt den Seitenrand oberhalb der Kopfzeile fest';
 	BUBBLE_LAYOUT_BMARGIN   = 'Legt den Seitenrand unterhalb der Fuûzeile fest';
@@ -353,7 +386,8 @@ const
 	BUBBLE_EXPORT_SAVEWITH  = 'Bestimmt, welche Teile bzw. welche Attribute des Blattes exportiert werden';
 	BUBBLE_EXPORT_DOCTYPE   = 'Legt den HTML-Dokumenttyp fest. "3.0" ist Netscape-Standard, "3.2" und "4.0" sind offizieller W3C-Standard. Derzeit ist "3.2" die beste Wahl.';
 	BUBBLE_EXPORT_SAVEDT    = 'Bestimmt, ob der Dokumenttyp Åberhaupt in der Exportdatei gespeichert wird. Wenn die Tabelle in eine andere HTML-Datei eingebunden wird, ist dies unnîtig.';
-	BUBBLE_EXPORT_COLORS    = 'Legt fest, ob die (nicht standardisierten) Farb- und Zeichensatzinformationen in die HTML-Tabelle exportiert werden';
+	BUBBLE_EXPORT_COLORS    = 'Legt fest, ob die Farbinformationen in die HTML-Tabelle exportiert werden';
+	BUBBLE_EXPORT_FONTS     = 'Bestimmt, ob die Zeichensatznamen exportiert werden. Geht nur, wenn auch die Farben exportiert werden.';
 	BUBBLE_EXPORT_DIFTYPE   = 'Wird zur Festlegung des DIF-Typs benîtigt, da M$-Produkte eine andere Zeilen/Spalten-Codierung verwenden als Åblich...';
 	BUBBLE_EXPORT_DIFSTAND  = 'Mit dieser Option kann eine Standard-DIF-Datei exportiert werden';
 	BUBBLE_EXPORT_DIFMS     = 'Mit dieser Option werden DIF-Dateien exportiert, die von M$-Produkten korrekt importiert werden';
@@ -414,17 +448,22 @@ const
 	BUBBLE_PRINT_RANGE      = 'Wird aus "Seite einrichten" Åbernommen. Ist dort kein Bereich eingetragen, ist dieser Punkt identisch mit "Alles".';
 	BUBBLE_PRINT_ALL        = 'Druckt das Blatt bis zur am weitesten rechts unten liegenden verwendeten Zellen aus';
 	BUBBLE_PRINT_SELECTION  = 'Druckt den aktuell markierten Block aus';
-	BUBBLE_PRINT_PAPER      = 'Stellt fÅr Drucker und Images die verwendete Papiergrîûe ein (ab NVDI3)';
+	BUBBLE_PRINT_PAPER      = 'Stellt fÅr Drucker und Images die verwendete Papiergrîûe ein'{$IFNDEF NVDI5}+' (ab NVDI3)'{$ENDIF};
 	BUBBLE_PRINT_PAGEFROM   = 'Legt fest, ab welcher Seite der gesplitteten Tabelle gedruckt werden soll. Die Numerierung wird in "Seite einrichten" festgelegt.';
 	BUBBLE_PRINT_PAGETO     = 'Bestimmt, bis zu welcher Seite der gesplitteten Tabelle gedruckt werden soll. Bei zu groûen Werten hîrt der Druck nach der letzten Seite auf. Ist hier nichts eingetragen, wird nur eine Seite gedruckt.';
 	BUBBLE_PRINT_LAYOUT     = 'Ruft den "Seite einrichten"-Dialog auf';
 	BUBBLE_PRINT_PREVIEW    = 'Ruft die Seitenansicht auf';
 	BUBBLE_PRINT_OK         = 'öbernimmt die Einstellungen (ohne zu drucken)';
 	BUBBLE_PRINT_INFO       = 'Zeigt Informationen Åber den GerÑtetreiber an';
-	
+
 	BUBBLE_SHFORM_SIZE      = 'Ermîglicht es, die Blattgrîûe nachtrÑglich zu Ñndern';
+	{$IFDEF LITE}
+	BUBBLE_SHFORM_ROWS      = 'Legt die Zeilenanzahl fest (max. 64)';
+	BUBBLE_SHFORM_COLUMNS   = 'Bestimmt die Anzahl der Spalten (max. 32)';
+	{$ELSE}
 	BUBBLE_SHFORM_ROWS      = 'Legt die Zeilenanzahl fest (max. 16384)';
 	BUBBLE_SHFORM_COLUMNS   = 'Bestimmt die Anzahl der Spalten (max. 702)';
+	{$ENDIF}
 	BUBBLE_SHFORM_FONTID    = 'Stellt den Zeichensatz fÅr die Zeilen- und Spaltenbeschriftungen ein';
 	BUBBLE_SHFORM_FONTSIZE  = 'Bestimmt die Zeichenhîhe der Zeilen- und Spaltenbeschriftungen';
 	BUBBLE_SHFORM_GRID      = 'Wenn dieses KÑstchen markiert ist, werden auch die einfachen Gitterlinien gezeichnet, sonst nicht';
@@ -468,6 +507,10 @@ const
 	BUBBLE_INFO_VERSION     = 'Zeigt an, mit welcher Texel-Version die Datei gespeichert wurde';
 	BUBBLE_INFO_ENCRYPT     = 'Schaltet die automatische DateiverschlÅsselung ein. Dadurch kann man den Klartext-Dateiinhalt nicht mehr mit einem Diskmonitor ausspÑhen.';
 	BUBBLE_INFO_PASSWORD    = 'Ruft einen Dialog auf, mit dem die Datei paûwortgeschÅtzt werden kann';
+	BUBBLE_INFO_TITLE       = 'Ein optionaler Titel des Dokuments, der von einigen Export-Formaten verwendet wird. In "Seite einrichten" kann man darauf in den Kopf- und Fuûzeilen mit #n zugreifen.';
+
+	BUBBLE_SINFO_AUTHOR     = 'Hier kann man eintragen, wer dieses Blatt erstellt. In "Seite einrichten" kann man darauf in den Kopf- und Fuûzeilen mit #a zugreifen.';
+	BUBBLE_SINFO_OK         = 'Erzeugt ein neues Rechenblatt mit den oben angegebenen Informationen';
 	
 	BUBBLE_FIND_SEARCHFOR   = 'Der Suchbegriff. Wildcards sind z.Z. noch nicht erlaubt';
 	BUBBLE_FIND_ROWS        = 'Zeilenweise Suche';
@@ -668,6 +711,22 @@ const
 	BUBBLE_TIP_NEXT         = 'Zeigt den nÑchsten Tip an';
 	BUBBLE_TIP_START        = 'Hiermit wird festgelegt, ob dieser Dialog bei jedem Texel-Start erscheint. Der Dialog kann ansonsten auch Åber das globale "Hilfe"-MenÅ aufgerufen werden.';
 	
+	BUBBLE_PATHS_TXL        = 'Legt fest, wo Texel-Dokumente normalerweise geladen und gespeichert werden';
+	BUBBLE_PATHS_EXPORT     = 'Legt das Standard-Exportverzeichnis fÅr alle Exportformate fest';
+	BUBBLE_PATHS_META       = 'Legt das Verzeichnis fÅr die Druckausgabe in GEM-Metafiles fest';
+	BUBBLE_PATHS_ID4        = 'Aus diesem Verzeichnis werden ID4-OLGA-Objekte normalerweise importiert';
+	BUBBLE_PATHS_TEXT       = 'Legt das Verzeichnis fest, in dem sich normalerweise die Texte fÅr Text-Objekte befinden';
+	BUBBLE_PATHS_GRAFIK     = 'Legt das Verzeichnis fest, in dem sich normalerweise die Bilder (*.IMG) fÅr Grafik-Objekte befinden';
+	BUBBLE_PATHS_DIAGRAMM   = 'Das Standardverzeichnis fÅr manuell gespeicherte Diagrammdateien';
+	BUBBLE_PATHS_LDW        = 'Aus diesem Verzeichnis werden LDW-Ausspuldateien (*.LDP) normalerweise importiert';
+	BUBBLE_PATHS_DIF        = 'Aus diesem Verzeichnis werden DIF-Dateien normalerweise importiert';
+	BUBBLE_PATHS_CSV        = 'Aus diesem Verzeichnis werden CSV-Dateien normalerweise importiert';
+	BUBBLE_PATHS_ASCII      = 'Aus diesem Verzeichnis werden allgemeine ASCII-Dateien normalerweise importiert';
+	BUBBLE_PATHS_DBF        = 'Aus diesem Verzeichnis werden dBase-Datenbanken normalerweise importiert';
+	BUBBLE_PATHS_EXCEL      = 'Aus diesem Verzeichnis werden Excel-Dokumente normalerweise importiert';
+	BUBBLE_PATHS_123        = 'Aus diesem Verzeichnis werden Lotus-123-Dateien normalerweise importiert';
+	BUBBLE_PATHS_PSION      = 'Aus diesem Verzeichnis werden Psion-3a-RechenblÑtter normalerweise importiert';
+	
 { texel.msg }
 
 	BUTTON_OK               = '  &OK  ';
@@ -700,6 +759,8 @@ const
 	MESSAGE_STARTUP_FRM1    = 'TEXEL:|Datei "';
 	MESSAGE_STARTUP_FRM2    = '" fehlerhaft';
 	MESSAGE_STARTUP_RSCERR  = 'TEXEL:|Resource-Dateien fehlerhaft.';
+	MESSAGE_STARTUP_WDIALOG = 'Ihr Betriebssystem besitzt leider keine Druckdialog-Routinen. Bitte installieren Sie daher WDIALOG ab Version 2.0 in Ihrem AUTO-Ordner bzw. unter N.AES als Autostart-Applikation in der Datei "N_AES.CNF".';
+	MESSAGE_STARTUP_NVDI    = 'Texel benîtigt NVDI ab Version 5.0.';
 
 	MESSAGE_WINDOW_MEMORY   = 'Texel:|Nicht genÅgend Speicher fÅr neues Fenster frei!';
 	MESSAGE_WINDOW_WINDOWS  = 'Kein Fenster mehr verfÅgbar.';
@@ -718,11 +779,20 @@ const
 	MESSAGE_WINDOW_BLOCK2   = 'Im Zielbereich werden Daten Åberschrieben!';
 	MESSAGE_WINDOW_EMBED1   = 'Beim Einbetten von "';
 	MESSAGE_WINDOW_EMBED2   = '" ist ein Fehler aufgetreten.';
-	MESSAGE_WINDOW_EMAIL    = 'Beim Versenden der EMail an den ASH-Texel-Support ist ein Fehler aufgetreten.';
+	MESSAGE_WINDOW_EMAIL    = 'Beim Versenden der EMail an den Texel-Support ist ein Fehler aufgetreten.';
 	MESSAGE_WINDOW_SIZE     = 'Bei der Verkleinerung des Blattes gehen Formel-, Text- oder Zahlendaten verloren.';
 	MESSAGE_WINDOW_SIZEERR  = 'Blattgrîûe kann nicht verÑndert werden (Speichermangel).';
 	MESSAGE_WINDOW_ABANDON1 = 'énderungen in Datei "';
 	MESSAGE_WINDOW_ABANDON2 = '" verwerfen?';
+
+	{$IFDEF LITE}
+	MESSAGE_HOME_2BIG1      = 'Das neue Dokument ist zu groû. Texel/Home speichert davon maximal ';
+	MESSAGE_HOME_2BIG2      = ' Zeilen und ';
+	MESSAGE_HOME_2BIG3      = ' Spalten.';
+	MESSAGE_HOME_SAVE1      = 'Speichern nicht mîglich.||Dokumente dÅrfen in Texel/Home maximal ';
+	MESSAGE_HOME_SAVE2      = ' Zeilen und ';
+	MESSAGE_HOME_SAVE3      = ' Spalten groû sein. Bitte passen Sie Ihr Dokument unter "Format - Blatt" entsprechend an.';
+	{$ENDIF}
 
 	MESSAGE_NUMFORM_EMPTY   = 'Bitte geben Sie ein Format ein.';
 	MESSAGE_NUMFORM_PARTS   = 'Ein Zahlenformat besteht aus max. 3 Teilen, darf also max. 2 Semikolons enthalten.';
@@ -789,6 +859,8 @@ const
 	MESSAGE_IMPORT_EXIST2   = '" nicht gefunden.';
 	MESSAGE_IMPORT_LOTUS1   = '"';
 	MESSAGE_IMPORT_LOTUS2   = '" ist keine Lotus-1-2-3-Datei.';
+	MESSAGE_IMPORT_PSION1   = '"';
+	MESSAGE_IMPORT_PSION2   = '" ist keine Psion3(a)-SPR-Datei.';
 	MESSAGE_IMPORT_WKS1     = '"';
 	MESSAGE_IMPORT_WKS2     = '" ist keine WKS/WK1-Datei.';
 	MESSAGE_IMPORT_WKPASS1  = '"';
@@ -837,7 +909,9 @@ const
 	MESSAGE_FINDVAL_FORMULA = 'Die Zielzelle muû eine Formel enthalten.';
 	MESSAGE_FINDVAL_NUMBER  = 'Die verÑnderbare Zelle muû eine Zahl enthalten oder leer sein.';
 	MESSAGE_FINDVAL_ERROR   = 'Der Zielwert konnte nicht korrekt bestimmt werden.';
-	
+
+	MESSAGE_ABOUT_UPGRADE   = 'Das Upgrade auf die aktuelle Texel-Vollversion erhalten Sie preiswert bei||Application Systems Heidelberg GmbH|Postfach 102 646|D-69016 Heidelberg||Telefon: 06221/30 00 02|'
+	                          +'Telefax: 06221/30 03 89|Mailbox: 06221/30 36 71||http://members.aol.com/ashinfo';
 
 { fsel titles }
 
@@ -858,10 +932,12 @@ const
 	FSELTITLE_IMPORTDBASE   = 'DBASE-DATEI IMPORTIEREN';
 	FSELTITLE_IMPORTEXCEL   = 'EXCEL-DATEI IMPORTIEREN';
 	FSELTITLE_IMPORT123     = '1-2-3-DATEI IMPORTIEREN';
+	FSELTITLE_IMPORTPSION   = 'PSION-DATEI IMPORTIEREN';
 	FSELTITLE_EXPORTFILE    = 'EXPORT-DATEI FESTLEGEN';
 	FSELTITLE_PRINTMETA     = 'AUSDRUCK IN METAFILE...';
 	FSELTITLE_PRINTIMG      = 'AUSDRUCK IN IMG-DATEI...';
 	FSELTITLE_SAVEAS        = 'TEXEL-BLATT SICHERN ALS...';
+	FSELTITLE_PATHS         = 'STANDARDPFAD AUSWéHLEN...';
 
 { window titles }
 
@@ -899,6 +975,7 @@ const
 	TITLE_SHFORM            = 'Blattformat';
 	TITLE_PREVIEW           = 'Seitenansicht';
 	TITLE_INFO              = 'Info';
+	TITLE_NEW               = 'Neu';
 	TITLE_FIND              = 'Suchen';
 	TITLE_REPLACE           = 'Ersetzen';
 	TITLE_CONST             = 'Konstanten';
@@ -908,6 +985,7 @@ const
 	TITLE_SPECIALCHARS      = 'Sonderzeichen';
 	TITLE_HELP              = 'Hilfe';
 	TITLE_TIPS              = 'Tips und Tricks';
+	TITLE_PATHS             = 'Pfadeinstellungen';
 
 { icon window titles }
 
@@ -941,6 +1019,7 @@ const
 	ICNTITLE_SHFORM         = 'BLATTFORMAT';
 	ICNTITLE_PREVIEW        = 'PREVIEW';
 	ICNTITLE_INFO           = 'INFO';
+	ICNTITLE_NEW            = 'NEU';
 	ICNTITLE_FIND           = 'SUCHEN';
 	ICNTITLE_REPLACE        = 'ERSETZEN';
 	ICNTITLE_CONST          = 'KONSTANTEN';
@@ -952,6 +1031,7 @@ const
 	ICNTITLE_PRINTERINFO    = 'DRUCKER-INFO';
 	ICNTITLE_HELP           = 'HILFE';
 	ICNTITLE_TIPS           = 'TIPS';
+	ICNTITLE_PATHS          = 'PFADE';
 
 { ST-Guide nodes }
 
@@ -987,6 +1067,7 @@ const
 	STG_SHFORM              = 'Blattformat-Dialog';
 	STG_PREVIEW             = 'Seitenansicht';
 	STG_INFO                = 'Tabellen-Informations-Dialog';
+	STG_NEW                 = 'Neu-Dialog';
 	STG_FIND                = 'Suchen-Dialog';
 	STG_REPLACE             = 'Ersetzen-Dialog';
 	STG_CONST               = 'Konstanten-Dialog';
@@ -996,6 +1077,7 @@ const
 	STG_PRINTERINFO         = 'Drucker-Informations-Dialog';
 	STG_HELP                = 'Hilfe-Stichwort';
 	STG_TIPS                = 'Tips-Dialog';
+	STG_PATHS               = 'Pfade-Dialog';
 
 { startup }
 
@@ -1013,26 +1095,77 @@ const
 
 { parse errors }
 
-	PARSERR_ERROR             = 'Fehler in Formel';
-	PARSERR_NOMEM             = 'Kein Speicher mehr frei';
-	PARSERR_INCOMPLETE        = 'Formel unvollstÑndig';
-	PARSERR_INCOMPCHARS       = 'UngÅltige Zeichen am Ende der Formel';
-	PARSERR_COMPINCOMPLETE    = 'Vergleich unvollstÑndig (zweites Argument fehlt)';
-	PARSERR_SUMMANDMISSING    = 'Summe unvollstÑndig (zweiter Summand fehlt)';
-	PARSERR_SUBTRAHENDMISSING = 'Differenz unvollstÑndig (Subtrahend fehlt)';
-	PARSERR_FAKTORMISSING     = 'Produkt unvollstÑndig (zweiter Faktor fehlt)';
-	PARSERR_DIVISORMISSING    = 'Quotient unvollstÑndig (Divisor fehlt)';
-	PARSERR_POWERMISSING      = 'Potenz unvollstÑndig (Exponent fehlt)';
-	PARSERR_FACTORINVALID     = 'Fehlendes oder ungÅltiges Argument (Funktion, Zelle, Zahl, Konstante oder Variable erwartet)';
-	PARSERR_BRACESWRONG       = 'Klammerung falsch';
-	PARSERR_ARGSMISSING       = 'Funktionsargumente fehlen (leere Klammer)';
-	PARSERR_MANYARGINVALID    = 'Zu viele Funktionsargumente oder ungÅltige Zeichen am Ende eines Arguments';
-	PARSERR_ARGCELLRANGE      = 'Argument muû Bereichs- oder Zellangabe sein';
-	PARSERR_ARGSINVALIDCHARS  = 'UngÅltige Zeichen am Ende der Argumentsliste (Argumente korrekt durch Semikolon getrennt?)';
-	PARSERR_TOOFEWARGS        = 'Zu wenig Funktionsargumente (Argumente korrekt durch Semikolon getrennt?)';
-	PARSERR_ARGEMPTY          = 'Leeres Funktionsargument';
-	PARSERR_ARGINVALID        = 'UngÅltige Zeichen am Ende eines Funktionsarguments';
-	PARSERR_TOOMANYARGS       = 'Zu viele Funktionsargumente';
+	PARSERR_ERROR               = 'Fehler in Formel';
+	PARSERR_NOMEM               = 'Kein Speicher mehr frei';
+	PARSERR_INCOMPCHARS         = 'UngÅltige Zeichen am Ende der Formel';
+	PARSERR_INCOMPCHARSFUNC     = 'UngÅltige Zeichen am Ende der Formel (Funktionsname falsch?)';
+	PARSERR_COMPINCOMPLETE      = 'Vergleich unvollstÑndig (zweites Argument ist ungÅltig oder fehlt)';
+	PARSERR_SUMMANDMISSING      = 'Summe unvollstÑndig (zweiter Summand ist ungÅltig oder fehlt)';
+	PARSERR_SUBTRAHENDMISSING   = 'Differenz unvollstÑndig (Subtrahend ist ungÅltig oder fehlt)';
+	PARSERR_FAKTORMISSING       = 'Produkt unvollstÑndig (zweiter Faktor ist ungÅltig oder fehlt)';
+	PARSERR_DIVISORMISSING      = 'Quotient unvollstÑndig (Divisor ist ungÅltig oder fehlt)';
+	PARSERR_POWERMISSING        = 'Potenz unvollstÑndig (Exponent ist ungÅltig oder fehlt)';
+	PARSERR_FACTORINVALID       = 'Fehlendes oder ungÅltiges Argument (Funktion, Zelle, Zahl, Konstante oder Variable erwartet)';
+	PARSERR_ARGCELLRANGE        = 'Argument muû Bereichs- oder Zellangabe sein';
+	PARSERR_TOOFEWARGS          = 'Zu wenig Funktionsargumente (Argumente korrekt durch Semikolon getrennt?)';
+	PARSERR_ARGEMPTY            = 'Leeres Funktionsargument';
+	PARSERR_TOOMANYARGS         = 'Zu viele Funktionsargumente';
+	PARSERR_KLAMMERZUFEHLT      = 'Schlieûende Klammer fehlt';
+	PARSERR_TOKENTOOLONG        = 'Zahl oder Zeichenkette zu lang!';
+	PARSERR_STRINGNOTTERMINATED = 'Zeichenkette nicht korrekt abgeschlossen (" am Stringende fehlt)';
+	PARSERR_COLUMNWRONG         = 'Falsche Spaltenangabe bei einer Zellreferenz (mind. ein, max. zwei Buchstaben A-Z)';
+	PARSERR_ROWWRONG            = 'Falsche Zeilenangabe bei einer Zellreferenz (mind. eine, max. fÅnf Ziffern)';
+	PARSERR_RANGEINCOMPLETE     = 'Bereichsangabe nach dem Doppelpunkt unvollstÑndig oder fehlerhaft';
+	PARSERR_NUMBERSEXPECTED     = 'Ziffern nach dem Dezimaltrenner oder dem Exponenten-E einer Zahl erwartet';
+	PARSERR_KLAMMERAUFFEHLT     = 'ôffnende Klammer nach einem Funktionsnamen fehlt';
+	PARSERR_KLAMMERORSEMIKOLON  = 'Semikolon (Argumenttrenner) oder schlieûende Klammer erwartet';
+	PARSERR_ARGNORANGE          = 'Keine Bereichsangaben bei diesem Funktionsaufruf erlaubt';
+
+{ operators }
+
+	OPS_NATURAL_PLUS        = 'plus';
+	OPS_NATURAL_MINUS       = 'minus';
+	OPS_NATURAL_MULT        = 'mal';
+	OPS_NATURAL_DIV         = 'durch';
+	OPS_NATURAL_POWER       = 'hoch';
+
+{ GEMScript command help }
+
+	CMD_DOC_CELL            = '<zeile> <spalte> [<datei>]';
+	CMD_DOC_CHECKAPP        = '<applikation>';
+	CMD_DOC_CHECKCOMMAND    = '<kommando>';
+	CMD_DOC_CLOSE           = '[<datei>]';
+	CMD_DOC_COPY            = '[<datei>]';
+	CMD_DOC_CUT             = '[<datei>]';
+	CMD_DOC_DELETE          = '[<datei>]';
+	CMD_DOC_EXPORT          = '<format> <name> [<datei>]';
+	CMD_DOC_GETCELL         = '<zelle> [<datei>] | <zeile> <spalte> [<datei>]';
+	CMD_DOC_GETCELLFORMULA  = '<zelle> [<datei>] | <zeile> <spalte> [<datei>]';
+	CMD_DOC_GETCELLVALUE    = '<zelle> [<datei>] | <zeile> <spalte> [<datei>]';
+	CMD_DOC_GETCOLUMNS      = '[<datei>]';
+	CMD_DOC_GETRANGE        = '<bereich> [<datei>]';
+	CMD_DOC_GETROWS         = '[<datei>]';
+	CMD_DOC_GETSELECTION    = '[<datei>]';
+	CMD_DOC_GETVARIABLE     = '<variable> [<datei>]';
+	CMD_DOC_GOTO            = '<zelle> [<datei>] | <zeile> <spalte> [<datei>]';
+	CMD_DOC_ISBLOCKUSED     = '<bereich> [<datei>]';
+	CMD_DOC_ISCELLCONST     = '<zelle> [<datei>] | <zeile> <spalte> [<datei>]';
+	CMD_DOC_ISCELLEMPTY     = '<zelle> [<datei>] | <zeile> <spalte> [<datei>]';
+	CMD_DOC_ISCELLFORMULA   = '<zelle> [<datei>] | <zeile> <spalte> [<datei>]';
+	CMD_DOC_ISCELLTEXT      = '<zelle> [<datei>] | <zeile> <spalte> [<datei>]';
+	CMD_DOC_OPEN            = '[<datei>]';
+	CMD_DOC_PASTE           = '[<datei>]';
+	CMD_DOC_PRINT           = '[<datei>]';
+	CMD_DOC_RECALC          = '[<datei>]';
+	CMD_DOC_RETURNCELLVALUE = '<datei> <zelle> <wert>';
+	CMD_DOC_SAVE            = '[<datei>]';
+	CMD_DOC_SAVEAS          = '<neuername> [<datei>]';
+	CMD_DOC_SELECT          = '<bereich> [<datei>]';
+	CMD_DOC_SELECTALL       = '[<datei>]';
+	CMD_DOC_SETCELL         = '<zelle> <inhalt> [<datei>] | <zeile> <spalte> <inhalt> [<datei>]';
+	CMD_DOC_SETCOLOR        = '<farbindex> [<datei>]';
+	CMD_DOC_SETTEXTCOLOR    = '<farbindex> [<datei>]';
+	CMD_DOC_TOFRONT         = '<datei>';
 
 { misc }
 
@@ -1055,6 +1188,7 @@ const
 	STRING_DEVICE           = 'GerÑt';
 	STRING_PRINTPAGE        = 'SEITE AUSDRUCKEN...';
 	STRING_COPY             = 'Exemplar';
+	STRING_COPIES           = 'Exemplare';
 	STRING_PAGE             = 'Seite';
 	STRING_BUILDPAGE        = 'SEITE AUFBAUEN...';
 	STRING_PAGEOF           = 'von';
@@ -1116,12 +1250,20 @@ const
 	STRING_PRNINFO_TXT7     = 'Druckbereich: ';
 	STRING_PRNINFO_TXT8     = 'B'#130'ziers:      ';
 	
-	STRING_WEB_SUPPORT      = 'mailto:VRitzhaupt@aol.com';
-	STRING_WEB_HOMEPAGE     = 'http://members.aol.com/ashinfo';
-	STRING_WEB_MAILDEF1     = 'Hallo ASH-Texel-Support,';
+	STRING_WEB_SUPPORT      = 'mailto:support@texel-home.de';
+	STRING_WEB_HOMEPAGE     = 'http://www.texel-home.de';
+	STRING_WEB_MAILDEF1     = 'Hallo Texel-Support,';
 	STRING_WEB_MAILDEF2     = 'ich habe folgende Frage zu';
 	STRING_WEB_MAILDATEOF   = 'vom';
 	STRING_WEB_MAILDEF3     = 'Viele Gruesse,';
 	STRING_WEB_MAILSUBJECT  = 'Frage zu';
 	
 	STRING_ELM_CHECKBOX     = 'KontrollkÑstchen';
+
+{ ############################################################################## }
+
+{$ENDIF}{$ENDIF}
+
+implementation
+
+end.

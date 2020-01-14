@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  15.04.1998  *
+ *      letztes Update am:  07.10.1998  *
  ****************************************}
 
 {
@@ -325,16 +325,17 @@ function DrawCardTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word; forward;
 
 var
 
-	d_clip : ARRAY_4;
-	extent : ARRAY_8;
+	d_clip  : ARRAY_4;
+	extent  : ARRAY_8;
 	d_str,
-	d_btn  : string;
-	d_chr  : PChar;
+	d_btn   : string;
+	d_chr   : PChar;
 	d_tx,
 	d_ty,
 	d_stat,
 	d_br,
-	d_scpos: integer;
+	d_scpos : integer;
+	defcolfg: TCOLOR_ENTRY;
 
 
 { *** Objekt TSCROLLBAR *** }
@@ -785,7 +786,7 @@ function TCheckBox.Install: boolean;
 						UsrDef:=false;
 					  ob_type:=G_BUTTON;
 					  ob_flags:=(ob_flags and not(RBUTTON)) or FL3DBAK;
-					  ob_state:=ob_state or WHITEBAK or $ff00
+					  ob_state:=ob_state or WHITEBAK or UNDERLINE or XSTATE;
 					end
 				else
 					begin
@@ -986,7 +987,7 @@ function TRadioButton.Install: boolean;
 						UsrDef:=false;
 					  ob_type:=G_BUTTON;
 					  ob_flags:=ob_flags or RBUTTON or FL3DBAK;
-			  		ob_state:=ob_state or WHITEBAK or $ff00
+			  		ob_state:=ob_state or WHITEBAK or UNDERLINE or XSTATE;
 					end
 				else
 					begin
@@ -2441,7 +2442,8 @@ function DrawGroupBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						vsf_interior(vdiHandle,FIS_HOLLOW);
 						vsf_color(vdiHandle,Black);
 						vswr_mode(vdiHandle,MD_TRANS);
-						v_bar(vdiHandle,d_clip)
+						v_bar(vdiHandle,d_clip);
+						vswr_mode(vdiHandle,MD_REPLACE)
 					end;
 				if parm^.pb_parm<>0 then
 					if PByte(parm^.pb_parm)^>0 then
@@ -2455,18 +2457,27 @@ function DrawGroupBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 									inc(longint(d_chr));
 									d_str[q+1]:=d_chr^
 								end;
-							vst_color(vdiHandle,SysInfo.BGDefCol);
-							vswr_mode(vdiHandle,MD_REPLACE);
-							vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
-							vswr_mode(vdiHandle,MD_ERASE);
-							vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
-							vswr_mode(vdiHandle,MD_TRANS);
-							vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
-							vst_color(vdiHandle,Black);
-							vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str)
+							if SysInfo.DefColValid then
+								begin
+									vst_fg_color(vdiHandle,CSPACE_RGB,defcolfg);
+									vst_bg_color(vdiHandle,CSPACE_RGB,SysInfo.DefCol);
+									vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
+									vst_color(vdiHandle,Black)
+								end
+							else
+								begin
+									vst_color(vdiHandle,SysInfo.BGDefCol);
+									vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
+									vswr_mode(vdiHandle,MD_ERASE);
+									vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
+									vswr_mode(vdiHandle,MD_TRANS);
+									vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
+									vst_color(vdiHandle,Black);
+									vgText(vdiHandle,parm^.pb_x+Attr.charSWidth,parm^.pb_y+(SysInfo.Font.Height shr 1),d_str);
+									vswr_mode(vdiHandle,MD_REPLACE)
+								end
 						end;
 				vsl_color(vdiHandle,Black);
-				vswr_mode(vdiHandle,MD_REPLACE);
 				vs_clip(vdiHandle,CLIP_ON,SysInfo.Desktop.A2)
 			end;
 		DrawGroupBox:=NORMAL
@@ -2516,18 +2527,11 @@ function DrawCheckBox(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 		with Application^ do
 			begin
 				if d_stat=bf_Grayed then
-					begin
-						if Attr.Colors>=LWhite then
-							begin
-								vsf_interior(vdiHandle,FIS_SOLID);
-								vsf_color(vdiHandle,LWhite)
-							end
-						else
-							begin
-								vsf_interior(vdiHandle,FIS_PATTERN);
-								vsf_style(vdiHandle,1)
-							end
-					end;
+					if Attr.Colors>=LWhite then
+						begin
+							vsf_interior(vdiHandle,FIS_SOLID);
+							vsf_color(vdiHandle,LWhite)
+						end;
 				v_bar(vdiHandle,d_clip);
 				if d_stat<>bf_Unchecked then
 					begin
@@ -3234,4 +3238,10 @@ function DrawCardTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 		DrawCardTitle:=NORMAL
 	end;
 
+
+begin
+	defcolfg.rgb.reserved:=0;
+	defcolfg.rgb.red:=0;
+	defcolfg.rgb.green:=0;
+	defcolfg.rgb.blue:=0;
 end.

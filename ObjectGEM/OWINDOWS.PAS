@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  19.05.1998  *
+ *      letztes Update am:  05.03.1999  *
  ****************************************}
 
 {
@@ -531,6 +531,7 @@ type
 		function DDReadArgs(dSize: longint; PipeHnd,OrgID,mX,mY,KStat: integer): boolean; virtual;
 		procedure DDFinished(OrgID,mX,mY,KStat: integer); virtual;
 		function FontChanged(OrgID,AnID,ASize,AColor,BackColor,Effects,ARotation,ASkew,HorAlign,VertAlign,AWidth,TrackKern: integer; Size31: fix31; PairKern,cWnd: boolean): boolean; virtual;
+		procedure ColorID(OrgID,mX,mY,palIndex: integer); virtual;
 		procedure Cut; virtual;
 		procedure Copy; virtual;
 		procedure Paste; virtual;
@@ -604,7 +605,11 @@ type
 		MultiTOS,
 		MiNTActive,
 		MagiCActive,
+		NAESActive,
 		ExtObjects,
+		CanScaleIMG,
+		CanTransferBits,
+		HasNewColorFn,
 		HasColorIcons,
 		BubbleHelpActive,
 		IsQSBUsed,
@@ -677,6 +682,7 @@ type
 		procedure PRNChanged(OrgID,Device,Action: integer); virtual;
 		procedure FNTChanged(OrgID: integer); virtual;
 		procedure ColorsChanged(OrgID: integer); virtual;
+		procedure ColorID(OrgID,mX,mY,palIndex: integer); virtual;
 		procedure XAccID(OrgID,mID: integer; Msg,Ver: byte; pName: PChar); virtual;
 		procedure XAccAcc(accID,mID: integer; Msg,Ver: byte; pName: PChar); virtual;
 		function XAccInsert(accID,mID: integer; Msg,Ver: byte; pName: PChar): boolean; virtual;
@@ -739,7 +745,7 @@ type
 		function NextIcon: PIcon; virtual;
 		procedure IconSelect(OnOff: boolean; OffExc: integer); virtual;
 		procedure IconPaint(Work: GRECT; var PaintInfo: TPaintStruct); virtual;
-		procedure BubbleHelp(mX,mY: integer; Hlp: string; mouse: boolean); virtual;
+		procedure BubbleHelp(mX,mY: integer; Hlp: string; mouse,demon: boolean); virtual;
 		function ExecDialog(ADialog: PDialog): integer; virtual;
 		function Alert(AParent: PWindow; DefBtn: integer; Sign: longint; Txt,Btn: string): integer; virtual;
 		function Popup(APopup: PPopup; x,y,Flag: integer): integer; virtual;
@@ -912,6 +918,7 @@ type
 		procedure Check; virtual;
 		procedure Uncheck; virtual;
 		procedure Toggle; virtual;
+		function IsChecked: boolean; virtual;
 		procedure Paint; virtual;
 		function IsHelpAvailable: boolean; virtual;
 		function GetHelp: string; virtual;
@@ -983,21 +990,15 @@ var
 
 	Application: PApplication;
 	pxya       : ptsin_ARRAY;
-	d_pxy,
-	d_clip     : ARRAY_4;
-	d_ty,
-	d_tx,
-	d_scpos    : integer;
-	d_str      : string;
-	d_btn      : string[40];
-	d_chr      : PChar;
 	SysInfo    : record
 		HotKeyCol,
 		UsrDefCol,
-		BGDefCol : integer;
-		Desktop  : GRECT;
+		BGDefCol   : integer;
+		DefCol     : TCOLOR_ENTRY;
+		DefColValid: boolean;
+		Desktop    : GRECT;
 		Font,
-		SmallFont: record
+		SmallFont  : record
 			ID,
 			Point,
 			Height,
@@ -1013,6 +1014,7 @@ procedure GlobalAlloc(var p: pointer; size: longint);
 procedure GlobalFree(var p: pointer; size: longint);
 function GetTempDir: string;
 function GetHomeDir(RootDefault: boolean): string;
+function FilePathSelect(AParent: PWindow; ATitle,AMask: string; var APath,AFile: string; AllowPaths,ForceExist: boolean): boolean;
 function FileSelect(AParent: PWindow; ATitle,AMask: string; var APath,AFile: string; ForceExist: boolean): boolean;
 function XFileSelect(AParent: PWindow; ATitle,AMask: string; var APath,AFile: string; MaxFiles: integer; Group: byte; ForceExist,Modal: boolean): boolean;
 function OpenPrivateProfile(FileName: string): boolean;
@@ -1049,6 +1051,8 @@ procedure BusyMouse;
 procedure SliceMouse;
 procedure SliceMouseNext;
 procedure LastMouse;
+function vst_fg_color(handle,color_space: integer; const fg_color: TCOLOR_ENTRY): integer;
+function vst_bg_color(handle,color_space: integer; const bg_color: TCOLOR_ENTRY): integer;
 function appl_xgetinfo(ap_gtype: integer; var ap_gout1,ap_gout2,ap_gout3,ap_gout4: integer): boolean;
 
 
@@ -1228,11 +1232,20 @@ var
 	upath      : pointer;
 	paf        : PAFNT;
 	ltmf       : PLTMFLY;
+	defcolfg   : TCOLOR_ENTRY;
 	appdone,
 	cliplock,
 	deskinst,
 	has_agi,
 	profilechng: boolean;
+	d_str      : string;
+	d_btn      : string[40];
+	d_chr      : PChar;
+	d_pxy,
+	d_clip     : ARRAY_4;
+	d_ty,
+	d_tx,
+	d_scpos,
 	mhstack,
 	mfstack,
 	spderr,
@@ -1258,6 +1271,7 @@ var
 		ApplSearch,
 		MenuInq,
 		ExtMnSelect,
+		SysNiceline,
 		WindUpdate,
 		Shutdown,
 		Broadcast,
@@ -1265,6 +1279,7 @@ var
 		MnAttach,
 		Iconify,
 		Backdrop,
+		GShortcut,
 		Owner,
 		Shading,
 		BEvent     : boolean
@@ -1587,7 +1602,7 @@ function TIcon.TestButton(mX,mY,BStat,KStat,Clicks: integer): boolean;
 				else
 					if (BStat=2) and (Clicks=1) then
 						begin
-							if IsHelpAvailable then Application^.BubbleHelp(mX,mY,GetHelp,false);
+							if IsHelpAvailable then Application^.BubbleHelp(mX,mY,GetHelp,false,false);
 							TestButton:=true
 						end
 			end
@@ -2735,7 +2750,7 @@ constructor TStatic.Init(AParent: PDialog; AnIndx,ATextLen: integer; UserDef: bo
 									begin
 									  ob_type:=G_STRING;
 									  ob_flags:=ob_flags or FL3DACT;
-									  ob_state:=ob_state or WHITEBAK or $ff00;
+									  ob_state:=ob_state or WHITEBAK or UNDERLINE or XSTATE;
 										inc(ob_height,3)
 									end
 								else
@@ -3573,17 +3588,20 @@ function TPopup.Execute: integer;
 				if bTst(PopTree^[q].ob_state,DISABLED) then
 					if StrPLeft(GetText(q-PopTree^[pStart].ob_head),1)='-' then
 						begin
-							PopTree^[q].ob_type:=G_USERDEF;
-							PopTree^[q].ob_spec.user_blk:=@mnusr;
-							continue
+							if not(agi.SysNiceline) or not(Application^.NAESActive) then
+								begin
+									PopTree^[q].ob_type:=G_USERDEF;
+									PopTree^[q].ob_spec.user_blk:=@mnusr;
+								end;
+							continue;
 						end;
 				if (PopTree^[q].ob_type and $ff)=G_STRING then
-					if (MagiCDate>=$19971030) and (List=nil) then PopTree^[q].ob_type:=G_SHORTCUT
+					if agi.GShortcut and (List=nil) then PopTree^[q].ob_type:=G_SHORTCUT;
 			end;
 		with PopTree^[ROOT] do
 			begin
 				ob_x:=0;
-				ob_y:=0
+				ob_y:=0;
 			end;
 		with PopTree^[pIndex] do
 			begin
@@ -6857,7 +6875,7 @@ procedure TWindow.WMToolbar(Indx,BStat,KStat,Clicks: integer);
 					if pe^.IsHelpAvailable then
 						begin
 							graf_mkstate(bx,by,dummy,dummy);
-							Application^.BubbleHelp(bx,by,pe^.GetHelp,false)
+							Application^.BubbleHelp(bx,by,pe^.GetHelp,false,false)
 						end;
 				exit
 			end;
@@ -7240,6 +7258,12 @@ function TWindow.FontChanged(OrgID,AnID,ASize,AColor,BackColor,Effects,ARotation
   					p:=p^.Nxt
 	  			end
 			end
+	end;
+
+
+procedure TWindow.ColorID(OrgID,mX,mY,palIndex: integer);
+
+	begin
 	end;
 
 
@@ -7644,6 +7668,7 @@ constructor TApplication.Init(AName: string);
   		dummy,
   		fontid,
   		extrsc : integer;
+  		rgb    : ARRAY_3;
   		atrb   : ARRAY_10;
   		ffnd,
   		scmd   : string;
@@ -7758,7 +7783,7 @@ constructor TApplication.Init(AName: string);
     DlgTop:=-1;
 		MiNTActive:=(MiNTVersion>0);
 		MagiCActive:=(MagiCVersion>=$0200);
-		ExtObjects:=(MagiCVersion>=$0300);
+		NAESActive:=GetCookie('nAES',gval);
 		MemoryProtection:=MiNTActive or MagiCActive;
 		with Attr do
 			begin
@@ -7912,27 +7937,39 @@ constructor TApplication.Init(AName: string);
 								vst_point(vdiHandle,SysInfo.SmallFont.Point,dummy,SysInfo.SmallFont.Height,SysInfo.SmallFont.Width,dummy)
 							end
 						else
-							with SysInfo.SmallFont do getpoint(Height,Width,ID,Point)
+							with SysInfo.SmallFont do getpoint(Height,Width,ID,Point);
 					end;
 				if appl_xgetinfo(2,dummy,dummy,fontid,extrsc) then
 					begin
 						HasColorIcons:=(fontid<>0);
-						agi.ExtRsc:=(extrsc<>0)
+						agi.ExtRsc:=(extrsc<>0);
 					end
 				else
 					begin
 						agi.ExtRsc:=((GEMVersion>=$0330) and (GEMVersion<>MAGIX)) or ((GEMVersion=MAGIX) and (MagiCVersion>=$0300));
 						HasColorIcons:=false
 					end;
+				if appl_xgetinfo(13,dummy,dummy,dummy,fontid) then
+					begin
+						ExtObjects:=bTst(fontid,$0004);
+						agi.GShortcut:=bTst(fontid,$0008);
+						agi.SysNiceline:={bTst(fontid,$0010) or...} NAESActive or extmagxmenu;
+					end
+				else
+					begin
+						ExtObjects:=(MagiCVersion>=$0300);
+						agi.GShortcut:=(MagiCDate>=$19971030);
+						agi.SysNiceline:=NAESActive or extmagxmenu;
+					end;
 				if appl_xgetinfo(10,fontid,dummy,dummy,dummy) then
 					begin
 						agi.Shutdown:=((fontid and $00ff)>=9) or (MagiCVersion>=$0300);
-						agi.Broadcast:=((fontid and $00ff)>=7) and not(MagiCActive)
+						agi.Broadcast:=((fontid and $00ff)>=7) and not(MagiCActive);
 					end
 				else
 					begin
 						agi.Shutdown:=(GEMVersion>=$0400);
-						agi.Broadcast:=agi.Shutdown
+						agi.Broadcast:=agi.Shutdown;
 					end;
 				if appl_xgetinfo(11,extrsc,dummy,agi.Gadgets,fontid) then
 					begin
@@ -7940,7 +7977,7 @@ constructor TApplication.Init(AName: string);
 						agi.Owner:=bTst(extrsc,16);
 						agi.BEvent:=bTst(extrsc,32);
 						agi.Backdrop:=bTst(extrsc,64);
-						agi.Iconify:=bTst(extrsc,384) and bTst(agi.Gadgets,1)
+						agi.Iconify:=bTst(extrsc,384) and bTst(agi.Gadgets,1);
 					end
 				else
 					begin
@@ -7951,7 +7988,7 @@ constructor TApplication.Init(AName: string);
 						agi.Owner:=agi.WindUpdate;
 						if GEMVersion>=$0410 then agi.Gadgets:=1
 						else
-							agi.Gadgets:=0
+							agi.Gadgets:=0;
 					end;
 				if appl_xgetinfo(4,dummy,dummy,fontid,dummy) then agi.ApplSearch:=(fontid<>0)
 				else
@@ -7959,12 +7996,12 @@ constructor TApplication.Init(AName: string);
 				if appl_xgetinfo(9,extrsc,dummy,dummy,fontid) then
 					begin
 						agi.MnAttach:=(extrsc<>0);
-						agi.ExtMnSelect:=(fontid<>0)
+						agi.ExtMnSelect:=(fontid<>0);
 					end
 				else
 					begin
 						agi.ExtMnSelect:=(GEMVersion>=$0330) and (GEMVersion<>MAGIX);
-						agi.MnAttach:=agi.ExtMnSelect
+						agi.MnAttach:=agi.ExtMnSelect;
 					end;
 				if appl_xgetinfo(6,dummy,dummy,fontid,dummy) then agi.MenuInq:=(fontid<>0)
 				else
@@ -7980,13 +8017,13 @@ constructor TApplication.Init(AName: string);
 						if ExtObjects then
 							begin
 								HotKeyCol:=Black;
-								UsrDefCol:=Black
+								UsrDefCol:=Black;
 							end
 						else
 							begin
 								HotKeyCol:=Red;
-								UsrDefCol:=Blue
-							end
+								UsrDefCol:=Blue;
+							end;
 					end;
 				bfalcol:=objc_xsysvar(ACTBUTCOL,$0100);
 				if GetCookie('ICFS',gval) and not(agi.Iconify) then icfserver:=pointer(gval);
@@ -7996,6 +8033,16 @@ constructor TApplication.Init(AName: string);
 					begin
 						SysInfo.BGDefCol:=objc_xsysvar(BACKGRCOL,$0404);
 						bfalcol:=objc_xsysvar(ACTBUTCOL,$0100);
+						vq_color(vdiHandle,SysInfo.BGDefCol,1,rgb);
+						SysInfo.DefCol.rgb.reserved:=0;
+						SysInfo.DefCol.rgb.red:=word(((longint(rgb[0])*longint(65535)) div longint(1000)) and $0000ffff);
+						SysInfo.DefCol.rgb.green:=word(((longint(rgb[1])*longint(65535)) div longint(1000)) and $0000ffff);
+						SysInfo.DefCol.rgb.blue:=word(((longint(rgb[2])*longint(65535)) div longint(1000)) and $0000ffff);
+						defcolfg.rgb.reserved:=0;
+						defcolfg.rgb.red:=0;
+						defcolfg.rgb.green:=0;
+						defcolfg.rgb.blue:=0;
+						SysInfo.DefColValid:=HasNewColorFn and (Attr.Colors>=SysInfo.BGDefCol);
 						gval:=0;
 						GetXAccAttr(XAcc);
 						with XAcc do
@@ -8004,7 +8051,7 @@ constructor TApplication.Init(AName: string);
 								if length(AppTypeMR)>0 then inc(gval,length(AppTypeMR)+2);
 								if AppTypeHR<>nil then inc(gval,length(AppTypeHR^)+2);
 								if ExtFeatures<>nil then inc(gval,length(ExtFeatures^)+2);
-								if GenericName<>nil then inc(gval,length(GenericName^)+2)
+								if GenericName<>nil then inc(gval,length(GenericName^)+2);
 							end;
 						if gval>0 then inc(gval,5);
 						xdsc:=(gval>0);
@@ -8088,17 +8135,19 @@ constructor TApplication.Init(AName: string);
 									pipe[6]:=menuID;
 									pipe[7]:=0;
 									Broadcast(@pipe,true);
-									dummy:=appl_find('GEMINI  ');
-									if dummy<0 then dummy:=appl_find('AVSERVER');
-									if dummy<0 then
+									dummy:=id_No;
+									scmd:=GetEnv('AVSERVER');
+									if length(scmd)>0 then
 										begin
-											scmd:=GetEnv('AVSERVER');
-											if length(scmd)>0 then
-												begin
-													scmd:=StrPUpper(StrPLeft(StrPTrimF(scmd),8));
-													dummy:=appl_find(scmd+StrPSpace(8-length(scmd)))
-												end
+											scmd:=StrPUpper(StrPLeft(StrPTrimF(scmd),8));
+											dummy:=appl_find(scmd+StrPSpace(8-length(scmd)))
 										end;
+									if dummy<0 then dummy:=appl_find('AVSERVER');
+									if dummy<0 then dummy:=appl_find('JINNEE  ');
+									if dummy<0 then dummy:=appl_find('THING   ');
+									if dummy<0 then dummy:=appl_find('GEMINI  ');
+									if dummy<0 then dummy:=appl_find('MAGXDESK');
+									if dummy<0 then dummy:=appl_find('EASE    ');
 									if dummy>=0 then
 										begin
 											pipe[0]:=AV_PROTOKOLL;
@@ -8158,7 +8207,7 @@ destructor TApplication.Done;
     DisposeStr(Name);
 		GlobalFree(pointer(xaccname),xaccnlen);
 		Application:=nil;
-    inherited Done
+    inherited Done;
   end;
 
 
@@ -8866,9 +8915,14 @@ procedure	TApplication.ExitGEM;
 
 
 procedure TApplication.SetupVDI;
-	var dummy: integer;
+	var dummy  : integer;
+	    ewrkout: workout_ARRAY;
 
 	begin
+		vq_extnd(vdiHandle,1,ewrkout);
+		CanScaleIMG:=bTst(ewrkout[30],1);
+		CanTransferBits:=bTst(ewrkout[30],2);
+		HasNewColorFn:=bTst(ewrkout[32],1);
 		SetSystemFont(vdiHandle,Attr.charWidth,Attr.charHeight,Attr.boxWidth,Attr.boxHeight);
 		vst_alignment(vdiHandle,TA_LEFT,TA_BASELINE,dummy,dummy);
 		vsl_udsty(vdiHandle,$5555);
@@ -10063,6 +10117,8 @@ procedure TApplication.MUMesag(data: TEventData);
 			FNTChanged(data.Pipe[1]);
 		COLORS_CHANGED:
 			ColorsChanged(data.Pipe[1]);
+		COLOR_ID:
+			ColorID(data.Pipe[1],data.Pipe[3],data.Pipe[4],data.Pipe[5]);
 		ACC_ID:
 			XAccID(data.Pipe[1],data.Pipe[6],byte(data.Pipe[3] and $00ff),byte((data.Pipe[3] and $ff00) shr 8),Ptr(word(data.Pipe[4]),word(data.Pipe[5])));
 		ACC_ACC:
@@ -10111,7 +10167,7 @@ procedure TApplication.MUMesag(data: TEventData);
 								if p^.Attr.gemHandle>=0 then
 									if not(p^.IsShaded) then
 										if p^.IsHelpAvailable(data.Pipe[4],data.Pipe[5]) then
-											BubbleHelp(data.Pipe[4],data.Pipe[5],p^.GetHelp(data.Pipe[4],data.Pipe[5]),false)
+											BubbleHelp(data.Pipe[4],data.Pipe[5],p^.GetHelp(data.Pipe[4],data.Pipe[5]),false,true)
 					end
 			end;
 		GO_PRIVATE:
@@ -10513,6 +10569,15 @@ procedure TApplication.FNTChanged(OrgID: integer);
 procedure TApplication.ColorsChanged(OrgID: integer);
 
 	begin
+	end;
+
+
+procedure TApplication.ColorID(OrgID,mX,mY,palIndex: integer);
+	var pw: PWindow;
+
+	begin
+		pw:=GetGPWindow(wind_find(mX,mY));
+		if pw<>nil then pw^.ColorID(OrgID,mX,mY,palIndex)
 	end;
 
 
@@ -11529,7 +11594,7 @@ procedure TApplication.IconPaint(Work: GRECT; var PaintInfo: TPaintStruct);
 	end;
 
 
-procedure TApplication.BubbleHelp(mX,mY: integer; Hlp: string; mouse: boolean);
+procedure TApplication.BubbleHelp(mX,mY: integer; Hlp: string; mouse,demon: boolean);
 	var bubblegem,
 	    bclicks,
 	    bmask,
@@ -11562,6 +11627,7 @@ procedure TApplication.BubbleHelp(mX,mY: integer; Hlp: string; mouse: boolean);
 		pipe[6]:=integer(LoWord(bubblebuf));
 		pipe[7]:=0;
 		if mouse then pipe[7]:=pipe[7] or BGS7_MOUSE;
+		if demon then pipe[7]:=pipe[7] or BGS7_REQBYDEMON;
 		if DlgTop<0 then
 			begin
 				appl_write(bubblegem,16,@pipe);
@@ -13161,11 +13227,11 @@ function TApplication.MenuCorrect(mt: PTree; var i: integer): boolean;
 								if ((ob_width>=SysInfo.Desktop.W) or (ob_height>=SysInfo.Desktop.H)) then
 									begin
 										MenuCorrect:=false;
-										exit
+										exit;
 									end;
 								objc_offset(mt,i,abs_x,abs_y);
-								if (abs_x>=(SysInfo.Desktop.X+SysInfo.Desktop.W-ob_width)) then dec(ob_x,abs_x+1-(SysInfo.Desktop.X+SysInfo.Desktop.W-ob_width))
-							end
+								if (abs_x>=(SysInfo.Desktop.X+SysInfo.Desktop.W-ob_width)) then dec(ob_x,abs_x+1-(SysInfo.Desktop.X+SysInfo.Desktop.W-ob_width));
+							end;
 				until bTst(mt^[i].ob_flags,LASTOB);
 				with mt^[ROOT] do
 					begin
@@ -13173,11 +13239,11 @@ function TApplication.MenuCorrect(mt: PTree; var i: integer): boolean;
 						ob_y:=0;
 						ob_width:=Attr.MaxPX+1;
 						ob_height:=Attr.MaxPY+1;
-						with mt^[ob_head] do ob_width:=mt^[ROOT].ob_width
+						with mt^[ob_head] do ob_width:=mt^[ROOT].ob_width;
 					end;
 				inc(i);
-				MenuCorrect:=true
-			end
+				MenuCorrect:=true;
+			end;
 	end;
 
 
@@ -13185,6 +13251,7 @@ procedure TApplication.MenuTune;
 	var i: integer;
 
 	begin
+		if agi.SysNiceline then exit;
 		i:=-1;
 		mnusr.ub_parm:=0;
 		mnusr.ub_code:=@DrawMenuRect;
@@ -13195,9 +13262,9 @@ procedure TApplication.MenuTune;
 					if bTst(ob_state,DISABLED) and (PChar(ob_spec.free_string)^='-') then
 						begin
 							ob_type:=G_USERDEF;
-							ob_spec.user_blk:=@mnusr
-						end
-		until bTst(MenuTree^[i].ob_flags,LASTOB)
+							ob_spec.user_blk:=@mnusr;
+						end;
+		until bTst(MenuTree^[i].ob_flags,LASTOB);
 	end;
 
 
@@ -13942,7 +14009,7 @@ procedure TDialog.WMButton(mX,mY,BStat,KStat,Clicks: integer);
 				else
 					if nx>=0 then
 						begin
-							if IsHelpAvailable(mX,mY) then Application^.BubbleHelp(mX,mY,GetHelp(mX,mY),false);
+							if IsHelpAvailable(mX,mY) then Application^.BubbleHelp(mX,mY,GetHelp(mX,mY),false,false);
 							exit
 						end
 			end;
@@ -15481,7 +15548,14 @@ procedure TToolbar.Toggle;
 	begin
 		if GetCheck=bf_Unchecked then SetCheck(bf_Checked)
 		else
-			SetCheck(bf_Unchecked)
+			SetCheck(bf_Unchecked);
+	end;
+
+
+function TToolbar.IsChecked: boolean;
+
+	begin
+		IsChecked:=(GetCheck=bf_Checked);
 	end;
 
 
@@ -15504,7 +15578,7 @@ procedure TToolbar.Paint;
 					begin
 						if rc_intersect(SysInfo.Desktop,box) then
 							if rc_intersect(obox,box) then
-								with obox do objc_draw(Class.ToolbarTree,ROOT,MAX_DEPTH,X,Y,W,H);
+								with box do objc_draw(Class.ToolbarTree,ROOT,MAX_DEPTH,X,Y,W,H);
 						wind_get(Attr.gemHandle,WF_NEXTXYWH,box.X,box.Y,box.W,box.H)
 					end;
 				ShowMouse;
@@ -15864,32 +15938,33 @@ constructor TSubMenu.Init(AParent: PEventObject; mNum,popTree,popIndex: integer)
 		Style:=Style or es_SubMenu;
 		if (agi.MnAttach) and IsApp then
 			begin
-				with Popup^ do
-					begin
-						mnusr.ub_parm:=0;
-						mnusr.ub_code:=@DrawMenuRect;
-						for i:=PopTree^[pStart].ob_head to PopTree^[pStart].ob_tail do
-							if bTst(PopTree^[i].ob_state,DISABLED) then
-								if StrPLeft(GetText(i-PopTree^[pStart].ob_head),1)='-' then
-									begin
-										PopTree^[i].ob_type:=G_USERDEF;
-										PopTree^[i].ob_spec.user_blk:=@mnusr
-									end
-					end;
+				if not(agi.SysNiceline) or Application^.extmagxmenu then
+					with Popup^ do
+						begin
+							mnusr.ub_parm:=0;
+							mnusr.ub_code:=@DrawMenuRect;
+							for i:=PopTree^[pStart].ob_head to PopTree^[pStart].ob_tail do
+								if bTst(PopTree^[i].ob_state,DISABLED) then
+									if StrPLeft(GetText(i-PopTree^[pStart].ob_head),1)='-' then
+										begin
+											PopTree^[i].ob_type:=G_USERDEF;
+											PopTree^[i].ob_spec.user_blk:=@mnusr;
+										end;
+						end;
 				with mnu do
 					begin
 						mn_tree:=Popup^.PopTree;
 						mn_menu:=Popup^.pIndex;
 						mn_item:=Popup^.pStart;
 						mn_scroll:=0;
-						mn_keystate:=K_NORMAL
+						mn_keystate:=K_NORMAL;
 					end;
-				menu_attach(MEA_ATTACH,p,VMNum,@mnu)
+				menu_attach(MEA_ATTACH,p,VMNum,@mnu);
 			end
 		else
 			with p^[VMNum] do
 				if (ob_type and $00ff)=G_STRING then
-					PChar(longint(ob_spec.free_string)+StrLen(ob_spec.free_string)-2)^:=#3
+					PChar(longint(ob_spec.free_string)+StrLen(ob_spec.free_string)-2)^:=#3;
 	end;
 
 
@@ -15900,7 +15975,7 @@ destructor TSubMenu.Done;
 			if (GEMVersion=MAGIX) or (GEMVersion>=$0410) then
 				if GetMenuTree<>nil then menu_attach(MEA_REMOVE,GetMenuTree,VMNum,nil);
 		if Popup<>nil then dispose(Popup,Done);
-		inherited Done
+		inherited Done;
 	end;
 
 
@@ -15913,7 +15988,7 @@ procedure TSubMenu.Work;
 				graf_mkstate(Popup^.pX,Popup^.pY,ret,ret);
 				Popup^.pFlag:=POP_CENTER;
 				ret:=Popup^.Execute;
-				if ret>=0 then HandleMenu(ret)
+				if ret>=0 then HandleMenu(ret);
 			end
 	end;
 
@@ -16191,7 +16266,7 @@ function TDKey.TestKey(Stat,Key: integer): boolean;
 												graf_mkstate(mx,my,dummy,dummy);
 												if IsHelpAvailable(mx,my) then
 													begin
-														Application^.BubbleHelp(mx,my,GetHelp(mx,my),false);
+														Application^.BubbleHelp(mx,my,GetHelp(mx,my),false,false);
 														valid:=true
 													end
 											end;
@@ -16524,6 +16599,50 @@ procedure vPline(vdiHandle,Count: integer; const pxyarray: array of integer);
 	end;
 
 
+function vst_fg_color(handle,color_space: integer; const fg_color: TCOLOR_ENTRY): integer;
+
+	begin
+		with VDI_pb do
+			begin
+				control^[0]:=200;
+				control^[1]:=0;
+				control^[3]:=6;
+				control^[5]:=0;
+				control^[6]:=handle;
+				intin^[0]:=0;
+				intin^[1]:=color_space;
+				intin^[2]:=fg_color.rgb.reserved;
+				intin^[3]:=fg_color.rgb.red;
+				intin^[4]:=fg_color.rgb.green;
+				intin^[5]:=fg_color.rgb.blue;
+				vdi(@VDI_pb);
+				vst_fg_color:=intout^[0]
+			end
+	end;
+
+
+function vst_bg_color(handle,color_space: integer; const bg_color: TCOLOR_ENTRY): integer;
+
+	begin
+		with VDI_pb do
+			begin
+				control^[0]:=201;
+				control^[1]:=0;
+				control^[3]:=6;
+				control^[5]:=0;
+				control^[6]:=handle;
+				intin^[0]:=0;
+				intin^[1]:=color_space;
+				intin^[2]:=bg_color.rgb.reserved;
+				intin^[3]:=bg_color.rgb.red;
+				intin^[4]:=bg_color.rgb.green;
+				intin^[5]:=bg_color.rgb.blue;
+				vdi(@VDI_pb);
+				vst_bg_color:=intout^[0]
+			end
+	end;
+
+
 function DrawMenuRect(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 	label _weiter,_raus;
 
@@ -16595,8 +16714,6 @@ function DrawTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 			begin
 				vs_clip(vdiHandle,CLIP_ON,d_clip);
 				vst_effects(vdiHandle,TF_UNDERLINED);
-				vswr_mode(vdiHandle,MD_ERASE);
-				vst_color(vdiHandle,SysInfo.BGDefCol);
 				d_str[0]:=#0;
 				d_chr:=PChar(parm^.pb_parm);
 				while d_chr^<>#0 do
@@ -16605,12 +16722,24 @@ function DrawTitle(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						d_str[byte(d_str[0])]:=d_chr^;
 						inc(longint(d_chr))
 					end;
-				vgText(vdiHandle,parm^.pb_x,parm^.pb_y+SysInfo.Font.Height,d_str);
-				vswr_mode(vdiHandle,MD_TRANS);
-				vst_color(vdiHandle,Black);
-				vgText(vdiHandle,parm^.pb_x,parm^.pb_y+SysInfo.Font.Height,d_str);
+				if SysInfo.DefColValid then
+					begin
+						vst_fg_color(vdiHandle,CSPACE_RGB,defcolfg);
+						vst_bg_color(vdiHandle,CSPACE_RGB,SysInfo.DefCol);
+						vgText(vdiHandle,parm^.pb_x,parm^.pb_y+SysInfo.Font.Height,d_str);
+						vst_color(vdiHandle,Black)
+					end
+				else
+					begin
+						vswr_mode(vdiHandle,MD_ERASE);
+						vst_color(vdiHandle,SysInfo.BGDefCol);
+						vgText(vdiHandle,parm^.pb_x,parm^.pb_y+SysInfo.Font.Height,d_str);
+						vswr_mode(vdiHandle,MD_TRANS);
+						vst_color(vdiHandle,Black);
+						vgText(vdiHandle,parm^.pb_x,parm^.pb_y+SysInfo.Font.Height,d_str);
+						vswr_mode(vdiHandle,MD_REPLACE)
+					end;
 				vst_effects(vdiHandle,TF_NORMAL);
-				vswr_mode(vdiHandle,MD_REPLACE);
 				vs_clip(vdiHandle,CLIP_ON,SysInfo.Desktop.A2)
 			end;
 		DrawTitle:=NORMAL
@@ -16631,8 +16760,6 @@ function DrawStatic(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 			begin
 				vs_clip(vdiHandle,CLIP_ON,d_clip);
 				if bTst(parm^.pr_currstate,DISABLED) then vst_effects(vdiHandle,TF_LIGHTENED);
-				vswr_mode(vdiHandle,MD_ERASE);
-				vst_color(vdiHandle,SysInfo.BGDefCol);
 				d_str[0]:=#0;
 				d_chr:=PChar(parm^.pb_parm);
 				while d_chr^<>#0 do
@@ -16641,11 +16768,23 @@ function DrawStatic(dummy1,dummy2: pointer; parm: PARMBLKPtr): word;
 						d_str[byte(d_str[0])]:=d_chr^;
 						inc(longint(d_chr))
 					end;
-				vgText(vdiHandle,parm^.pb_x,parm^.pb_y+SysInfo.Font.Height,d_str);
-				vswr_mode(vdiHandle,MD_TRANS);
-				vst_color(vdiHandle,Black);
-				vgText(vdiHandle,parm^.pb_x,parm^.pb_y+SysInfo.Font.Height,d_str);
-				vswr_mode(vdiHandle,MD_REPLACE);
+				if SysInfo.DefColValid then
+					begin
+						vst_fg_color(vdiHandle,CSPACE_RGB,defcolfg);
+						vst_bg_color(vdiHandle,CSPACE_RGB,SysInfo.DefCol);
+						vgText(vdiHandle,parm^.pb_x,parm^.pb_y+SysInfo.Font.Height,d_str);
+						vst_color(vdiHandle,Black)
+					end
+				else
+					begin
+						vswr_mode(vdiHandle,MD_ERASE);
+						vst_color(vdiHandle,SysInfo.BGDefCol);
+						vgText(vdiHandle,parm^.pb_x,parm^.pb_y+SysInfo.Font.Height,d_str);
+						vswr_mode(vdiHandle,MD_TRANS);
+						vst_color(vdiHandle,Black);
+						vgText(vdiHandle,parm^.pb_x,parm^.pb_y+SysInfo.Font.Height,d_str);
+						vswr_mode(vdiHandle,MD_REPLACE)
+					end;
 				vsl_type(vdiHandle,LT_SOLID);
 				vst_effects(vdiHandle,TF_NORMAL);
 				vs_clip(vdiHandle,CLIP_ON,SysInfo.Desktop.A2)
@@ -16997,6 +17136,13 @@ function xfilesys(const fsys: string): boolean;
 
 
 function FileSelect(AParent: PWindow; ATitle,AMask: string; var APath,AFile: string; ForceExist: boolean): boolean;
+
+	begin
+		FileSelect:=FilePathSelect(AParent,ATitle,AMask,APath,AFile,false,ForceExist)
+	end;
+
+
+function FilePathSelect(AParent: PWindow; ATitle,AMask: string; var APath,AFile: string; AllowPaths,ForceExist: boolean): boolean;
 	label _again;
 
 	var fname,fpath,npath,dmy: string;
@@ -17018,7 +17164,7 @@ function FileSelect(AParent: PWindow; ATitle,AMask: string; var APath,AFile: str
 		if nofsel2 then wind_update(BEG_MCTRL);
 		olddta:=FGetdta;
 		Fsetdta(@newdta);
-		FileSelect:=false;
+		FilePathSelect:=false;
 		if length(APath)=0 then dgetpath(fpath,0)
 		else
 			fpath:=APath;
@@ -17043,40 +17189,44 @@ function FileSelect(AParent: PWindow; ATitle,AMask: string; var APath,AFile: str
 			ret:=fsel_exinput(fpath,fname,exitButton,ATitle)
 		else
 			ret:=fsel_input(fpath,fname,exitButton);
-		if (exitButton=1) and (ret<>0) and (length(fname)>0) then
+		if (exitButton=1) and (ret<>0) and ((length(fname)>0) or AllowPaths) then
 			begin
-				dummy:=pos('.',AMask);
-				if ((pos('.',fname)=0) or (StrPRight(fname,1)='.')) and Between(dummy,1,length(AMask)-1) then
+				if length(fname)>0 then
 					begin
-						dmy:=StrPRight(AMask,length(AMask)-dummy);
-						if (pos('?',dmy)=0) and (pos('*',dmy)=0) then
+						dummy:=pos('.',AMask);
+						if ((pos('.',fname)=0) or (StrPRight(fname,1)='.')) and Between(dummy,1,length(AMask)-1) then
 							begin
-								if StrPRight(fname,1)='.' then fname:=fname+dmy
-								else
-									fname:=fname+'.'+dmy
+								dmy:=StrPRight(AMask,length(AMask)-dummy);
+								if (pos('?',dmy)=0) and (pos('*',dmy)=0) then
+									begin
+										if StrPRight(fname,1)='.' then fname:=fname+dmy
+										else
+											fname:=fname+'.'+dmy
+									end
 							end
 					end;
 				npath:=StrPLeft(fpath,RPos('\',fpath));
 				if ForceExist then
-					if not(Exist(npath+fname)) then
-						begin
-							if Application<>nil then
-								with Application^ do
-									begin
-										if Attr.Country=FRA then
-											Alert(nil,1,NOTE,'"'+fname+'" n''existe pas.','  &OK  ')
-										else if (Attr.Country=FRG) or (Attr.Country=SWG) then
-											Alert(nil,1,NOTE,'"'+fname+'" existiert nicht.','  &OK  ')
-										else
-											Alert(nil,1,NOTE,'"'+fname+'" does not exist.','  &OK  ')
-									end
-							else
-								form_alert(1,'[1][ | | |"'+fname+'" existiert nicht.  ][   OK   ]');
-							goto _again
-						end;
+					if length(fname)>0 then
+						if not(Exist(npath+fname)) then
+							begin
+								if Application<>nil then
+									with Application^ do
+										begin
+											if Attr.Country=FRA then
+												Alert(nil,1,NOTE,'"'+fname+'" n''existe pas.','  &OK  ')
+											else if (Attr.Country=FRG) or (Attr.Country=SWG) then
+												Alert(nil,1,NOTE,'"'+fname+'" existiert nicht.','  &OK  ')
+											else
+												Alert(nil,1,NOTE,'"'+fname+'" does not exist.','  &OK  ')
+										end
+								else
+									form_alert(1,'[1][ | | |"'+fname+'" existiert nicht.  ][   OK   ]');
+								goto _again
+							end;
 				APath:=npath;
 				AFile:=fname;
-				FileSelect:=true
+				FilePathSelect:=true
 			end;
 		Fsetdta(olddta);
 		if nofsel2 then wind_update(END_MCTRL);
@@ -18203,7 +18353,7 @@ function appl_xgetinfo(ap_gtype: integer; var ap_gout1,ap_gout2,ap_gout3,ap_gout
 					control^[4]:=0;
 					intin^[0]:=ap_gtype;
 					_crystal(@AES_pb);
-					if intout^[0]=1 then
+					if intout^[0]<>0 then
 						begin
 							ap_gout1:=intout^[1];
 							ap_gout2:=intout^[2];
@@ -18215,7 +18365,7 @@ function appl_xgetinfo(ap_gtype: integer; var ap_gout1,ap_gout2,ap_gout3,ap_gout
 		else
 			if paf<>nil then
 				if paf^.af_magic='AFnt' then
-					appl_xgetinfo:=(paf^.afnt_getinfo(nil,nil,0,0,0,ap_gtype,ap_gout1,ap_gout2,ap_gout3,ap_gout4)=1)
+					appl_xgetinfo:=(paf^.afnt_getinfo(nil,nil,0,0,0,ap_gtype,ap_gout1,ap_gout2,ap_gout3,ap_gout4)<>0)
 	end;
 
 

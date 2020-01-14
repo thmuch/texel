@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  19.05.1998  *
+ *      letztes Update am:  05.03.1999  *
  ****************************************}
 
 {
@@ -67,7 +67,7 @@ uses
 const
 
 	GOVersion             = $0150;
-	GODate                = $05191998;
+	GODate                = $03051999;
 
 	em_OK                 =     0;
 	em_OutOfMemory        =    -1;
@@ -437,6 +437,8 @@ const
 	G_SHORTCUT            =    38;
 	WHITEBAK              = $0040;
 	DRAW3D                = $0080;
+	UNDERLINE             = $0f00;
+	XSTATE                = $f000;
 	FL3DMASK              = $0600;
 	FL3DNONE              = $0000;
 	FL3DIND               = $0200;
@@ -697,6 +699,12 @@ const
 	
 	GSM_COMMAND           = $0001;
 	GSM_MACRO             = $0002;
+	GSM_WRITE             = $0004;
+	GSM_HEXCODING         = $0008;
+	
+	GSACK_OK              =     0;
+	GSACK_UNKNOWN         =     1;
+	GSACK_ERROR           =     2;
 
 	KEYTAB_ID_IDENTICAL   =     0;
 	KEYTAB_ID_ANSI        =     1;
@@ -722,6 +730,8 @@ const
 	BGS7_USRHIDE          = $0001;
 	BGS7_MFDB             = $0002;
 	BGS7_MOUSE            = $0004;
+	BGS7_2STRINGS         = $0008;
+	BGS7_REQBYDEMON       = $0010;
 	BGS7_ERROR            = $8000;
 
 	CAB_CCHANGED          = integer($cab0);
@@ -762,6 +772,9 @@ const
 	VIEWERR_WID           =     3;
 	VIEWERR_MEM           =     4;
 
+	COLOR_ID              = integer($c010);
+	COLOR_RGB             = integer($c011);
+
 	PAGE_DEFAULT          =     0;
 	PAGE_A3               =     1;
 	PAGE_A4               =     2;
@@ -772,6 +785,10 @@ const
 	PAGE_LEGAL            =    18;
 	PAGE_DOUBLE           =    19;
 	PAGE_BROAD            =    20;
+
+	CSPACE_RGB		        =     1;
+	CSPACE_ARGB	     	    =	    2;
+	CSPACE_CMYK		        =     4;
 
 	HexArray: array [0..15] of char =
 							('0','1','2','3','4','5','6','7',
@@ -905,6 +922,29 @@ type
 		file_name3 : array [0..199] of char;
 		pt_cnt     : integer;
 		pt_sizes   : array [0..63] of integer
+	end;
+
+	PCOLOR_RGB = ^TCOLOR_RGB;
+	TCOLOR_RGB = record
+		reserved,
+		red,
+		green,
+		blue    : word
+	end;
+	
+	PCOLOR_CMYK = ^TCOLOR_CMYK;
+	TCOLOR_CMYK = record
+		cyan,
+		magenta,
+		yellow,
+		black  : word
+	end;
+	
+	PCOLOR_ENTRY = ^TCOLOR_ENTRY;
+	TCOLOR_ENTRY = record
+		case boolean of
+			false: (rgb : TCOLOR_RGB);
+			true:  (cmyk: TCOLOR_CMYK)
 	end;
 
 	PINFOXSSI             = ^INFOXSSI;

@@ -11,7 +11,7 @@
  *  www.uni-karlsruhe.de/~Thomas.Much   *
  ****************************************
  *      erstellt am:        13.07.1992  *
- *      letztes Update am:  17.04.1998  *
+ *      letztes Update am:  23.06.1998  *
  ****************************************}
 
 {
@@ -114,6 +114,7 @@ function GetMemBuffer(smax,smin: longint; var size: longint): pointer;
 function MapKey(key: word): word;
 procedure KeyRepeatOff;
 procedure KeyRepeatRestore;
+function GetTicks: longint;
 function BootDevice: char;
 function Exist(const FileName: string): boolean;
 function PathExist(PathName: string): boolean;
@@ -128,6 +129,8 @@ function GetFileSize(FileName: string; FileHdl: integer): longint;
 function GetQuotedName(var p: PChar): string;
 function GetExtension(const FileName: string): string;
 function GetDrives: longint;
+function GetBackupFilename(const FileName: string): string;
+function HasLongFileNames(PathName: string): boolean;
 function CopyFile(oldname,newname: string): boolean;
 
 function NVDIVersion: word;
@@ -163,12 +166,6 @@ implementation
 uses
 
 	Strings,Tos,Gem;
-
-const
-
-	_bootdev   = $446;
-	_sysbase   = $4f2;
-	_p_cookies = $5a0;
 
 type
 
@@ -211,9 +208,13 @@ var
 	mxdate,
 	oldct  : longint;
 	krcount: integer;
-	conterm: byte absolute $484;
 	pmagx  : PMAGX_COOKIE;
 	pnvdi  : PNVDIStruct;
+	posh   : pointer;
+
+	conterm: byte absolute $484;
+	hz200  : longint absolute $4ba;
+	sysbase: longint absolute $4f2;
 
 
 
@@ -806,17 +807,10 @@ function Ptr(hi,lo: word): pointer;
 	end;
 
 
-function getjar: longint;
-
-	begin
-		getjar:=PLongint(_p_cookies)^
-	end;
-
-
 function GetCookieJar: PCookie;
 
 	begin
-		GetCookieJar:=PCookie(supexec(getjar))
+		GetCookieJar:=PCookie(setexc(360,pointer(-1)))
 	end;
 
 
@@ -924,14 +918,14 @@ function ChangeCookie(cookie: TCookieID; newval: longint): boolean;
 function getosheader: longint;
 
 	begin
-		getosheader:=PLongint(_sysbase)^
+		getosheader:=sysbase
 	end;
 
 
 function GetOSHeaderPtr: pointer;
 
 	begin
-		GetOSHeaderPtr:=pointer(PLongint(supexec(getosheader)+8)^)
+		GetOSHeaderPtr:=posh
 	end;
 
 
@@ -963,17 +957,10 @@ function MapKey(key: word): word;
 	end;
 
 
-function bootdev: longint;
-
-	begin
-		bootdev:=PWord(_bootdev)^+65
-	end;
-
-
 function BootDevice: char;
 
 	begin
-		BootDevice:=chr(supexec(bootdev))
+		BootDevice:=chr((longint(setexc(273,pointer(-1))) and $000000ff)+65)
 	end;
 
 
@@ -1449,6 +1436,31 @@ function GetDrives: longint;
 	end;
 
 
+function GetBackupFilename(const FileName: string): string;
+
+	begin
+		if HasLongFileNames(FileName) then GetBackupFilename:=FileName+'.bak'
+		else
+			GetBackupFilename:=GetPath(FileName)+GetFilename(FileName,false)+'.bak'
+	end;
+
+
+function HasLongFileNames(PathName: string): boolean;
+	var maxmode: longint;
+
+	begin
+		PathName:=GetPath(PathName);
+		if length(PathName)=0 then HasLongFileNames:=false
+		else
+			begin
+				maxmode:=dpathconf(PathName,-1);
+				if maxmode<3 then HasLongFileNames:=false
+				else
+					HasLongFileNames:=(dpathconf(PathName,3)>12)
+			end
+	end;
+
+
 function CopyFile(oldname,newname: string): boolean;
 	label _raus,_fehler;
 
@@ -1555,12 +1567,27 @@ procedure KeyRepeatRestore;
 	end;
 
 
+function gethz200: longint;
+
+	begin
+		gethz200:=hz200
+	end;
+
+
+function GetTicks: longint;
+
+	begin
+		GetTicks:=supexec(gethz200)
+	end;
+
+
 begin
 	kt:=nil;
 	krcount:=0;
 	oldct:=0;
 	mxver:=0;
 	mxdate:=0;
+	posh:=pointer(PLongint(supexec(getosheader)+8)^);
 	if GetCookie('MagX',longint(pmagx)) then
 		if pmagx<>nil then
 			with pmagx^ do
