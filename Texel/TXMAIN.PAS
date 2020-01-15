@@ -1,5 +1,5 @@
 unit txmain;
-{ 1999-03-07 }
+{ 2000-01-31 }
 
 interface
 
@@ -1985,6 +1985,8 @@ procedure TCalcWindow.SetupWindow;
 	    pzw : PZielwert;
 	    pide: PInsertDialogElement;
 	    ptd : PTDiagram;
+	    pcp : PCellProtect;
+	    pcu : PCellUnprotect;
 
 	begin
 		inherited SetupWindow;
@@ -2020,8 +2022,10 @@ procedure TCalcWindow.SetupWindow;
 				PReplace(replace)^.rb2:=nil
 			end;
 		new(PReplaceNext,Init(@self,K_CTRL,Ctrl_T,RTWMREPLACENEXT,RTWM3));
-		new(PCellProtect,Init(@self,RTWMPROTECT,nil,false));
-		new(PCellUnprotect,Init(@self,RTWMUNPROTECT,nil,false));
+		new(pcp,Init(@self,RTWMPROTECT,nil,false));
+		if pcp<>nil then pcp^.Disable; { ... }
+		new(pcu,Init(@self,RTWMUNPROTECT,nil,false));
+		if pcu<>nil then pcu^.Disable; { ... }
 		new(PInsert,Init(@self,K_NORMAL,S_Insert,RTWMINSERT,RTWM4));
 		new(PInsertCell,Init(@self,K_CTRL+K_SHIFT,Ctrl_V,RTWMINSCELL,RTWM4));
 		insrow:=new(PInsertRows,Init(@self,K_CTRL,Ctrl_Insert,RTWMINSROWS,RTWM4));

@@ -1,5 +1,5 @@
 unit txtypes;
-{ 1999-03-07 }
+{ 2000-03-03 }
 
 interface
 
@@ -10,12 +10,12 @@ uses
 
 const
 
-	TEXELVER          = $0220;
-	TEXELDATE         = '07.03.1999';
+	TEXELVER          = $0230;
+	TEXELDATE         = '03.03.2000';
 	RELEASE           =     0;
-	BUILT             = (19 shl 25) + (3 shl 21) + (7 shl 16);
-	EXPIRE            = (20 shl 25) + (2 shl 21);
-	EXPIRESTR         = '31.01.2000';
+	BUILT             = (20 shl 25) + (3 shl 21) + (3 shl 16);
+	EXPIRE            = (21 shl 25) + (2 shl 21);
+	EXPIRESTR         = '31.01.2001';
 	TEXELCOMPAT       =    45;
 
 	TEXELWINDCLASS    = 'TexelCalcWindow';
@@ -1407,7 +1407,7 @@ const
 	                  'Programm: Thomas Much - Handbuch und Onlinehilfe: Gîtz Hoffart - Betatester: Christoph Bartholme, Sven & Wilfried',
 	                  ' Behne, Daniel Beretzki, Karl Brandt, Oliver Buchmann, Friedrich Burgwedel, Jens Cardinal, Gerd Castan, Alexander',
 	                  ' Clauss, Joe Connor, Ralf Heckmann, Thomas Hoffmann, Gerd Hofmann, Matthias Jaap, Andreas Kromke, Thomas KÅnneth,',
-	                  ' Manfred Lippert, Mario Meissner, Philipp Oelwein, Ulli Ramps, Volker Ritzhaupt, Ulrike Schumann,',
+	                  ' Manfred Lippert, Mario Meissner, Philipp Oelwein, Ulli Ramps, Volker Ritzhaupt,',
 	                  ' Michael Schwingen, Ben Sommer, Peter G. Spengler, Alexander Stehling, Rainer Wiesenfeller und Christian Witt',
                     ' - Homepage: http://www.texel-home.de - EMail: support@texel-home.de - ASH-Mailbox: +49 (0)6221 / 303671',
                     ' - Piep, piep, piep... we apologise for the inconvenience.                                               ');

@@ -1,5 +1,5 @@
 unit txexport;
-{ 1998-07-18 }
+{ 2000-01-31 }
 
 interface
 
@@ -2742,7 +2742,7 @@ procedure TExport.SaveHTML(fname: string; const texbuf: TExportBuf);
 			end;
 
 		begin
-			rgb2hex:='#'+StrPUpper(int2hex(rgb[0])+int2hex(rgb[1])+int2hex(rgb[2]))
+			rgb2hex:='#'+StrPLower(int2hex(rgb[0])+int2hex(rgb[1])+int2hex(rgb[2]))
 		end;
 
 	function rgb2rgb(st: integer): string;
@@ -2812,12 +2812,12 @@ procedure TExport.SaveHTML(fname: string; const texbuf: TExportBuf);
 				se:=StrPTrimF(p^.infobuf.Autor);
 				if length(se)>0 then
 					begin
-						if writes('<META NAME="AUTHOR" CONTENT="') then goto _ende;
+						if writes('<META NAME="author" CONTENT="') then goto _ende;
 						if htmlmask(se) then goto _ende;
 						if writeline('">') then goto _ende;
 					end
 			end;
-		if writes('<META NAME="GENERATOR" CONTENT="') then goto _ende;
+		if writes('<META NAME="generator" CONTENT="') then goto _ende;
 		if htmlmask(TexelApp.GetShortCreatorString) then goto _ende;
 		if writeline('">') then goto _ende;
 		if html30 then
@@ -2920,15 +2920,15 @@ procedure TExport.SaveHTML(fname: string; const texbuf: TExportBuf);
 								begin
 									case (cell^.TxtVal.Align and $0f) of
 									TA_CENTER:
-										if writes(' ALIGN=CENTER') then goto _ende;
+										if writes(' ALIGN="center"') then goto _ende;
 									TA_RIGHT:
-										if writes(' ALIGN=RIGHT') then goto _ende
+										if writes(' ALIGN="right"') then goto _ende
 									end;
 									case (cell^.TxtVal.Align and $f0) of
 									TA_OBEN:
-										if writes(' VALIGN=TOP') then goto _ende;
+										if writes(' VALIGN="top"') then goto _ende;
 									TA_UNTEN:
-										if writes(' VALIGN=BOTTOM') then goto _ende
+										if writes(' VALIGN="bottom"') then goto _ende
 									end
 								end
 						end;
@@ -3015,7 +3015,7 @@ procedure TExport.SaveHTML(fname: string; const texbuf: TExportBuf);
 					else
 						if cell^.Interior=FIS_HOLLOW then
 							begin
-								if writes(' BGCOLOR=#FFFFFF>') then goto _ende
+								if writes(' BGCOLOR="#ffffff">') then goto _ende
 							end
 						else
 							if vq_color(p^.vdiHandle,cell^.Color,0,rgb)=-1 then
@@ -3025,10 +3025,10 @@ procedure TExport.SaveHTML(fname: string; const texbuf: TExportBuf);
 							else
 								if cell^.Interior=FIS_SOLID then
 									begin
-										if writes(' BGCOLOR='+rgb2hex(0)+'>') then goto _ende
+										if writes(' BGCOLOR="'+rgb2hex(0)+'">') then goto _ende
 									end
 								else
-									if writes(' BGCOLOR='+rgb2hex(cell^.Style)+'>') then goto _ende;
+									if writes(' BGCOLOR="'+rgb2hex(cell^.Style)+'">') then goto _ende;
 					if cell^.Typ=CTYPE_EMPTY then
 						begin
 							if colors and not(css1) then
@@ -3041,7 +3041,7 @@ procedure TExport.SaveHTML(fname: string; const texbuf: TExportBuf);
 									if writes('<FONT') then goto _ende;
 									vqc:=vq_color(p^.vdiHandle,cell^.TxtVal.Color,0,rgb);
 									if vqc<>-1 then
-										if writes(' COLOR='+rgb2hex(0)) then goto _ende;
+										if writes(' COLOR="'+rgb2hex(0)+'"') then goto _ende;
 									if fntnames then
 										begin
 											fsize:=((cell^.TxtVal.Size-fstdsize) shr 1);

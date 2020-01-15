@@ -1,5 +1,5 @@
 unit txformsh;
-{ 1998-07-08 }
+{ 2000-01-31 }
 
 interface
 
@@ -84,7 +84,8 @@ procedure TFormSheet.Work;
 						new(pc,Init(ADialog,RTFSLLAYOUT,true,BUBBLE_SHFORM_RLAYOUT));
 						if pc<>nil then pc^.Disable; { ... }
 						new(PCheckBox,Init(ADialog,RTFSOBJECTS,true,BUBBLE_SHFORM_OBJECTS));
-						new(PCheckBox,Init(ADialog,RTFSPROTECT,true,BUBBLE_SHFORM_PROTECT));
+						new(pc,Init(ADialog,RTFSPROTECT,true,BUBBLE_SHFORM_PROTECT));
+						if pc<>nil then pc^.Disable; { ... }
 						new(PCheckBox,Init(ADialog,RTFSUMBRUCH,true,BUBBLE_SHFORM_BREAK));
 						new(PCheckBox,Init(ADialog,RTFSEXCELDATE,true,BUBBLE_SHFORM_EXCELDATE));
 						new(PButton,Init(ADialog,RTFSCURRENT,id_No,true,BUBBLE_SHFORM_CURRENT));
