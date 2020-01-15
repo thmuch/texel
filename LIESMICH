@@ -1,0 +1,1436 @@
+TEXEL Version 2.30r0-beta (.10.1999)
+======================================
+Copyright (c)1994-99 by Thomas Much
+
+SnailMail:       Gerwigstraûe 46, D-76131 Karlsruhe
+Telefon:         (0721) 62xxx
+Fax:             (0721) 62xxx
+EMail:           Thomas Much @ KA2 (keine Mails>16KB)
+                 thomas@snailshell.de (fÅr UUEs)
+WorldWideWeb:    http://www.snailshell.de
+Die Texel-Seite: http://www.texel-home.de
+Die OLGA-Seite:  http://www.snailshell.de/OLGA/
+
+Ab Version 0.10 benîtigt man einen SchlÅssel, damit z.B. das Speichern
+nicht gesperrt ist. Solltest Du noch keinen solchen SchlÅssel erhalten
+haben, kannst Du ihn bei mir anfordern.
+
+
+Betatest-Support
+----------------
+In der Maus FR (0761-50xxx) steht fÅr eingetragene Betatester der GPT
+TEXEL zur VerfÅgung, in dem sich immer die aktuelle Texel-Betaversion
+befindet. Auf Anfrage gibt es Betas auch als UUE per Internet. Diskutiert
+wird in der Texel-Mailingliste.
+
+
+Release-History
+---------------
+Texel 4.0:
+- mehrere Zeilen pro Zelle
+- mehrere Attribute/Fonts pro Zelle
+- DB-Listen incl. schreiben
+- 123-Export
+- Attribute bei Zahlenformaten
+- Zellschutz
+- Notizen
+----------
+Texel 3.5 (Herbst 1999):
+- Zellpositionsberechnung intelligenter
+- gedrehte Textobjekte
+- Stringfunktionen (neuer Formelparser?)
+- Regression
+- bessere Diagramme (externes Modul)
+- ID4-Server
+----------
+Texel 3.0 (FrÅhjahr 1999):
+- Rahmen "zwischen" Zellen
+- XY-Plots
+- Metafiles unter NVDI ausgeben
+- AusfÅllen
+- Bereiche exportieren
+- Arbeitsmappen
+- Texteingabe direkt in die Zelle
+- Åber Zellen zentrierter Text
+- Formate Åbertragen
+- schnelleres Redraw (Offsets merken)
+- weitere Dialogelemente
+----------
+Texel 2.2 (Herbst 1998)
+- neuer Parser mit Stringfunktionen
+- komplett interative Berechnung
+- Redraw aller Zellen erst nach der Berechnung
+- Excel5-Import; Export verbessern
+- Dialogelemente: SchaltflÑchen
+- Lotus-Export
+- HTML-Export mit CSS2
+- optimale Breite/Hîhe
+- Spalten/Zeilen klemmen
+- Farb-IMGs mit NVDI dithern
+----------
+Version 2.30r0 (.03.00)
+- beim HTML-Export werden die COLOR- und BGCOLOR-Angaben mit AnfÅhrungszeichen
+  gespeichert
+- MemoryProtection konnte wegen eines Fehlers bei AV_PROTOKOLL eigentlich gar nicht
+  funktionieren ... gefixed.
+// Zellschutz
+// nach Neueingabe von Konstanten Blatt neu berechnen (wie nach "Ñndern")
+// 123-Import-Bug: BUD-JAN.WK1 -> Jîrg Schmela
+// Absturz unter Farb-SingleTOS ...
+// Absturz bei gîtzbug.txl
+// bei Cut/Copy auch Text/CSV ins Klemmbrett
+// wenn Sheet mit "HTML 3.0"-Export-Einstellung geladen wird, ist CSS aktiv ...
+-
+// NVDI5: Inquire Printer Scaling
+// Mauscursor Åber Zeilen- und Spaltengrenzen verÑndern
+// Fcntl(PLOADINFO)
+// HVERWEIS/VVERWEIS (-> Claris)
+// freie DesktoprÑnder beachten (?)
+// Ssystem()
+// ZellÅberlauf: bei Bildschirmausgabe Flag berechnen, das beim Druck ausgewertet wird
+// Psion-Import verbessert (Codepage 850)
+// EasterEgg: "Besondere GrÅûe an xyz, unseren Lieblingskunden"
+// Kalenderwoche(jjjj,mm,tt), Kalenderwochen(jjjj)
+// falls Niceline.color==Menu.bgcol: schraffierte Niceline verwenden
+// -> Nicelines an Milan-Beta-TOS anpassen
+// neue Funktion: MTrans()
+// Excel-Export mit Attributen
+// wenn ZellrÅckgabe vorhanden: Funktion Auswahl()
+// Mod()-Doku: ganze Zahlen
+// neue Funktion Rest()
+// unzusammenhÑngende Bereiche
+// Zugriff auf globale Variablen mit "[Sheet]!VarName"
+// Anpassung an neue KEYTAB-Version
+// Font im Sonderzeichenfenster einstellen
+// Druckdialog nichtmodal
+// Spalten/Zeilen klemmen
+// Tag-Orientiertes Dateiformat
+// fehlende Argumente, Matrizen als Parameter
+// FunktionsrÅckgabe: Zahl, String, Zelle, Matrix
+// CompoundFiles importieren
+// MagiC-File-/Fontselektor nichtmodal aufrufen
+// Tastenbelegung neu? Cursor=Bewegen; +Shift=Markiere; +Control=im Bloc springen
+--> schaltbar
+// beim Verschieben von Zellen gehen Zellvariablen verloren
+// Probleme beim Ausdruck mehrerer Seiten, Seite x von y
+// bei DIF Value "NA" erkennen
+// Runden() mit Anzahl der Stellen, Abrunden(), Aufrunden()
+// bei Zeit() Stunden > 23 erlauben
+// beim Bewegen des Cursors zugehîrigen Zeilen-/Spaltentitel fett zeichnen
+// nur die verwendeten Fonts im TXL speichern
+// bei CSV Trenner einstellbar (Komma oder Semikolon)
+- 
+// Chart-Objekte (evtl. als Module per GEMScript)
+// Lotus-123-Export
+// CSS2
+// nach shel_read() cd ins gleiche Verzeichnis
+// Neuberechnung nicht rekursiv, sondern solange iterativ Åber das gesamte
+   Blatt, bis alle Zellen fertig berechnet sind; dabei min/max-Rechteck mit
+   Formeln ermitteln (-> Stackprobleme mit bug\Stack.txl)
+// Block _vor_ Ausgabe neu berechnen (Recalc liefert max. Rechteck der verÑnderten Zellen)
+// Neuberechnung nach Import ohne Anzeige
+// Excel5-Import
+// Ausdruck nur "Seite 3 von 3" geht nicht...?!?
+// Probleme beim Aufruf vom STG unter TOS 4.04
+// vor NVDI5: Outlinefunktionen nicht bei Bitmapfonts verwenden (Liste mit vqt_name aufbauen)
+// Cursor-Redrawbug bei ID4 fixen
+// vq_prn_scaling() -> evtl. selbst skalieren...
+// Text "echt" vertikal zeichnen
+// BubbleHelp in .tip-Ñhnliche Datei auslagern
+// shel_help() verwenden, wenn vorhanden
+// fÅr Drucker-öberlaufsberechnungen Bildschirm-Workstation verwenden
+// Bereich exportieren
+// fslx_do() verwenden, falls vorhanden
+// EinfÅgen/Formate: leere Zellen Åberschreiben Texte...
+// Objekte: Skalierung korrekt, Einrasten mit Shift,
+   Redrawprobleme bei Cursor-Einzelschritten+Komplettredraws,
+   D&D zwischen Fenstern, nach Sheet-Laden nicht selektieren,
+   bei Anklicken immer kleinstes unter Mauszeiger selektieren
+// Rahmenredrawversatz beim Cursor beim Wechsel von selected auf normal
+// Druckdialog/Preview korrigieren
+// Preview: Druckdialog nicht îffnen
+// Diagramme: Legende ausschaltbar
+// neue Diagrammtypen: 1:Y, X:Y
+// Maximalgrîûe auf Rechenbereich und Dialogelemente beschrÑnken
+// Textobjekte drehbar, mittig/rechtsbÅndig
+// ID4-Objekte auch ohne ID4-Server im Dokument lassen/anzeigen
+// dBase-Import mit Auswahl des Datensatzbereichs
+// GDBC-Anbindung
+// texelusr.xxx in HOME suchen, inf zuerst im Texel-Verzeichnis
+// Bereichsanpassungsfehler in zeile.txl
+// Diagramme (halb)automatisch aktualisieren
+// NT_GSCMD: AppName[.Fn]+[()]
+// Modalwert per Scripter
+// Einpassen-Routine nicht Åber Skalierung
+// neuer Import-Dialog (mit Filter)
+// beim Schlieûen von Dokumenten optional automatisch speichern
+// AutoSave nach x Minuten
+// beim Verschieben von Objekten scrollen
+// Ping, falls Zeile einfÅgen... und Eingabezeile aktiv
+// Redrawoffsets merken
+// Format Åbertragen
+// Objekt-Cursor-Redraw-Bug
+// Lotus-Import verbessern
+// Texteingabe direkt in die Zelle
+// Drehscript
+// negative Uhrzeiten
+// s/w-Druckoption
+// rsrc_load()/TOS 1.0...
+// dBase5-Import
+// vertikaler Text Åber Zellgrenzen
+// userdef Zahlenformate mit Leerzeichen am Anfang/Ende
+// GS: New mit Grîûenangabe; neues Sheet mit Dateinamen îffnen
+// GS: Lock/Unlock
+// neue GS-Kommandos: SetColumnWidth, SetRowHeight...
+// bei Åberlagerten Objekten liefert AutoHelp falsches Objekt (Icon?!?)
+// Redraw nach COLORS_CHANGED
+// Suchen/Ersetzen blocksensitiv
+// fixe LÑnge beim ASCII-Import
+// Faxausgabe: Probleme bei mehreren Seiten?
+// Druckertreiberinfo in WDIALOG
+// Druckbereich-Buttons unter TOS: OGEM-Objekte verwenden
+// ID4-Server
+// beim EinfÅgen/Lîschen von Spalten Titel/UmbrÅche mitverschieben
+// Bereich exportieren
+// ID beim Laden von Textobjekten korrekt?
+// OLGA-Objekte: Existenz nicht prÅfen
+// Summenfunktion: Datum etc. wird nicht mitsummiert
+// (Text-)Objekte beim Laden auf énderung testen
+// FONT_CHANGED auch fÅr Textobjekte auswerten
+// Block.Sel. und Obj.Verschieben auch im Hintergrund
+// Textobjekte: Umbruch nur einmal berechnen
+// Spaltenbreite/Zeilenhîhe fÅr Bildschirm cachen
+// FontChanged: Fontgrîûen-Popup korrekt auswechseln
+// beachten, ob Fontgrîûe Åbergeben wird
+// BreakLink: korrekte Reaktion
+// dummy.txl-Bug (Preview)
+// person02.txl-Bug
+// sch96.img vom Ramdisk-ROOT: Datei nicht gefunden?
+// lange Editzeile fÅr Zahlenformate
+// IMG/TXT/ID4-Objekte auch vom Klemmbrett einfÅgen (nicht nur TOBs)
+// via Druckroutine und Prozentskalierung zum ID4-Server ausbauen
+// SH_CHANGED
+// Inhalte einfÅgen mit öberspringen von Zellen
+// Block-Cut/Copy auch mit anderen Formaten
+// Objekte: mehrere selektieren/verschieben
+// "Bearbeiten-Objekte": Alle auswÑhlen, Position (delta)
+// "EinfÅgen - Grafik" lÑût jetzt auch neue Dateien zu
+// "Speichern als": ZÑhler zurÅcksetzen
+// A4 die Formel: sum(a1:a3). Dann fÅgt man auf der  Zelle a4 eine
+  Zeile ein. Dann soll sich die Formel in sum(a1:a4) Ñndern.
+// NRunden(240/0.6) ergibt 399 NRunden(600/1.2) ergibt 499
+// ID4 optimieren
+// bei OLE_NEW Objekte etc. neu einlesen
+// FFT, Regression
+// erweitertes AV_SENDKEY
+// Notizen (Text/Audio/Video)
+// Doppelklick bei Funktionsmanager und Objekt einfÅgen
+// OLGA_GETOBJECTS erweitern
+// Listenverwaltung (Daten - Maske), dBase3-Export, Sortieren: "Liste enthÑlt öberschriften"
+// .TXT-D&D aus jedem Edit-Feld heraus, auch innerhalb einer Applikation
+// TXL-Block-D&D
+// Diagrammtitel-Variablen
+// AusfÅllen
+// 256-Farben-UnterstÅtzung
+// SYLK-Import, Export mit Formeln
+// Seitenpopup mit Zahlen
+// Autolocator (1 Zeichen) bei List-/Comboboxen
+// Diagramm-Dialog-Einstellungen speichern
+// Optionen: "leere" Plots nicht zeichnen, Font
+// Button "Treiber aktualisieren" im Drucken-Dialog
+// Papiergrîûe auch fÅr Metafiles (-> splitten!)
+// Text vom Klemmbrett einfÅgen (und dort speichern)
+// COMA-Anpassung, dafÅr bessere Initialisierung des Druckdialogs
+// beim Verschieben gehen Zellvariablen verloren
+// Schreiben auf writeonly-Datei wird akzeptiert
+// ZellbezÅge beim Lîschen korrekt anpassen
+// Formaticons frei belegbar
+// Linienbreiten editierbar
+// Blattformat bei Zeile/Spalte einfÅgen automatisch vergrîûern
+// nach RechenblattformatÑnderung Cursor nicht nach Home
+// ALIGN_DEFAULT
+// UnterstÅtzung von FNT_CHANGED
+// Preview: korrektes Update, DruckrÑnder beachten
+// PRN_CHANGED: Namen fÅr Listen neu auslesen
+// Probleme bei absoluten/relativen ZellbezÅgen
+// oft benîtigte ASCII-Im-/Exportfilter leichter aufrufbar machen
+// mehrdimensionale RechenblÑtter
+// Zeilenhîhe/Spaltenbreite automatisch anpassen
+Version 2.20 (05.03.99)
+- WDIALOG wird auch von der Release-Version zwingend benîtigt
+- Bug im Parser gefixed: DM2EURO (z.B.) kann wieder als Variable verwendet werden, da
+  "DM2" hierbei nicht mehr als Zellangabe mit ZeichenmÅll am Ende interpretiert wird
+- GEMScript 1.2 wird unterstÅtzt
+- Rundungsfehler bei Stunden (hoffentlich) beseitigt
+- wenn beim Programmstart keine Fenster mehr geîffnet werden konnten, blieb Texel in
+  einem modalen Dialog hÑngen ... nun wird Texel nach einem Alert korrekt beendet
+- bei einem Fehler in der Startphase stÅrzt Texel nach dem Warnalert nicht mehr ab
+- wenn der Cursor beim Suchen auf der Zelle links oben (rechts unten) und die Such-
+  richtung auf "rÅckwÑrts" ("vorwÑrts") steht, wird sie automatisch *vor* dem Suchen
+  umgedreht; dies gilt aus SicherheitsgrÅnden nur beim Suchen (und nicht beim
+  Ersetzen)
+- die Textausrichtung links/mittig/rechts kann bei aktiver Eingabezeile nicht mehr
+  geÑndert werden (bisher ging der Text der Eingabezeile verloren ...)
+Version 2.19r2 (30.01.99)
+- Copyright um 1999 ergÑnzt, Laufzeit der Beta bis Ende 99
+Version 2.19 (10.11.98)
+- beim EinfÅgen von Zellen und Bereichen per Maus in eine Formel
+  wird nun das Semikolon korrekt als Trenner erkannt
+- zum Test auf G_SHORTCUT und die erweiterten MagiC-Objekte wird
+  nun appl_getinfo() verwendet
+- appl_getinfo() testet jetzt auf <>0 (statt ==1) fÅr OK
+- Nicelines an N.AES bzw. M.AES angepaût
+- im About-Dialog wird die ASH-Homepage erwÑhnt
+- wenn v_copies() die tatsÑchliche Anzahl der im Druckdialog ein-
+  gestellten Kopien zurÅckliefern wÅrde (und nicht immer nur 1),
+  wÅrde Texel im Druckverlaufsdialog nun "x Exemplare" statt
+  "Exemplar y/z" anzeigen
+Version 2.10r6 (13.08.98)
+- "Optionen - Einstellungen - Pfade"
+- dafÅr neue Dateiauswahl, die auch nur Pfade (ohne Datei)
+  akzeptiert
+- mit "Optionen - Einstellungen/Standardokument - Info-Dialog"
+  kann ein kleiner Info-Dialog vor dem ôffnen eines neuen Dokuments
+  eingeschaltet werden; ob die Option aktiv ist, sieht man an drei
+  Punkten im MenÅeintrag "Datei - Neu"
+- im Rahmenpopup erzeugt das zweite Icon von links in der untersten
+  Zeile Haarlinien innerhalb des Blockes und eine 0,3mm-Linie am
+  Blockrand; dadurch ist das Ergebnis schîner (=brauchbar)
+- wird der Text einer Textzelle neu eingegeben, merkt sich Texel
+  nun das Clippingflag
+- "Datei - Seitenansicht - Einpassen" sollte nun auch dann
+  korrekt funktionieren, wenn Zeilen- und/oder Spaltentitel
+  gedruckt werden; bitte genau testen, ich habe bei der Gelegenheit
+  intern etwas optimiert
+- bei einer Seitenpreview in Farbe werden jetzt auch die
+  Spaltentitel korrekt grau gezeichnet
+- in der BubbleHelp der Toolbar werden nun die Shortcuts angezeigt
+Version 2.10r5 (18.07.98)
+- bîser Bug im Parser: Operatoren gleicher PrioritÑt wurden R->L
+  ausgewertet; das gab tolle Ergebnisse, die leider selten korrekt
+  waren... das sollte jetzt gehen (Beispiel: "=7-1+3"), nebenbei
+  habe ich dadurch noch ein paar Rekursionen beseitigt
+- beim HTML-Export kann das Speichern von Farben und Fonts nun
+  getrennt festgelegt werden
+- der HTML-Export speichert nun ein paar <META>-Tags ab
+- "Datei - Info": in die bisher vierte Kommentarzeile kann nun
+  ein Dokumenttitel eingegeben werden, der von einigen Export-
+  formaten (HTML, RTF, UDO), beim Ausdruck (vs_document_info())
+  und in den OLGA-Info-Dateien (neues Tag 'TITL') verwendet wird
+- neuer Platzhalter #n in Kopf- und Fuûzeilen fÅr diesen Titel
+- "Datei - Info/Autor" wird mit dem Namen des registrierten
+  Benutzers vorbelegt; bei der Demo- und Home-Version wird dafÅr
+  die EnvVar USERNAME verwendet (sofern gesetzt)
+- beim Block-Drag&Drop wird das Fenster nur noch gescrollt, wenn
+  keine Shift-Taste gedrÅckt ist
+- falsche Funktionsnamen werden besser erkannt
+Version 2.10r4 (17.07.98)
+- Formelparser komplett neu geschrieben (!); bitte *genau* testen,
+  ob der neue Parser alles erkennt, was auch der alte erkannt hat;
+  die Geschwindigkeit sollte mind. um Faktor 2 gesteigert sein
+  (eher deutlich mehr) - kînnte das mal jemand mit einem langsamen
+  Rechner benchmarken?
+- der Parser erkennt jetzt auch Strings (d.h. in " eingeschlossene
+  Zeichen); " und \ kînnen mit einem vorangestellten \ gequotet
+  werden; derzeit liefern Formeln mit Stringparametern aber immer
+  die Fehlermeldung "#STRING"
+- umgangssprachliche Operatoren: plus, minus, mal, durch, hoch
+- interne Verwaltung der Funktionen geÑndert
+- "Optionen - Einstellungen/Allgemein - Zelle beibehalten"
+  schreibt bei einem Fehler den fehlerhaften Formeltext in die
+  Eingabezeile und setzt den Cursor auf die Stelle vor dem
+  (vermutlichen) Fehler
+- Kurzbeschreibungen im Funktionsmanager korrigiert (Semikolons)
+- http- und ftp-URLs, die Texel Åbergeben werden (per Drag&Drop,
+  VA_START, GEMScript), reicht Texel per CAB-Protokoll an den
+  Browser weiter, falls dieser gerade online ist
+- Texel-Export: Version 2.1
+- beim HTML-Export mit Farben (aber ohne CSS1) wird bei leeren
+  Zellen jetzt ein festes Leerzeichen ausgegeben, damit auch der
+  Navigator den Zellenhintergrund anzeigt...
+- der HTML-Export unterdrÅckt jetzt "SIZE=+0"
+- wenn die EnvVar GEMSCRIPT nicht gesetzt ist, sucht Texel bei
+  SkriptNr() nun nach einer laufenden Applikation "SCRIPTER"
+- der Eingabecursor wird wieder korrekt gesetzt, wenn eine Funktion
+  vom Funktionsmanager oder dem Toolbar-Summen-Button in die
+  *disablete* Eingabezeile eingefÅgt wird
+- von der WDIALOG-only-Version werden die Daten des alten Druck-
+  dialogs nicht mehr in Texel.inf gespeichert
+- Startuproutine aufgerÑumt; Texel.inf wird etwas schneller geladen
+- Quelltext so gut wie mîglich modularisiert
+Version 2.10r3 (24.06.98)
+- Psion 3(a)-Import
+- ein Block kann nun auf den MÅlleimer (Cut), Shredder (Delete)
+  oder das Klemmbrett (Copy) eines AV-Servers gezogen werden;
+  die Aktion wird nur ausgefÅhrt, wenn die Antwort des Servers
+  (VA_THAT_IZIT) in weniger als 500ms bei Texel ankommt
+- Erkennung des AV-Servers verbessert
+- BGS7_REQBYDEMON (BubbleGEM 08-beta) wird unterstÅtzt
+Version 2.10r2 (09.06.98)
+- Home-Version (lÑuft nur auf einem Milan)
+- BootDevice und die CookieJar-Routinen verwenden nun Setexc()
+  statt Supexec()
+- AES-Message COLOR_ID wird unterstÅtzt
+- der "Don't change"-Zustand von TriState-Buttons hat in
+  Monochrom jetzt einen weiûen Hintergrund
+- NVDI5-Abfragefunktionen nach ObjectGEM verlagert
+- die Toolbaricons beachten wieder die Rechteckliste...
+- ab NVDI5 verwenden einige der UserDefs vst_fg/bg_color()
+- Texel besitzt keinen eigenen Druckdialog mehr, d.h. ein
+  installiertes WDIALOG wird vorausgesetzt; bei Gelegenheit
+  werde ich auch die Resource entsprechend kÅrzen
+- aus dem Source kann nun jederzeit eine Version compiliert
+  werden, die NVDI5 voraussetzt
+Version 2.10 (19.05.98)
+- bei Cut/Copy/Paste werden Formeln jetzt geparst kopiert
+- KontrollkÑstchen werden jetzt gespeichert und kînnen auch beim
+  Cut/Copy/Paste verwendet werden
+- die Zellreferenz des KontrollkÑstchens wurde u.U. falsch er-
+  mittelt; gefixed
+- die Zellreferenz eines KontrollkÑstchens wurde nach énderung
+  der Blattgrîûe nicht aktualisiert; gefixed
+- KontrollkÑstchenreferenzen kînnen nicht mehr auûerhalb des
+  Blattes liegen
+- Fontpopups werden nun zwei EintrÑge Åber der aktuellen
+  Markierung geîffnet
+- Demoversion mit Nervalerts beim Start+Ende; Cut/Copy/Paste ist
+  nicht mehr eingeschrÑnkt
+- nach dem Laden eines Dokuments mit Objekten ist keins der Objekte
+  mehr selektiert
+- beim Bewegen eines Sheet-Iconfensters wird dieses nicht mehr
+  grîûer...
+Version 2.09r7 (09.05.98)
+- wenn eine fehlerhafte LDP-Datei importiert werden soll, wird
+  jetzt eine Warnung ausgegeben
+- Aufruf von vq_devinfo() korrigiert
+- beim Druckfortschrittsfenster wird zur Anzeige des Treiber-
+  namens nach Mîglichkeit vq_ext_devinfo() verwendet
+- die normalen Gitterlinien werden nun auch beim Ausdruck auf
+  Farbdruckern als schwarze 50%-Linie ausgegeben
+- Zeichenroutinen fÅr die Toolbaricons verÑndert
+- die ersten zehn Buttons einer Alertbox kînnen mit F1..F10
+  bedient werden
+Version 2.09r6 (22.04.98)
+- beim Drag&Drop zwischen zwei Sheets werden Formeln jetzt
+  geparst kopiert
+- "Datei - Export - Texel" fÅr Versionen 1.6 und 2.0
+- neue Formate fÅr das GS-Kommando "Export": TEXEL (=TEXEL-16)
+  und TEXEL-20
+- WF_MINXYWH wird nur noch unter MagiC verwendet
+- ab KEYTAB06 werden im Export-Filter-Popup Kurzfassungen der
+  Filternamen eingetragen
+- dafÅr Filterpopup um ein Zeichen verbreitert
+- bei ComboBoxen sind die Pfeile nun schwarz
+Version 2.09r5 (09.04.98)
+- Datumsangaben werden auch im Format [m]m/[t]t/jj[jj] erkannt
+- der DIF-Import erkennt Zahlen in Klammern als negative Werte
+- wenn beim CSV-Import das Semikolon als Trennzeichen erkannt
+  wird, ist auch ein Komma als Dezimaltrenner erlaubt
+- der LDW-Import ersetzt ".." in Formeln durch ":" und "," durch
+  ";"; dadurch werden Bereiche und Funktionsargumente erkannt
+- die Textimporte (CSV, ASCII, LDW, DIF, dBase) erkennen Datum
+  und Uhrzeit
+- Wert() erkennt bei Stringreferenzen Datum und Uhrzeit
+- dafÅr Datums- und Zeitroutinen Åberarbeitet
+- beim RTF- und Excel-Export wird im Export-Dialog eine Warnung
+  angezeigt, wenn KEYTAB nicht installiert ist
+- Wichtige énderung in ObjectGEM: Disablete Editfelder werden
+  ab 16 Farben nicht mehr disabled, sondern nur noch dunkelgrau
+  gezeichnet; achtet bitte genau darauf, ob sich Dialoge (z.B
+  der Paûwort-Dialog) und die Sheet-Eingabezeile dadurch irgend-
+  wie "komisch" verhalten... Testet das jemand auch mal auf
+  nicht-MagiC-Systemen?
+Version 2.09r4 (07.04.98)
+- neue Funktion: Wert()
+- %-Operator (Operand steht *links* vom Operator, also "x%");
+  dividiert den Operanden durch 100
+- wird auch beim Excel-Export beachtet
+- der Excel-Export speichert Zellangaben und Funktionen nun korrekt
+- der Excel-Import erkennt nun SonderfÑlle der Wenn()-Funktion
+- der Excel-Import maskiert Bit 15 der Standardzeilenhîhe aus;
+  dadurch sollten einige seltsame AbstÅrze beseitigt sein...
+- der Lotus-Import importiert Spaltenbreiten fehlertoleranter;
+  vorher wurde u.U. wild im Speicher rumgeschrieben (und lieû Texel
+  manchmal abstÅrzen...)
+- Anpassung an GEMScript 1.1
+- bei GS_REPLY wird der Fehlerstatus korrekt ausgewertet
+- bei Fehlern bei der Formeleingabe erscheint jetzt eine Bubble-
+  Help mit einer kurzen Anmerkung; BubbleGEM 06 wird dafÅr benîtigt
+- mit "Optionen - Einstellungen/Allgemein - Formelfehler anzeigen"
+  kann diese Anzeige wieder ausgeschaltet werden
+- Texel macht jetzt alle zwei Sekunden einen Pwait3()-Aufruf,
+  damit beim Drucken mit NVDI5 keine Zombie-Prozesse im Speicher
+  bleiben
+- wenn Formeln uralter Texel-Sheets (ungeparste Formeln bis Texel
+  1.02) wegen der Umstellung des Argumenttrenners von Komma auf
+  Semikolon nicht mehr geparst werden kînnen, werden sie als Text
+  importiert (d.h. Texel stÅrzt dabei nicht mehr ab...)
+- der Rahmendialog aktualisiert jetzt beim erneuten Aufruf die
+  Anzeige der im aktuellen Block gesetzten Rahmen
+Version 2.09r3 (25.03.98)
+- Excel-Export mit Formeln (s.u.)
+- Excel-Import generell etwas optimiert
+- ObjectGEM verwendet WF_MINXYWH (sofern vorhanden)
+- die Minimalhîhe eines Rechenfensters kann die Hîhe von Toolbar
+  und Funktionsleiste nicht unterschreiten
+Version 2.09r2 (18.03.98)
+- "Format - Blatt - Excel-Datum"; da Excel den 1.1.1900 mit 1
+  gleichsetzt (Texel dagegen mit 0) und 1900 als Schaltjahr an-
+  sieht, kann hiermit auf diese Datumsberechnung umgeschaltet
+  werden (Default bei importierten Excel-Sheets)
+- dieses Verhalten kann fÅr alle neuen BlÑtter unter "Optionen -
+  Einstellungen/Standarddokument - Excel-Datumsangaben" einge-
+  schaltet werden
+- Karteireiter "Optionen - Einstellungen/Programmstart" in
+  "Start/Ende" umbenannt
+- dort kann jetzt auch festgelegt werden, ob beim Programmende
+  die Arbeitsumgebung und die Einstellungen gespeichert werden
+- Texel-Absturz beim Beenden eines OLGA-Servers beseitigt
+Version 2.09 (10.03.98)
+- Excel-Export (2,3,4,5), derzeit noch ohne Formeln und Attribute
+- RTF-Export (es fehlen noch ein paar Attribute)
+- neue Formate fÅr das GS-Kommando "Export": RTF, BIFF2, BIFF3,
+  BIFF5 und XLS (=BIFF4)
+- der HTML-4.0-Export unterstÅtzt jetzt CSS1
+- das Element <U> (Unterstreichung) wird bei HTML 4.0 nicht mehr
+  exportiert, da es nicht mehr zum HTML-Standard gehîrt
+- vor dem Ausdruck jeder Seite wird das Druck-Fortschrittsfenster
+  neu gezeichnet
+- Titel des Karteireiters "Programmstart" verbreitert
+- Karteireitertitel sollten jetzt auch auf nicht-MagiC-Systemen
+  schwarz dargestellt werden
+Version 2.00r3 (07.02.98)
+- neue GEMScript-Kommandos: AppGetLongName, CheckApp
+- "Hilfe - Tips und Tricks..."
+- F1 und der Hilfe-DÑmon funktionieren jetzt auch bei der Toolbar
+- HTML-Export: "Steuerzeichen nicht umwandeln"
+- Defaulteinstellung beim HTML-Export ist jetzt HTML 3.2
+- die Trennlinien zwischen den Spaltennamen und Zeilennummern
+  werden jetzt immer korrekt gedruckt
+- TXL-Dateien mit mehr als 8192 Zeilen werden wieder geladen...
+- rsrc_load() sollte jetzt endlich korrekt aufgerufen werden
+- Anpassung an KEYTAB05
+Version 2.00r2 (04.01.98)
+- neues GEMScript-Kommando: GetCellValue (entspricht GetCellFormula,
+  liefert aber auch bei Formelzellen eine unformatierte Zahl)
+- GetCellFormula liefert Konstanten unformatiert und mit Punkt als
+  Dezimaltrenner sowie Texte mit Alignzeichen (',^,") zurÅck
+- beim NVDI-Ausdruck wird nun v_clrwk() statt v_form_adv()+
+  v_clear_disp_list() verwendet
+- vs_document_info() wird unterstÅtzt
+- Paûwîrter werden nun verdeckt eingegeben
+- dafÅr Kontrolleingabefeld in "Info - Paûwort"
+- IE-Client: derzeit wird nur OLGA_IE_BUTTON verschickt; Doppelklick
+  auf ein IE-fÑhiges Objekt selektiert und aktiviert dieses (es be-
+  kommt einen grauen Rand); bis zur Deselektion werden *alle* Klicks
+  in den Objektbereich an den IE-Server weitergereicht; mit Control+
+  Doppelklick kann aber auch fÅr ein aktives Objekt das Fenster des
+  Servers getoppt werden
+- "EinfÅgen - Dialogelement" angefangen (hochgradig alpha!)
+- beim Export aufs Klemmbrett wird jetzt immer auch eine *.txt-Datei
+  erzeugt
+- beim HTML-4.0-Export wird nun die offizielle "HTML 4.0 Transitional
+  DTD" verwendet
+- nach dem Lîschen von Zellen wird die Eingabezeile aktualisiert
+- beim Objektpopup ist "EinfÅgen" nur noch enabled, wenn sich eine
+  passende Datei im Klemmbrett befindet
+- auch in modalen Dialogen kann die BubbleHelp verwendet werden
+  (BubbleGEM 05-beta liegt bei)
+- Anpassung an BubbleGEM-Help-DÑmon (liegt bei)
+- TriState-Buttons zeigen den "don't change"-Status jetzt mit einem
+  horizontalen Strich an
+- falls BubbleGEM nicht lÑuft, versucht Texel das in der EnvVar
+  BUBBLEGEM angegebene Programm nachzustarten
+- beim Speichern eines iconifizierten Fensters merkt sich Texel die
+  korrekte Grîûe
+- wenn kein Fenster mehr geîffnet werden kann, schmiert Texel nicht
+  mehr ab...
+Version 2.00r1 (09.12.97)
+- neue Funktionen: Falsch, Wahr, Pi (ersetzen die Konstanten)
+- Header-Auswertung beim dBase-Import verbessert
+- Abfrage auf N.AES, MultiTOS etc. beim Nachstarten von Programmen
+  verbessert
+- Vorbereitungen fÅr IE-OLGA (InplaceEditing)
+- Finanzfunktionen Excel97-kompatibel umbenannt
+- in der Eingabezeile und im Konstantendialog werden Zahlen auch
+  mit Komma erkannt
+- dadurch ist nur noch das Semikolon als Argumenttrenner erlaubt
+- bei der deutschen und franzîsischen Version verwendet das
+  Standardzahlenformat nun das Komma als Dezimaltrenner
+- der CSV-Export trennt Zellen nun per Semikolon (wie Excel)
+- bei neu geparsten Formeln wird der Zellwert auf Null gesetzt
+  bzw. aus der alten Zelle Åbernommen, wenn es auch eine Formel-
+  zelle war; dadurch sollten die "Runtime Error 207" beseitigt
+  sein...
+Version 2.00 (01.12.97)
+- der dBase-Import erkennt jetzt auch 'F'-Felder (Floats)
+- Ungenauigkeit bei der Sliderbereichsberechnung beseitigt
+- Skript datumneu.sic an neue Scripter-Version angepaût
+Version 1.99r6 (24.11.97)
+- neues GEMScript-Kommando: Export
+- dafÅr Exportroutinen besser modularisiert
+- das Kommando 'Open' erkennt auch nicht-TXL-Formate
+- Skript -1.tsc (MMult) an neue Scripter-Version angepaût
+- WÑhrungszahlenformate fÅr îS und sfr
+- Rundungsfehler bei Zeitdifferenzen (hoffentlich) beseitigt
+- Fileselectortitel beim dBase-Import korrigiert
+- die Grîûe des Sonderzeichen-Fensters wird bei Proportionalfonts
+  korrekt berechnet
+Version 1.99r5 (19.11.97)
+- der HTML-Export speichert auch die <TH>s in separaten Zeilen
+- beim HTML-Export wird die Zellen-Hintergrundfarbe bei gesetztem
+  Muster nun passend aufgehellt
+- der dBase-Import ermittelt die IVer-Versionsnummer nun korrekt
+- nach Paste und "Inhalte einfÅgen" wird die Toolbar aktualisiert
+- "Untere Zeile freilassen" sollte das Fenster jetzt nicht mehr
+  zentrieren
+- mit "NewToolbar=1" im Bereich "[Setup]" von texel.inf kann die
+  Verwendung der alten Toolbar-Icons erzwungen werden
+Version 1.99r4 (15.11.97)
+- neue Funktion: MMult() (benîtigt GEMScript/Scripter)
+- neue GEMScript-Befehle IsCellEmpty, IsCellText, IsCellConst,
+  IsCellFormula und Goto
+- GEMScript-Befehle GetCell, GetCellFormula und SetCell erweitert
+- mit "Textattribute - Text-Clipping" kann der Text Åber Zell-
+  grenzen fÅr einzelne Zellen ausgeschaltet werden
+- "Optionen - Einstellungen/Fenster - untere Zeile freilassen"
+- dBase-Import korrigiert
+- fehlerhafte DBFs werden bis zum ersten kaputten Datensatz
+  (exkl.) importiert
+- das Flag zur automatischen Neuberechnung wird nun von allen
+  Routinen, die Zellen einfÅgen, lîschen oder verÑndern, beachtet
+- Toolbar-Farbicons werden erst ab 16 Farben verwendet
+- Arctan2() (Fehler im dritten Quadranten) korrigiert
+- die Uhrzeit-Rundungsfehler von alten Texel-Versionen kînnen
+  mit dem Scripter-Skript datumneu.sic beseitigt werden
+- bei linksbÅndigem Text wird die erste Pixelspalte nicht
+  mehr abgeschnitten
+- in der Preview ist jetzt auch wieder Text sichtbar, der
+  nicht vertikal mittig ausgerichtet ist...
+- Rahmen werden jetzt auch in der Preview richtig skaliert
+Version 1.99r3 (12.11.97)
+- neue GEMScript-Befehle: IsBlockUsed, GetRange, Cell, Recalc,
+  GetRows, GetColumns, SetColor, SetTextColor
+- das GEMScript-Kommando SetCell fÅhrt keine Neuberechnung mehr
+  durch; dies geschieht erst bei ReturnCellValue oder Recalc
+- RÅckgabe von GEMScript-Ergebnissen optimiert
+- GS_QUIT wird verschickt
+- in der Datei texelusr.dat kînnen Namen fÅr externe Skripten
+  festgelegt werden
+- Skripten mit Nummern<0 sind ab sofort fÅr Texel reserviert
+- Rundungsfehler bei den Uhrzeiten verringert
+- dBase-Import um dBase II und IV erweitert
+- der dBase-Import erkennt jetzt auch Strings der LÑnge 1
+- Euro-WÑhrungsformate
+- die Funktionsliste im Funktionsmanager wird jetzt ohne Beachtung
+  der Groû-/Kleinschreibung sortiert
+- beim Verkleinern von Spalten wird der graue Bereich rechts der
+  Spalten wieder korrekt gezeichnet
+- beim Drag&Drop wird ein im Hintergrund liegendes Blatt nicht
+  mehr gescrollt
+- Text wird wegen besserer Lesbarkeit um die Breite des dÅnnen
+  Rahmens vom Rand entfernt
+- Text Åber Zellgrenzen jetzt auch bei 180 Grad mîglich
+- Test auf ZellÅberlauf verbessert
+- auf Systemen mit Farbicons ist die Toolbar nun bunt
+- Alertboxen (Umbruch, Breite) an prop. Systemfonts angepaût
+Version 1.99r2 (10.11.97)
+- neue Funktion: NormVert()
+- der dBase-Import erlaubt die Auswahl der Felder und der
+  Reihenfolge
+- der Excel-Import erkennt nun auch Sin(), Cos(), Tan(), Rest(),
+  FakultÑt(), Abs(), Vorzeichen(), Ganzzahl(), Zufallszahl(),
+  Arcsin(), Arccos(), Arctan(), Arctan2(), Sinhyp(), Coshyp(),
+  Tanhyp(), Arcsinhyp(), Arccoshyp(), Arctanhyp(), Exp(),
+  Log10(), Ln() und Wurzel()
+- Blatt-Initialisierung optimiert
+Version 1.99r1 (06.11.97)
+- Excel-Formel-Import eingeschrÑnkt mîglich (s.u.)
+- importierte Excel-BlÑtter sind nun minimal so groû wie ein
+  Standard-Texel-Blatt
+- neues Zahlenformat zur Anzeige von Boolean-Werten
+- Ausgabe von Kopf- und Fuûzeilen speicheroptimiert
+Version 1.95r2 (04.11.97)
+- neues GEMScript-Kommando: GetVariable
+- der HTML-Export speichert leere Zellen ohne ÅberflÅssige
+  Attribute
+- HTML-Export an Text Åber Zellgrenzen angepaût
+- beim éndern der Textfarbe werden Åberlappende Texte sofort
+  neu gezeichnet
+- zur Berechnung von Åberlappendem Text wird jetzt die Fontgrîûe
+  der Zelle und nicht die Default-Sheet-Fontgrîûe verwendet...
+- Text Åber Zellgrenzen beachtet jetzt auch SeitenumbrÅche
+- Text Åber Zellgrenzen wird auch nach énderung der Blattgrîûe
+  neu berechnet
+- Textroutinen speicheroptimiert
+Version 1.95r1 (03.11.97)
+- Text Åber Zellgrenzen
+- Popups und FenstermenÅs an G_SHORTCUT angepaût
+- bei Diagrammen kînnen die Achsenbereiche festgelegt werden
+- im "Seite einrichten"-Dialog gibt es bei zu kleinen Kopf- bzw.
+  Fusszeilenhîhen im Alert einen "Minimal"-Button
+- der LDW-Import erkennt auch Formeln, die mit '@' beginnen
+- doppelte Shortcutbelegung 'z' im Suchen- und Ersetzen-Dialog
+  beseitigt
+- Popups scrollen erst dann automatisch, wenn der Mauscursor
+  vorher mind. einmal innerhalb des Popups war
+- Redrawfehler bei ZellgrîûenÑnderung beseitigt
+- RechenblÑtter beachten, ob sie ikonifiziert oder geshaded sind
+- der Shading-Status wird unter MagiC nun Åber das erste Rechteck
+  der Rechteckliste bestimmt
+- UnterstÅtzung von GEMScript Rev 1.0
+Version 1.79r1 (24.10.97)
+- Funktion SkriptNr() komplett Åberarbeitet, es kînnen nun bel.
+  Parameter Åbergeben werden; Rest s. Beispielskript "0.tsc"; wenn
+  SkriptNr() verwendet wird, muû es die erste Funktion in der Zelle
+  sein
+- beim Block-Drag&Drop scrollt das Quellblatt nun mit, wenn sich der
+  Mauscursor nicht Åber einem anderen Blatt befindet
+- "Optionen - Einstellungen - Fenster/Test auf ZellÅberlauf"
+- Probleme mit dem ZellÅberlaufstest entschÑrft
+- Redrawprobleme am Rand von Blîcken beseitigt
+- der Textattribute-Dialog fÅhrt ein Update der Toolbar durch
+- scrollbare Popups scrollen automatisch, wenn sich der Mauscursor
+  ober- oder unterhalb des Popups befindet
+- Quoting in der Kommandozeile wird beachtet
+- Stack fÅr stark rekursive Berechnungen um 50K erhîht
+- Texel verwendet bei MagiC-Versionen vor dem 26.9.97 nur noch max.
+  126 Zeichen lange Eingabefelder
+Version 1.60r9 (16.10.97)
+- gedrehter Text wird korrekt ausgegeben; dafÅr habe ich sÑmtliche
+  Textausgaberoutinen neu geschrieben; bitte genau testen! (mit und
+  ohne GDOS)
+- Fehlertexte werden mit den eingestellten Zellattributen ausgegeben
+- "Datei - Letzte Fassung"
+- der VerknÅpfen-Dialog behÑlt beim HinzufÅgen bzw. Lîschen von
+  Objekten die Cursorposition bei; beim Aufruf des Dialogs wird das
+  selektierte Objekt in der Liste markiert; bei Selektion eines
+  Objekts wird die Markierung der Liste angepaût
+- GEMJINGPATH wird unterstÅtzt
+- der Toolbar-Datumsbutton funktioniert nun auch in der englischen
+  und franzîsischen Version
+- franzîsische und kanadische WÑhrungsformate
+- Redrawprobleme beim Ausschalten der Toolbar beseitigt
+- neue Funktion SkriptNr(n) (mit n=ganze Zahl), die das GEMScript-
+  Skript n.tsc im Ordner Skripte\ (relativ zu texel.app) aufruft;
+  Achtung: Es gibt derzeit keine Bindung von einem Skript an eine
+  Zelle (gilt insbesondere fÅr die RÅckgabe), mit SkriptNr() kann
+  nur ein Skript aufgerufen werden, das das Blatt "global" beein-
+  flussen kann (z.B. per SetCell); der GS-Interpreter wird per
+  EnvVar GEMSCRIPT gefunden
+- GEMScript-Anpassung optimiert
+Version 1.60r8 (10.10.97)
+- "Optionen - Einstellungen" ist jetzt ein Karteidialog
+- "Optionen - Einstellungen - Fenster/WÑhrung"
+- dadurch arbeitet der englische Toolbar-WÑhrungsbutton nun korrekt
+- der Toolbarbutton zur Erhîhung der Nachkommastellen erzeugt auch
+  dann in der englischen Version ein korrektes Format, wenn das
+  bisherige Format noch keine Nachkommastellen enthielt
+- Druckdialog: Icontext "Bereich" mit Spaces aufgefÅllt
+- unterstrichene öberschriften verwenden nun auch das MagiC-Objekt
+- auch TComboBox-Titel sind nun MagiC-Objekte
+- mit dem Dreieck in der Funktionsleiste kann die Toolbar an- und
+  ausgeschaltet werden
+- dafÅr "Optionen - Einstellungen - Toolbar"
+- ab MagiC 5.10 verwendet ObjectGEM objc_edit(), objc_wedit() und
+  objc_xedit() anstelle der OGEM-Routine
+- ab MagiC 5.14 und 16 Farben bestehen die MenÅtrennstriche aus einer
+  einzelnen dunkelgrauen Linie
+- die Fontpopups werden an der Selektionsposition geîffnet
+- "AusfÅllen"-Dialog geringfÅgig erweitert
+- auf Filesystemen mit langen Dateinamen wird '.bak' _zusÑtzlich_
+  zur eigentlichen Extension angehÑngt
+- die globalen MenÅeintrÑge "Datei - Schlieûen" und "Bearbeiten"
+  sind nur noch dann enabled, wenn ein Texel-Fenster top ist
+- Import- und Abruf-SubmenÅ an Menu3D angepaût
+- nach einer énderung des Paûworts wird das Dirty-Flag gesetzt
+- bei jedem Aufruf des Zahlenformatedialogs wird das aktuelle Format
+  voreingestellt
+- bei jedem Aufruf wird der Rahmendialog nun besser vorbelegt
+- ab NVDI 3.00 wird vqt_real_extent() verwendet
+- TriState-Buttons kommen nun auch mit prop. Systemfonts zurecht
+- das Rahmen-Popup verodert nun die Rahmen; nur mit dem Rahmentyp
+  oben links kînnen Rahmen nach wie vor gelîscht werden
+- Zellmuster- und -farbenpopup zeigen jetzt korrekte Werte an
+Version 1.60r7 (14.09.97)
+- WF_TOP an N.AES angepaût
+- Absturz beim ôffnen zu kleiner Dateien gefixed
+- Vorbereitungen fÅr franzîsische Version (OGEM)
+- die OGEM-Sprache wird passend zur Resource fest gesetzt
+- Aktionsmeldungen im Startupdialog
+- bei der Export-Dateiauswahl werden jetzt Maske und Dateiname
+  besser vorbelegt
+- "Optionen - Arbeit sichern" speichert die Arbeitsumgebung (alle
+  offenen TXL-Dateien) ab, so daû sie beim nÑchsten Start automatisch
+  geladen werden; wenn eine Arbeitsumgebung vorhanden ist, wird
+  "Optionen - Einstellungen - Programmstart" ignoriert
+- neuer Unterdialog beim WDIALOG-Druckdialog, mit dem der Bereich
+  wieder festgelegt werden kann
+Version 1.60r6 (03.09.97)
+- das "Proportional"-Flag ist vom Objekt-Popup in den "Objektgrîûe"-
+  Dialog gewandert
+- in den Popups gibt es an dieser Stelle jetzt das "Drucken"-Flag,
+  mit dem die Ausgabe eines Objekts auf den Bildschirm beschrÑnkt
+  werden kann
+- mit "Objektgrîûe - gesperrt" kann ein Objekt gegen Grîûen- und
+  PositionsÑnderungen geschÅtzt werden
+- dafÅr "Bearbeiten - Objekte" erweitert
+- BubbleGEM-UnterstÅtzung (OGEM-eigene Routinen entfernt)
+- AV_SENDCLICK-UnterstÅtzung
+- Alert-VDI-Problem OGEM-intern behoben
+- unter MagiC werden MenÅtrennstriche als gepunktete Linie gezeichnet
+- auch SubmenÅs sind jetzt getunt
+- bei "EinfÅgen - Grafik" werden nicht-s/w-IMGs an einen ID4-Server
+  weitergeleitet
+- neue Option "Filter" beim Export und ASCII-Import, unterstÅtzt KEYTAB
+- falls KEYTAB installiert ist, wird es automatisch vom 123- und Excel-
+  Import verwendet
+- Anpassung an GEMScript Rev 0.9
+Version 1.60r5 (04.08.97)
+- neue GEMScript-Kommandos: GetCell, GetCellFormula, SetCell
+- Seitenansicht: 100%-Button
+- neue (Englische) Zahlenformate
+- der Toolbar-Button fÅr das Standard-Zahlenformat stellt bei der
+  Englischen Version das Format {0|.00} ein
+- der Bereichsvorschlag des Toolbar-Summenbuttons endet nun mit der
+  ersten nicht-Zahl-Zelle oberhalb der Summenzelle
+- Ressoucedateien mal wieder ein biûchen optimiert
+- auch fÅr Pushbuttons werden nun die MagiC-Objekte verwendet
+- Help-Buttons an den neuen Look angepaût
+- LDP-Import: Das Attribut {F} wird erkannt, andere Attribute ignoriert;
+  aus dem Formeltext werden Klammeraffen entfernt, dadurch koennen viele
+  Formeln automatisch geparst werden; auch Formeln ohne '+' oder '=' am
+  Anfang werden erkannt
+- die Zellschutzmarkierung bei Importdateien wird vorerst nicht mehr
+  angezeigt
+- Umlauterkennung beim Import von Mac-XLS-Dateien
+- Workaround fÅr Alertboxen eingebaut; nach dem Aufruf war die VDI-
+  Workstation durcheinander (das Clipping war ausgeschaltet); ein echter
+  Bugfix kommt noch, aber die Englische Version muû raus
+Version 1.60r4 (31.07.97)
+- Texel (bzw. OGEM) benutzt jetzt erweiterte Objekttypen fÅr Gruppen,
+  Checkboxen und Radiobuttons, falls MagiC (ab 3.00) installiert ist
+- Mxalloc() verwendet jetzt Modus 3
+- HTML-4.0-Export (noch ohne CSS1)
+Version 1.60r3 (28.07.97)
+- auf Mac-Tastaturen werden nun auch End, PgUp und PgDn unterstÅtzt
+- Stackverbrauch der USERDEF-Routinen minimiert; der TC-Absturz ist
+  allerdings ein NVDI-Bug... (ein neuer Treiber von 2B liegt vor)
+- UnterstÅtzung des SMU-DHST-Protokolls (ab SMU 7.01)
+- SCCS-Kennung
+- TButton (und alle davon abgeleiteten Objekte) sowie G_STRING-TStatics
+  testen jetzt auf die max. erlaubte StringlÑnge (ist wegen der eng-
+  lischen Version nîtig geworden); bitte *genau* testen, ob irgend etwas
+  in den Dialogen komisch aussieht!
+- Anpassung an GEMScript Rev 0.8
+Version 1.60r2 (25.05.97)
+- Vorbereitungen fÅr Mehrsprachigkeit abgeschlossen
+- auch als englische Version verfÅgbar
+- Excel-Import: DOS-Umlaute werden umgewandelt (Mac-Umlaute teilweise);
+  AbstÅrze bei Mac-Dateien beseitigt
+- Sheet-Initialisierung optimiert
+- BubbleHelp vervollstÑndigt
+- Papierformat/OK setzt das Dirty-Flag
+- das Sonderzeichenfenster kann per Doppelklick geschlossen werden
+- beim Objekt-Cut/Copy/Delete funktioniert "Abbruch" nun
+- die Fontgrîûen beim HTML-Export liegen nun zwischen -7 und 7
+- TEXEL.RSC optimiert (alten Export-Dialog entfernt)
+Version 1.60 (23.03.97)
+- wenn keine der EnvVars TMPDIR, TEMPDIR, TMP und TEMP gesetzt ist,
+  verwendet Texel den zum Texel-Verzeichnis relativen Ordner Temp\
+  (und legt ihn ggfs. vorher an)
+- texel.grp, texel.msg und texel.hlp werden statisch eingebunden;
+  dadurch schnellerer Texel-Startup
+- Vorbereitungen fÅr englische Version
+- der Toolbar-Summenbutton lÑût den Bereichsvorschlag leer, wenn sich
+  nur leere Zellen Åber der aktuellen Zelle befinden
+- AbstÅrze bei Alertboxen vor dem Drucken beseitigt
+- Workaround fÅr den Dateinamen beim WDIALOG-IMG/Meta-Druck
+- der WDIALOG-Druck beachtet jetzt die zu druckenden Seiten und den
+  Druckbereich; auûerdem wird auch OLGA_UPDATE wieder verschickt
+- WDIALOG 1.96 liegt bei; damit ist der Meta-Druck wieder mîglich;
+  Skalierung, Orientation etc. bleiben bei MACPRN erhalten
+- DRAGFONT ruft vst_error() auf
+Version 1.59r3 (19.03.97)
+- "Seitenansicht - Einpassen": Berechnet die (Druck-)Skalierung,
+  damit das gesamte Blatt auf eine Druckseite paût, sofern dies
+  mit einem Prozentfaktor von 5..999 mîglich ist; SeitenumbrÅche
+  werden dabei allerdings ignoriert!
+- kleinstmîgliche Skalierung von 10% auf 5% gesenkt
+- das öberprÅfen auf Vorhandensein bei den Abruf-Dateien kann mit
+  "CheckHistory=1" im Abschnitt "[Setup]" ausgeschaltet werden
+- Objektdateien, die im temporÑren Verzeichnis liegen, werden beim
+  Lîschen des Objekts bzw. Schlieûen des Dokuments gelîscht; da das
+  Verzeichnis standardmÑûig das Texel-Verzeichnis ist, sollte die
+  Env.Var. TMPDIR gesetzt werden!
+- wenn der Toolbar-Summen-Button angewÑhlt wird, ohne daû ein Block
+  markiert ist, trÑgt Texel als Summenbereich die Spalte oberhalb der
+  Zelle bis zur nÑchsten Textzelle ein
+- Bereichsangaben der Form "A1:" kînnen nun auch mit einem Mausklick
+  vervollstÑndigt werden
+- der Help-Button in der Preview sollte nun komplett angezeigt werden
+- das Umschalten der Export-Extension sollte jetzt auch bei der
+  eigentlichen Datei funktionieren (nicht nur im Dialog)
+- der Objekt-Grîûe- und Attribute-Dialog setzen nun das Dirty-Flag
+- bei den voreingestellten Dateiauswahlpfaden und "Abrufen" werden
+  die Angaben nun evtl. korrigiert (kleine Laufwerksbuchstaben,
+  fehlender Backslash)
+- wenn ein Sheet nicht gespeichert werden konnte, Åbernimmt Texel
+  nicht mehr den Dateinamen und lîscht auch nicht das Dirty-Flag
+- Editcursor-Bug gefixed; dadurch sollte das EinfÅgen von Zellen etc.
+  in der Eingabezeile nun immer funktionieren
+- MagiC-Drag&Drop-Fontselektor DRAGFONT liegt bei
+Version 1.59r2 (13.03.97)
+- UnterstÅtzung des WDIALOG-Druckdialog (z.Z. nur modal);
+  WDIALOG 1.95 liegt bei; leider ignoriert MACPRN.SYS derzeit noch
+  die Skalierung, die Orientierung, die Anzahl der Kopien... auûerdem
+  scheinen da generell noch ein paar andere Macken drin zu sein
+- der Dialog kann daher in texel.inf mit "ExtPrnSel=1" im Abschnitt
+  [Setup] manuell ausgeschaltet werden
+- "Datei - Papierformat..." (nur mit WDIALOG)
+- "Datei - Seitenansicht - Papier..." (nur mit WDIALOG)
+- die globalen Druckereinstellungen fÅr diesen Dialog werden in
+  der Datei texel.prs gesichert
+- ganz nebenbei sollte sich das Preview-Update-Verhalten mit dem
+  alten Druckdialog verbessert haben
+- ID4-OLGA: CBXDraw(), cbColorTable, cbServerID/cbClientID und
+  OLGA_ID4UPDATE werden unterstÅtzt
+- der erste Eintrag in "EinfÅgen - Objekt" ist nun "beliebig"
+- OGEM-Dialoge (und damit alle Texel-Dialoge) beachten bei Tastatur-
+  eingaben den Shading-Status des Fensters, wenn das System die Aufrufe
+  appl_getinfo('WX') und wind_get(WF_SHADE) unterstÅtzt; gleiches gilt
+  fÅr MausformÑnderungen (z.B. beim Sonderzeichendialog)
+- der HTML-Export speichert die FONT-Attribute SIZE und FACE
+- Fakt(n) mit n>1748 erzeugt nun den Fehler #öBERLAUF
+- der 123-Import erkennt @AVG nun besser
+- die Fontauswahl ignoriert bei der Sortierung die Groû-/Kleinschreibung
+- interne OPROCS-Optimierung (Stringverwaltung, Exist)
+- "Datei - Abrufen": beim Start werden alle eingetragenen Dateien auf
+  Existenz ÅberprÅft; nicht vorhandene werden nicht mehr eingetragen
+- "Datei - Abrufen" ignoriert nun Groû-/Kleinschreibung, damit Dateien
+  nicht doppelt eingetragen werden; Minix-FS-Anwender sollten das ver-
+  schmerzen kînnen...
+- eingebettete Objekte werden auûerhalb des Zellenbereichs grau
+  (bzw. heller) dargestellt
+- mit Shift kann die Datenreihen-Automatik des Diagramm-Toolbar-
+  Buttons umgekehrt werden
+- der Sonderzeichendialog zeigt jetzt ASCII 32-255 an und reagiert
+  auf FONT_CHANGED (die Fontgrîûe wird allerdings ignoriert, und die
+  Dialogausmaûe werden nicht verÑndert)
+- wenn die EnvVar STGUIDE gesetzt ist, wird der ST-Guide bei Bedarf
+  nachgestartet
+- Textobjekte zeigen jetzt auch beim Umbruch immer alle Zeilen an...
+Version 1.59 (10.02.97)
+- Erweiterung der Farbauswahl bei Zahlenformaten ([Schwarz] etc.);
+  in jedem der drei Abschnitte (+;-;0) dÅrfen beliebig viele Farbangaben
+  vorkommen, wobei die am weitesten rechts stehende beachtet wird; neu
+  sind jetzt Wertvergleiche: durfte bisher nur [farbe] angegeben werden,
+  kann dort nun [farbe|vergleich1|vergleich2...] stehen, wobei nur einer
+  der Vergleiche zutreffen muû, um die Farbe einzustellen; der Vergleich
+  selber erlaubt die Operatoren =,<,>,<=,>=; mit einem Komma kînnen zwei
+  Vergleiche mit UND verknÅpft werden; folgendes Zahlenformat hat also
+  als Grundfarbe Schwarz bzw. Rot, falls der Wert zwischen 3 und 5 liegt
+  oder gleich 7 ist: [Schwarz][Rot|>3,<=5|=7]{#.##0|,00}
+- beginnt der Farbname mit einem Backslash, wird nicht die Text-,
+  sondern die Hintergrundfarbe gesetzt
+- Toolbar-Button zur schnellen Erzeugung von Balkendiagrammen
+- UnterstÅtzung von GEMScript Rev 0.4
+- der Objekt-EinfÅgen-Dialog kann auch per Doppelklick auf ein
+  Element der Liste beendet werden
+- HTML-Export: Shortcut von "Farben exportieren" geÑndert;
+  "eingebettete Objekte exportieren" erzeugt EMBED-Tags fÅr die
+  entsprechenden Dateien; die HTML-Version wird nun per Popup aus-
+  gewÑhlt; das Speichern des Dokumenttyps kann unterdrÅckt werden
+- AV_SENDKEY fÅr Alt+Shift+"<" wieder aktiviert
+- "Bearbeiten - Objekte - VerknÅpfungen" sollte jetzt funktionieren
+  (Doppelklick auf Eintrag, Aktivieren, Bearbeiten, VerknÅpfung Ñndern,
+  Reaktion auf OLGA_RENAMELINK)
+Version 1.50r3 (12.01.97)
+- neue Funktion: Anzahl2()
+- LDP-Dateien werden bei KommandozeilenÅbergabe automatisch importiert
+- der LDW-Import beachtet jetzt auch Zellzentrierungen
+- WKS/WK1-Import: @IF, @CNT, unÑres Plus (wird ignoriert)
+- mit "Datei - Abruf" kînnen auch Importdateien geladen werden
+- wenn kein Texel-Fenster top ist, wird ein Rechenfenster bei einem
+  Einfachklick links getoppt
+- "Optionen - Sonderzeichen..."
+- "Optionen - Einstellungen - .BAK-Dateien speichern"
+- auch fÅr BAK-Dateien wird jetzt OLGA_UPDATE verschickt
+- Verhalten von IstFehler() geÑndert: True wird jetzt schon ab
+  einer fehlerhaften Zellen im Bereich geliefert
+- ab NVDI 3.02 werden Fontnamen bis max. 49 Zeichen angezeigt
+- Diagramme unterstÅtzen den Tag DPNT (z.Z. nur hardcoded als Komma)
+- Darstellungsprobleme in der Eingabezeile nach Zellwechsel behoben
+- in Editfeldern kînnen keine falsche Dateien mehr gepastet werden
+- Vorbereitung fÅr GEMScript
+Version 1.50r2 (11.12.96)
+- "Bearbeiten - Objekte - VerknÅpfungen" (die Buttons gehen noch nicht)
+- temporÑre TAD-Dateinamen jetzt garantiert eindeutig
+- Texel warnt den Benutzer, wenn dieser ein Sheet mit einem ID4-Objekt
+  speichern mîchte, das zwar verÑndert, aber in seinem ID4-Server noch
+  nicht gespeichert wurde
+- "TAD speichern"-TADs werden von ArtWorx beim Laden nicht mehr gelîscht
+- "Abruf" mit weniger als 10 Dateien schmiert ohne XMEN_MGR nicht mehr
+  auf dem Bildschirm rum; machen jetzt andere Popups Probleme?
+- beim Objekt-Cut/Copy werden jetzt auch die Originaldaten gespeichert
+- beim Objekt-Cut wird jetzt auch das Dirty-Flag gesetzt
+- wenn DataPath in texel.inf nicht gesetzt ist, wird texel.app per
+  shel_find() gesucht und der evtl. so gefundene Pfad verwendet
+- AV_SENDKEY wieder ausgebaut (es gab doch zu viele Probleme)
+Version 1.50 (21.11.96)
+- eingebettete Objekte>128K konnten nicht gespeichert, Objekte>16K
+  nicht mehr geladen werden... gefixed, allerdings werden r8-Objekte
+  beim Laden ignoriert
+- Diagrammobjekte werden beim Neuanlegen immer eingebettet
+Version 1.49r8 (20.11.96)
+- wenn sich die Datei texel.pal im Texel-Verzeichnis (bzw. in
+  DataPath) befindet, wird diese Farbpalette von Texel beim
+  Programmstart auf der Applikationsworkstation eingestellt
+- beim Erzeugen von Diagrammen werden jetzt automatisch die
+  zugehîrigen CWG-Dateien eingebettet
+- im Diagrammdialog kînnen die Diagrammgrîûe und der Dateiname
+  festgelegt werden
+- die Einstellungen des Diagrammdialogs werden gespeichert
+- Objekte werden gespeichert
+- TAD-Dateien kînnen mit dem Button "TAD speichern" im Diagrammdialog
+  auch unter SingleTOS erzeugt werden; diese mÅssen dann von Hand in
+  ArtWorx geladen werden
+- im Diagramm-RM-Popup kînnen die Diagrammeinstellungen mit
+  "öbernehmen" in den Diagrammdialog Åbernommen werden
+- auch ID4-Objekte werden nun eingebettet, d.h. "Sichern als" im
+  RM-Popup funktioniert
+- wenn .IMG/.ASC/.TXT per MTOS-D&D auf ein Rechenfenster gezogen werden,
+  werden diese Dateien automatisch als Objekte eingebettet; bei unbe-
+  kannten Dateitypen wird versucht, diese als ID4-Objekt einzubetten
+- beim ID4-CCP werden auch die Grîûe und die Attribute Åbernommen
+- Dialogelemente werden generell nicht mehr gezeichnet, wenn sie in
+  einem versteckten Dialogbaum liegen
+- nach jedem Speichern werden SH_WDRAW und AV_PATH_UPDATE verschickt
+- die Zugriffspfad werden jetzt in texel.pth gespeichert; damit ent-
+  fallen die Abschnitte [Paths] und [Files] in texel.inf
+- Anpassung an ID4-OLGA vom 19.11.
+Version 1.49r7 (08.11.96)
+- ID4-OLGA Åberarbeitet, neuer Manager (liegt bei) und neue
+  ArtWorx-beta (>=04.11.) nîtig!
+- "Datei - Abrufen" (die History mit max. 10 Dateien wird bei
+  _jedem_ Quit in der Datei texel.his gesichert)
+- Toolbar-CCP funktioniert jetzt auch fÅr aktive Eingabezeile
+- bei Tastatur-CCP (und Delete) sowie einem selektierten Objekt
+  wird nachgefragt, was man kopieren oder lîschen mîchte
+- Objekte: Cut/Copy/Paste (bei ID4-Objekten wird die Grîûe z.Z.
+  noch nicht Åbernommen)
+- beim Aktivieren der Eingabezeile werden Objekte deselektiert
+- Objekte kînnen nur bei inaktiver Eingabezeile selektiert werden
+- Absturz beim Fensterschlieûen beseitigt, der auftreten konnte,
+  wenn man den Diagrammdialog aufgerufen hatte
+Version 1.49r6 (30.10.96)
+- CAT3-D&D-Typ '.FLT' wird erkannt
+- D&D-Typ '.ASC' wird erkannt
+- wÑhrend SliceMouse(Next) macht OGEM einen kleinen evnt_timer();
+  dadurch sollte wÑhrend der Startphase Multitasking besser mîglich
+  sein (der Bildschirm bleibt aber trotzdem blockiert)
+- Doppelklick auf Objekt startet den passenden OLGA-Server
+- entspricht "Bearbeiten" im Objekt-RM-Popup
+- Objektattribute und -grîûe im RM-Popup einstellbar
+- InplaceDrawing (ID4-OLGA); ein neuer OLGA-Manager liegt bei;
+  zum Testen braucht man auch eine neue ArtWorx-Version
+- eingebettete Objekte haben beim Zeichnen die Rechteckliste
+  zerschossen... gefixed.
+- die Onlinehilfe wird jetzt auch im STG-GUIDES-Ordner gesucht,
+  wenn sie nicht im Texel-Verzeichnis liegt
+- Flieûtextobjekte ("EinfÅgen - Text")
+- 123-Import: 'é', 'ö', Summe() mit mehreren Summanden, Sin(), Cos(),
+  Tan(), Arccos(), Arcsin(), Arctan(), Exp(), Ln(), Lg(), QWurzel(),
+  Abs(), Int(), Runden(), Mittelwert() und Varianz() werden erkannt
+- beim Import wird der Seitenumbruch jetzt korrekt initialisiert
+- AbstÅrze beim Druckdialog beseitigt
+- Groupbox-öberschriften werden aus texel.grp eingelesen
+- BubbleHelp-Strings werden aus texel.hlp eingelesen
+- Alert-Strings werden aus texel.msg eingelesen
+- CSV,DIF,ASCII: Zahlen kînnen optional ohne Format exportiert werden
+- beim Wechsel des Exportformats wird die Extension angepaût
+- Option "Farbe" bei Diagrammen
+- auch bei neueren Dialogen wird das Iconify-Icon jetzt angezeigt
+- Stringumwandlungen ergeben immer 0, wenn val() einen Fehler meldet
+- Legende bei Kreisdiagrammen abschaltbar
+- bei "EinfÅgen - Objekt - EinfÅgen" erscheint nur noch ein Fileselector
+Version 1.49r5 (11.09.96)
+- unter MagiC (ab dem 29.08.95) ist die Formel-Eingabezeile nun 255
+  Zeichen lang (bitte _alle_ EDITs genau und auch unter non-MagiC-TOS
+  testen!)
+- der komplette Inhalt der Eingabezeile wird in der BubbleHelp angezeigt
+- bei Linienplots sind Linien- und Punktstil einstellbar
+- Diagramm-Defaultfont wÑhlbar; die Grîûe gilt fÅr die öberschrift,
+  der Rest wird (von AW) angepaût
+- doppelte Anwahl einer Gruppe im Diagrammdialog nicht mehr mîglich
+- r3-Redrawbug bei "Gitterlinien nicht anzeigen" behoben
+- wenn DataPath in texel.inf nicht angegeben ist, sucht Texel im Ordner
+  Daten\ relativ zu texel.app nach seinen Dateien
+- globale benutzerdefinierte Konstanten und Zahlenformate werden
+  jetzt aus den Dateien texelusr.val und texelusr.frm eingelesen
+- Cursor-Redraw bei Objekten sollte jetzt funktionieren
+- Ctrl+C kopiert das Alignment mit
+Version 1.49r4 (08.09.96)
+- neuer Diagramm-Dialog
+- Anpassung an neue CAB_MAIL-Definition
+- "EinfÅgen - Seitenumbruch" geht jetzt auch bei markiertem Block
+Version 1.49r3 (06.09.96)
+- der dBase-Import verwendet das neue OGEM-TXBase-Objekt
+  (bitte genau testen!)
+- Anpassung an neuestes CAB-Protokoll (CAB 1.4-beta)
+- dadurch "Hilfe - Support..." mîglich (Mail an Volkers AOL-Adresse)
+- "Datei - URL îffnen"; Texel muû dazu in CAB als "external viewer"
+  fÅr *.txl angemeldet sein
+- der ST-Guide wird zur Laufzeit erkannt
+- Objekte werden auch beim Anklicken einer Zelle deselektiert
+  (hat z.Z. noch erhebliche Redrawprobleme mit dem Cursor)
+- @[]{} in Editfeldern (bitte auf Seiteneffekte testen!)
+- automatische Text-Offsets bei Rahmen
+- neue Zahlenformatvariablen [$x], [&x] und [%x] zur hexadezimalen,
+  oktalen und binÑren Darstellung mit x Stellen
+- drei entsprechende neue Zahlenformate
+- neue Option "Proportional" im RM-Popup von eingebetteten Objekten
+- bei ACC_TEXT und D&D auf ein Sheet wird die Eingabezeile aktiviert
+- "EinfÅgen - Seitenumbruch"
+- "Seitenumbruch" in den Zeilen/Spalten-RM-Popups
+- "Format - Blatt - Seitenumbruch anzeigen"
+Version 1.49r2 (29.08.96)
+- neue Funktionen: Median(), Quantil(), QuartilUnten(),
+  QuartilOben(), Quartilsabstand(), Spannweite(), MDet()
+- neue Funktion Fehler (erzeugt "#FEHLER")
+- Zielwertsuche (mit dem Sekanten-Verfahren)
+- Lotus-WKS/WK1-Import (erkannte Funktionen s.u.)
+- "Bearbeiten - Objekte"
+- Anpassung an neues CAB-Protokoll
+- die Adresse der Homepage kann in TEXEL.INF im Abschnitt [Web]
+  mit dem SchlÅsselwort ASH vorgegeben werden
+- die Treibernamen im Druckpopup werden nicht mehr gekÅrzt
+Version 1.49 (26.08.96)
+- "EinfÅgen - Objekt" verwaltet weiûe Rahmen (incl. RM-Popup);
+  Speichern funktioniert noch nicht, auûerdem fehlt noch die
+  Redrawoptimierung fÅr verdeckte Zellen
+- "EinfÅgen - Grafik" (z.Z. nur monochrome IMGs, Skalieren nur ab NVDI4)
+- Texel ist mit den Objekten jetzt echter OLGA-Client
+- ACC_TEXT wird erkannt und in das aktive Editfeld eingefÅgt
+- XAcc "extended names" komplettiert
+- "Drucken mit Grafiken" und "Grafiken anzeigen" durch "Objekte" ersetzt
+- "Format - Blatt - Objekte anzeigen" anwÑhlbar
+- "Datei - Seite einrichten - Drucken mit Objekten" anwÑhlbar
+- bei "Sichern als" wird ein leerer Dateiname vorgegeben
+- automatische Datumsumwandlung jetzt im Format [t]t.[m]m.[jj]jj
+- "Hilfe - ASH im Web" heiût jetzt "ASH-Homepage" und verweist auch
+  wirklich dorthin
+- die Env.Var. BROWSER wird erkannt; dort sollte der komplette
+  Zugriffspfad von z.B. CAB stehen; ausgewertet wird z.Z. nur der
+  Dateiname
+- bei jedem appl_find() (OLGAMANAGER etc.) wird eine Umwandlung in
+  Groûbuchstaben durchgefÅhrt
+Version 1.19r2 (19.08.96)
+- Export-Dialog
+- "Datei - Export auf Klemmbrett" wurde dadurch ÅberflÅssig
+- "Optionen - Einstellungen" hat jetzt den Shortcut Shift+Ctrl+E,
+  dafÅr hat "Datei - Export" den Shortcut Ctrl+E
+- HTML-Export verbessert (doctype, Zell- und Textfarben,
+  fast alle Sonderzeichen, HTML 3.2)
+- max. Zeilenzahl fÅr UDO-Tabellen auf 256 verdoppelt
+- "Hilfe - ASH im Web" (geht nur, wenn CAB lÑuft)
+- About-Dialog Åberarbeitet
+- Update der Eingabezeile bei Toolbar-Buttons links/mitte/rechts
+- StIc-Anpassung entfernt
+- "Datei - Info - Grîûe" entfernt
+- Anpassung an OLGA Rev 1.1 (incl. undokumentierter Features :-)
+- AV_SENDKEY wird wieder verschickt
+- versteckte Shortcuts und Editfelder werden nicht mehr beachtet
+Version 1.19 (30.05.96)
+- neue Funktionen: std1, min1, sek1 (ersetzen die Konstanten)
+- zwei neue Standardzahlenformate zur Anzeige negativer Zeiten:
+  [Schwarz][#h]:[mm];[Rot]-[#h]:[mm] und
+  [Schwarz][#h]:[mm]:[ss];[Rot]-[#h]:[mm]:[ss]
+- Diagramme: leere Zellen und Textzellen werden nun nicht mehr als
+  Null, sondern als "nicht vorhanden" ausgewertet (Sprungstellen)
+- Kreisdiagramme
+- "EinfÅgen - Diagramm": OK-Button
+- "EinfÅgen - Objekt" etwas erweitert
+- "EinfÅgen - Grafik" entfernt
+Version 1.10r5 (12.04.96)
+- "Datei - Export - HTML" (mit der neuen OLGA-fÑhigen CAB-Beta wird
+  Texel damit zum ersten Atari-Web-Editor ;-)
+- "Datei - Export - UDO"
+- SFP004-Abfrage generell entfernt
+- "EinfÅgen - Objekt" (z.Z. nur der Dialog, nur mit neuem OLGA-Manager)
+- auch unter MagiC wird jetzt MU_TIMER gesetzt... (wichtig fÅr Signale)
+- beim Anklicken einer einzigen Zelle wird die Funktionsleiste wieder
+  aktualisiert...
+Version 1.10r4 (30.03.96)
+- Diagramme: der Wertebereich der Y-Achse wird besser bestimmt; die
+  Anzahl der Ticks wird immer korrekt an AW Åbergeben
+- AW wird in OLGA.INF nun Åber die Extension .TAD nachgestartet
+- OLGA_RENAME wird verschickt
+- Online-Scrolling bei Zeilen-/Spaltenselektion sowie Listboxen
+- Online-Blockselektion, falls die Eingabezeile nicht aktiv ist
+- "Optionen - Einstellungen - Online-Blockselektion"
+- bei aktiver Eingabezeile kînnen die rechte-Maustasten-Popups nicht
+  mehr aufgerufen und ganze Zeilen/Spalten nicht mehr selektiert werden
+- "Sortieren - ohne Attribute sortieren"
+- "Daten - Zielwertsuche" (z.Z. nur der Dialog)
+- "Inhalte lîschen"-Shortcuts "Alles" und "Formeln" vertauscht
+- D&D-Typ 'PATH' wird beantwortet
+- D&D-Typ '.TXT' wird angenommen, die erste Zeile des Textes wird
+  in das aktuelle Editfeld eingefÅgt (kann mit CAT getestet werden)
+- hinter "Hilfe - Stichwort" sind nun drei Punkte :-)
+- Anpassung an StIc 0.11
+Version 1.10r3 (16.03.96)
+- neue Funktionen: Wahl(Index,Arg1[,...,Arg n]), Zeilen(), Spalten()
+- Diagrammdialog erweitert (u.a. Balkendiagramme)
+- bei XY-Plots hÑngen die Linien jetzt nicht mehr links und rechts
+  am Diagrammrahmen; dadurch werden auch alle Ticks korrekt beschriftet
+- "EinfÅgen - Diagramm" nur noch unter Multitasking verfÅgbar
+- ein Diagramm mit nur einer Werte-Zelle kann nicht mehr erzeugt werden
+- beim Diagrammtitel wird kein * mehr eingetragen
+- bei den Diagramm-Achsenbeschriftungen werden auch Zahlen angezeigt
+- "Diagrammausmaûe zu klein"-Alert ersetzt
+- neues vm_coords()-Binding; das PP-Binding soll bei Metafiles
+  nicht immer funktionieren
+- "Gehe zu Seite"-Dialog in der Preview Åberarbeitet
+- der Block-Dialog verwaltet jetzt eine History-Liste sowie alle
+  definierten Zellvariablen
+- "Optionen - Einstellungen - Block-History-LÑnge"
+- "Datei - Info - Paûwort..."
+- "Datei - Info - VerschlÅsseln"; ist unabhÑngig vom Paûwort und
+  bei neuen Dokumenten default
+Version 1.10r2 (05.03.96)
+- Erweiterung fÅr zweite Resourcedatei (TEXEL2.RSC)
+- "EinfÅgen - Diagramm"; Diagrammerzeugung per ArtWorx+OLGA
+- das Laden eines Excel5-Blattes erzeugt keinen Absturz mehr
+Version 1.10 (28.02.96)
+- Cut/Copy/Paste-Bug gefixed
+- lexikalisches Sortieren: Akzente etc. korrekt
+- neuer OLGA-Datentyp ICON
+- LDW-Default-Extension ist nun *.LDP
+Version 1.02r12 (29.01.96)
+- bei Paste werden Attribute nicht mehr mitkopiert (dazu muû man
+  nun explizit "Inhalte einfÅgen" verwenden)
+- bei Paste und "Inhalte einfÅgen" sollten nun Font-ID und -grîûe
+  immer korrekt kopiert werden
+- "Inhalte einfÅgen - EinfÅgen"
+- Genauigkeit bei Zahl2String-Umwandlungen auf 15 Stellen reduziert,
+  dadurch sollten diverse Rundungsfehler nicht mehr auftreten
+- "Einstellungen - Neuberechnung nach Laden"
+- die Eingabezeile flackert bei Wechsel zwischen Leerzellen nicht mehr
+- ist das erste Zeichen der Eingabezeile ', wird der Rest der Eingabe
+  als linksbÅndiger Text interpretiert, entsprechend rechtsbÅndig bei "
+  und zentriert bei ^; sollen diese Zeichen angezeigt werden, mÅssen
+  sie verdoppelt oder entsprechend kombiniert werden
+- GroupBox-öberschriften sollten jetzt Åberall deckend sein
+- <Help> ruft jetzt nach Mîglichkeit immer den ST-Guide auf;
+  die BubbleHelp ist per rechter Maustaste oder <F1> erreichbar
+- TEXEL.INF wird in $HOME gesucht, wenn $HOME/defaults nicht existiert
+Version 1.02r11 (11.01.96)
+- Formeln werden geparsed gespeichert, dadurch drastisch bessere
+  Performance beim Laden; alte Sheets mÅssen natÅrlich neu ge-
+  speichert werden, um davon zu profitieren
+- Ersetzen funktioniert auch dann korrekt, wenn nicht in allen
+  Zelltypen ersetzt wird
+Version 1.02r10 (08.01.96)
+- neue Funktion: Stunden()
+- "EinfÅgen - Inhalte..."
+- dafÅr neue Paste-Routine (bitte _genau_ testen!)
+- neue Sortierroutine (Shellsort)
+- beim IMG-Ausdruck kann nun eine Dateiname festgelegt werden
+- nach einer Metafile- bzw. IMG-Ausgabe wird ein entsprechender
+  OLGA-Update durchgefÅhrt
+- der CSV-Import erkennt nun automatisch, ob die Datei normal
+  oder von Microsoft ist
+- der CSV- und ASCII-Import stÅrzen nicht mehr ab, wenn eine
+  Datei mit mehr als zwei Zeilen nicht mit CR beendet ist...
+- Stewart-Anpassung optimiert
+Version 1.02r9 (20.12.95)
+- "Datei - Import - dBase III"
+- im "Seite einrichten"-Dialog gibt es einen "Setzen"-Button
+- beim Vergrîûern des Blattes in "Format - Blatt" werden die Zellausmaûe
+  nun unabhÑngig von der Zoomstufe berechnet
+- nach Iconify/Verschieben/Uniconify sind die Slider nun korrekt
+- D&D-Wunschtypen werden versendet
+- Anpassung an Stewart
+- ProgressIndicators haben keinen MOVER mehr
+- UnterstÅtzung von PRN_CHANGED (Flag 1); kann mit dem NVDI4-Treiber-
+  CPX getestet werden
+Version 1.02r8 (06.12.95)
+- neue Funktion: Kehrwert()
+- Excel-Import geringfÅgig erweitert
+- Metafile-Ausgabe optimiert (Dateiname, Seitengrîûe)
+- im Dialog "Datei - Drucken" kann die Preview direkt aufgerufen werden
+- ab NVDI3 wird der Druckdialog intelligenter und schneller initiali-
+  siert; auûerdem kann dann fÅr Drucker und Images die Papiergrîûe vor-
+  gegeben werden
+- Zahlenformatvariable #h fÅr absolute Stundenanzahl
+- passend dazu zwei neue Standardzahlenformate
+- der Cursor wird nicht mehr auf Fehlerzellen gesetzt
+- beim Laden und Importieren erscheint nun ein Progress Indicator
+- die Stichworte in "Datei - Info" werden durch Komma getrennt
+- Alert bei Sichern eines unverÑnderten Blattes entfernt
+- Popup "Datei - Import" umsortiert (Vorbereitung fÅr Modulkonzept)
+Version 1.02r7 (22.11.95)
+- "Datei - Import - MS-Excel" angefangen; Attribute, Formeln, die Code-
+  page und vieles andere werden aber noch ignoriert
+- die Spaltenbreite etc. wird korrekt gesetzt, auch wenn der Zahlstring
+  mit einem Punkt endet
+- LDW-Import stÅrzt bei Leertexten nicht mehr ab, Formeln sollten jetzt
+  immer als solche erkannt werden
+- gequotete Dateinamen sollten auch bei Drag&Drop korrekt erkannt werden
+- bessere Titel bei Dialog-Iconfenstern
+Version 1.02r6 (13.11.95)
+- einfacher Test, ob eine zu ladende Datei schon im Speicher ist
+- "Optionen - Einstellungen - Anzeigegrîûe" entfernt
+- OLGA_INFO wird jetzt korrekt an den Absender von OLGA_GETINFO geschickt
+- Anpassung an OLGA Rev 0.9
+Version 1.02r5 (10.11.95)
+- benutzerdefinierte Zahlenformate
+- TEXEL.FRM entsprechend erweitert
+- Drag&Drop und Cut/Copy/Paste daran angepaût
+- die Nachkomma-Toolbarbuttons funktionieren auch mit Zahlenformaten
+- "Format - Spalte - Standardbreite"
+- "Format - Zeile - Standardhîhe"
+- Anpassung an OLGA Rev 0.8; OLGA_GETINFO wird entsprechend beantwortet
+Version 1.02r4 (29.10.95)
+- neue Funktion: Schaltjahr()
+- Texel ist jetzt OLGA-Server fÅr TXL, SYLK, DIF, CSV, TXT und TEX
+- "Bearbeiten - Suchen/Weitersuchen"
+- "Bearbeiten - Ersetzen/Weiterersetzen"
+Version 1.02r3 (24.10.95)
+- neue Datumsformate [TTT] und [TTTT]
+- beim EinfÅgen von Spalte A wird nun eine korrekte Breite gewÑhlt
+- der Shortcut fÅr "Reihe ausfÅllen" ist nun Shift+Control+A
+- MagiC-Fontselektor-Aufruf an neueste Beta angepaût
+Version 1.02r2 (20.10.95)
+- neue Funktion: Anzahl()
+- Wurzel() mit einem Parameter entspricht jetzt QWurzel()
+- Zeitumwandlung [h]h:mm[:ss]
+- der Shortcut fÅr "Zellen einfÅgen" ist nun Shift+Control+V
+- der Shortcut fÅr Zeilen (Spalten) einfÅgen ist (Shift+)Control+Insert
+- "Datei - Info - gespeichert mit..."
+- das Clipboard-Semaphor _SCP wird nicht mehr benutzt; evtl. sind
+  damit die Probleme beim Cut/Copy/Paste behoben
+- Bug mit der Blockmarkierung nach dem Laden behoben
+- Fehlermeldung, wenn kein Fenster (Sheet) mehr frei ist
+- alte Beta-Laderoutinen entfernt
+Version 1.02 (11.10.95)
+- TXLs grîûer als 32K werden nun auch geladen...
+- ^R ist jetzt korrekt disabled ;-)
+- alle korrekten Seriennummern sollten nun (endlich) akzeptiert werden
+Version 1.01 (28.09.95)
+- rudimentÑrer LDW-Formel-Import
+- MTOS-Drag&Drop funktioniert jetzt auch auf Dialogfenster
+- bei MTOS-D&D und VA_START wird der Dateityp jetzt wie bei ARGV erkannt
+- in registrierten Versionen sollte man nun auch sichern kînnen ;-)
+Version 1.00 (25.09.95)
+- erste îffentliche Version
+
+
+Nicht offensichtliche Shortcuts
+-------------------------------
+Alt+F  Font-Popup
+Alt+R  Grîûen-Popup
+Alt+S  Seitennummer (Seitenansicht)
+Alt+Z  Zoom-Popup
+F1     Hilfe (auch BubbleHelp)
+F2     fett
+F3     kursiv
+F4     unterstrichen
+F5     links
+F6     mitte
+F7     rechts
+F8     Nachkomma +
+F9     Nachkomma -
+F10    Summe
+
+GÅltige Formelelemente
+----------------------
+- "+", "-", "*", "/", "^", "(", ")", unÑres Minus/Plus
+- "=",">","<",">=","<=","<>"
+- Konstanten (s. Datei TEXEL.VAL), Zahlen
+- Funktionen (s. Datei TEXEL.DAT)
+- ZellbezÅge (A1, BN38 etc.)
+
+Folgende Funktionen werden im WKS/WK1-Format erkannt:
+-----------------------------------------------------
+- Texte
+- Flieûkomma- und Integerzahlen
+- Zellen und Bereiche
+- "+", "-", "*", "/", "^", "(", ")"
+- unÑres Minus, unÑres Plus
+- "=",">","<",">=","<=","<>"
+- @SUM, @AVG, @VAR, @SIN, @COS, @TAN, @ATAN, @ASIN, @ACOS,
+  @EXP, @LN, @LOG, @SQRT, @ABS, @INT, @ROUND, @CNT, @IF
+
+Folgende Funktionen werden im Psion-Format erkannt:
+---------------------------------------------------
+- Texte
+- Flieûkomma- und Integerzahlen
+- Zellen und Bereiche
+- "+", "-", "*", "/"
+- unÑres Minus, unÑres Plus
+- "=",">","<",">=","<=","<>"
+- PI
+- NOT, AND, OR
+- ERR, FALSE, TRUE
+- SUM(), MIN(), MAX(), RND, ABS()
+- NOW
+
+Folgende Funktionen werden im Excel-2/3/4-Format erkannt:
+---------------------------------------------------------
+- Texte
+- Flieûkomma- und Integerzahlen, Strings, Booleans,
+  fehlende Argumente, Fehlerwerte
+- Zellen und Bereiche
+- "+", "-", "*", "/", "^", "(", ")", "%" (Prozent)
+- unÑres Minus, unÑres Plus
+- "=",">","<",">=","<=","<>"
+- Pi()
+- Summe(), Rest(), FakultÑt()
+- Abs(), Vorzeichen(), Ganzzahl(), Zufallszahl()
+- Wenn()
+- Sin(), Cos(), Tan(), Arcsin(), Arccos(), Arctan(), Arctan2(),
+  Sinhyp(), Coshyp(), Tanhyp(), Arcsinhyp(), Arccoshyp(), Arctanhyp()
+- Exp(), Log10(), Ln(), Wurzel()
+
+Folgende Funktionen werden beim Excel-Export gespeichert:
+---------------------------------------------------------
+- Texte
+- Zahlen, Fehlerwerte
+- Zellen und Bereiche
+- "+", "-", "*", "/", "^", "(", ")", "%" (Prozent)
+- unÑres Minus
+- "=",">","<",">=","<=","<>"
+- Pi()
+- Summe(), Rest(), FakultÑt()
+- Abs(), Vorzeichen(), Ganzzahl(), Zufallszahl()
+- Wenn()
+- Sin(), Cos(), Tan(), Arcsin(), Arccos(), Arctan(), Arctan2(),
+  Sinhyp(), Coshyp(), Tanhyp(), Arcsinhyp(), Arccoshyp(), Arctanhyp()
+- Exp(), Log10(), Ln(), Wurzel()
+
+Folgende GEMScript-Kommandos werden ausgewertet (Rev 1.0):
+----------------------------------------------------------
+//Standard-Kommandos:
+New, Quit, Open [datei], Close [datei], ToFront datei, Cut [datei],
+Copy [datei], Paste [datei], Delete [datei], SelectAll [datei],
+Print [datei], Save [datei], SaveAs neuername [datei], GetFront,
+CheckCommand command, GetAllCommands, CheckApp app, AppGetLongName
+//Texel-Kommandos:
+Export format name [datei]
+Select bereich [datei], GetSelection [datei],
+SetCell zelle inhalt [datei] bzw. SetCell r c inhalt [datei],
+GetCell zelle [datei] bzw. GetCell r c [datei],
+GetCellFormula zelle [datei] bzw. GetCellFormula r c [datei],
+GetCellValue zelle [datei] bzw. GetCellValue r c [datei],
+ReturnCellValue datei zelle wert,
+GetVariable variable [datei], IsBlockUsed bereich [datei],
+GetRange bereich [datei], Cell row col [datei],
+IsCellText zelle [datei] bzw. IsCellText r c [datei],
+IsCellConst zelle [datei] bzw. IsCellConst r c [datei],
+IsCellFormula zelle [datei] bzw. IsCellFormula r c [datei],
+IsCellEmpty zelle [datei] bzw. IsCellEmpty r c [datei],
+Recalc [datei], GetRows [datei], GetColumns [datei],
+SetColor farbe [datei], SetTextColor farbe [datei],
+Goto zelle [datei] bzw. Goto r c [datei]
