@@ -6,6 +6,12 @@ From time to time I'm being asked if I could release the Texel source code... We
 
 ![Texel main window on Atari Falcon 030](Screenshots/screenshot.gif)
 
+While I was coding, [Götz Hoffart](https://68k.computer/) was testing the software, reporting bugs, making sugestions for improvements &ndash;
+and he wrote the German manual. Distribution of the German version was done by Heidelberg-based company [Application Systems](https://www.application-systems.de/texel/indexa.html);
+pretty famous at that time, and they're still in business today (selling Mac &amp; PC software and games).
+The English version was translated and distributed by [System Solutions](https://www.system-solutions.co.uk/) in London.
+
+
 ## Disclaimer
 
 This source code is completely out of date. It is provided as-is without any warranty.
