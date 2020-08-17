@@ -1,7 +1,8 @@
 # Texel ![Texel-Logo](Screenshots/logo.gif)
 
 Over 20 years ago I wrote a spreadsheet application called ["Texel"](https://snailshell.de/Texel/) for Atari/TOS/MagiC
-systems. From time to time I'm being asked if I could release the Texel source code... Well, here it is.
+systems. I probably started coding Texel in 1994; version 1.00 was released in September 1995. The last official release 2.20 dates back to 1999.
+From time to time I'm being asked if I could release the Texel source code... Well, here it is.
 
 ![Texel main window on Atari Falcon 030](Screenshots/screenshot.gif)
 
